@@ -1,0 +1,44 @@
+<?php
+session_start();
+include 'database (1).php';
+
+if (!isset($_SESSION['cust_id'])) {
+    $_SESSION['cust_id'] = 1; 
+}
+$cust_id = $_SESSION['cust_id'];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prod_id'])) {
+    $prod_id = $_POST['prod_id'];
+    
+    // Check if cart exists for user
+    $cart_query = $conn->prepare("SELECT cart_id FROM cart WHERE cust_id = ?");
+    $cart_query->bind_param("i", $cust_id);
+    $cart_query->execute();
+    $result = $cart_query->get_result();
+    
+    if ($result->num_rows > 0) {
+        $cart = $result->fetch_assoc();
+        $cart_id = $cart['cart_id'];
+    } else {
+        // Create new cart
+        $create_cart = $conn->prepare("INSERT INTO cart (cust_id) VALUES (?)");
+        $create_cart->bind_param("i", $cust_id);
+        $create_cart->execute();
+        $cart_id = $create_cart->insert_id;
+        $create_cart->close();
+    }
+    $cart_query->close();
+    
+    // Insert item into cart_items
+    $insert_item = $conn->prepare("INSERT INTO cart_items (cart_id, prod_id) VALUES (?, ?)");
+    $insert_item->bind_param("ii", $cart_id, $prod_id);
+    $insert_item->execute();
+    $insert_item->close();
+    
+    header("Location: product page.php?added=" . urlencode($prod_id));
+    exit;
+} else {
+    header("Location: product page.html");
+    exit;
+}
+?>
