@@ -37,7 +37,7 @@ $recent_orders = mysqli_query($conn, "
         <li><a href="admin_products.php">Inventory</a></li>
         <li><a href="admin_order_list.php">Orders</a></li>
         <li><a href="admin_rental_list.php">Rentals</a></li>
-        <li><a href="admin_customer_list.php">Customers</a></li>
+        <li><a href="manage_customer.php">Customers</a></li>
         <li><a href="admin_report.php">Reports</a></li>
     </ul>
     <div style="margin-top: auto;">
