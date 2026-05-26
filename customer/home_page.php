@@ -1,32 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Home</title>
-<style>
-body { font-family: Arial; margin:0; background:#f2f2f2; }
-.header { background:#4a9b6f; color:white; padding:15px; }
-.container { padding:20px; }
-
-.card {
-    background:white;
-    padding:20px;
-    margin:10px;
-    display:inline-block;
-    width:200px;
-    border-radius:10px;
-    box-shadow:0 4px 10px rgba(0,0,0,0.1);
-}
-</style>
+  <title>Home Page</title>
+  <link rel="stylesheet" href="customer.css">
 </head>
-
 <body>
-<div class="header">ADMIN DASHBOARD</div>
+  <div class="header">ADMIN PORTAL</div>
 
-<div class="container">
-    <div class="card">Total Products: 50</div>
-    <div class="card">Orders: 120</div>
-    <div class="card">Users: 30</div>
-</div>
+  <div class="container">
+    <div class="card">
+      <h2>Welcome User</h2>
+      <p>Select an option below</p>
 
+      <a href="edit-profile.html"><button>Edit Profile</button></a><br><br>
+      <a href="change-password.html"><button>Change Password</button></a><br><br>
+      <a href="product-details.html"><button>View Products</button></a><br><br>
+      <a href="logout.html"><button>Logout</button></a>
+    </div>
+  </div>
 </body>
 </html>
