@@ -15,7 +15,7 @@
       <label>Full Name</label>
       <input type="text" placeholder="Enter your full name">
 
-      <label>Email Address</label>
+            <label>Email Address</label>
       <input type="email" placeholder="Enter your email">
 
       <label>Password</label>
@@ -27,5 +27,5 @@
       <a href="login.html"><button>Register</button></a>
     </div>
   </div>
-  </body>
+</body>
 </html>
