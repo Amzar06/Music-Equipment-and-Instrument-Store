@@ -17,8 +17,7 @@
 
       <label>Email Address</label>
       <input type="email" value="john@email.com">
-
-      <label>Phone Number</label>
+          <label>Phone Number</label>
       <input type="text" value="0123456789">
 
       <a href="home.html"><button>Save Changes</button></a>
