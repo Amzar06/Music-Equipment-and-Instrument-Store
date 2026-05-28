@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'database (1).php';
+include '../database.php';
 
 // Mock session for cart logic if not logged in
 if (!isset($_SESSION['cust_id'])) {
@@ -47,23 +47,24 @@ if (isset($conn)) {
 </head>
 <body>
 
-<div style="width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-    <h2 style="margin: 0;">Our Instruments</h2>
-    <a href="cart page.html" style="margin: 0; padding: 10px 20px; background: rgba(255,255,255,0.1); border-radius: 8px;">View Cart</a>
-</div>
+<div style="width: 100%; max-width: 1200px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="margin: 0;">Our Instruments</h2>
+        <a href="cart page.php" style="margin: 0; padding: 10px 20px; background: rgba(255,255,255,0.1); border-radius: 8px;">View Cart</a>
+    </div>
 
-<!-- Category Sort Section -->
-<div style="margin-bottom: 32px; display: flex; align-items: center; gap: 12px; max-width: 1200px; width: 100%;">
-    <label for="categoryFilter" style="font-weight: 600; color: var(--text);">Sort by Category:</label>
-    <select id="categoryFilter" style="padding: 10px 16px; font-size: 1rem; border-radius: 6px; border: 1px solid var(--card-border); background: #f8fafc; color: var(--text-primary); cursor: pointer;" onchange="filterCategory()">
-        <option value="all">All Instruments</option>
-        <?php foreach ($categories as $cat): ?>
-            <option value="<?php echo htmlspecialchars(strtolower($cat['category_name'])); ?>"><?php echo htmlspecialchars($cat['category_name']); ?></option>
-        <?php endforeach; ?>
-    </select>
-</div>
+    <!-- Category Sort Section -->
+    <div style="margin-bottom: 32px; display: flex; align-items: center; gap: 12px;">
+        <label for="categoryFilter" style="font-weight: 600; color: var(--text-primary);">Sort by Category:</label>
+        <select id="categoryFilter" style="padding: 10px 16px; font-size: 1rem; border-radius: 6px; border: 1px solid var(--card-border); background: #f8fafc; color: var(--text-primary); cursor: pointer;" onchange="filterCategory()">
+            <option value="all">All Instruments</option>
+            <?php foreach ($categories as $cat): ?>
+                <option value="<?php echo htmlspecialchars(strtolower($cat['category_name'])); ?>"><?php echo htmlspecialchars($cat['category_name']); ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
 
-<div class="product-grid" id="productGrid">
+    <div class="product-grid" id="productGrid">
     <?php if (empty($products)): ?>
         <div style="text-align: center; color: var(--text-secondary); grid-column: 1 / -1; padding: 48px;">
             <h3>No products found.</h3>
@@ -88,14 +89,14 @@ if (isset($conn)) {
 
                 <div class="product-actions mt-4">
                     <!-- BUY -->
-                    <form action="add_to_cart.html" method="POST" style="margin-bottom: 24px;">
+                    <form action="add_to_cart.php" method="POST" style="margin-bottom: 24px;">
                         <input type="hidden" name="prod_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
                         <button type="submit">Add to Cart</button>
                         <!-- Showing message from GET if added --><?php if (isset($_GET['added']) && $_GET['added'] == $product['prod_id']) echo "<span style='color: var(--success); font-size: 0.8em; display:block; margin-top:4px;'>Added!</span>"; ?>
                     </form>
 
                     <!-- RENT -->
-                    <form action="address page.html" method="GET">
+                    <form action="address page.php" method="GET">
                         <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
                         <input type="hidden" name="type" value="rent">
                         <input type="hidden" name="price" value="<?php echo htmlspecialchars($product['prod_rental_price']); ?>">
@@ -109,6 +110,7 @@ if (isset($conn)) {
             </div>
         <?php endforeach; ?>
     <?php endif; ?>
+    </div>
 </div>
 
 <script>
