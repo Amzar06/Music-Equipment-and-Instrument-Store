@@ -14,8 +14,7 @@
 
       <label>Email Address</label>
       <input type="email" placeholder="Enter your email">
-
-      <a href="login.html"><button>Send Reset Link</button></a>
+    <a href="login.html"><button>Send Reset Link</button></a>
     </div>
   </div>
 </body>
