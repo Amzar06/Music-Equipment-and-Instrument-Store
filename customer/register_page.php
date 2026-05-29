@@ -25,7 +25,7 @@
       <label>Confirm Password</label>
       <input type="password" name="confirm_password" placeholder="Confirm your password">
 
-      <button type="submit">Register</button>
+      <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php"><button>Register</button></a>
 
     </form>
   </div>
