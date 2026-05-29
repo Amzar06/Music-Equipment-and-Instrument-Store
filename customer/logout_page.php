@@ -12,7 +12,7 @@
       <h2>You Have Logged Out</h2>
       <p>Thank you for using the system</p>
 
-      <a href="admin/cust login.php"><button>Login Again</button></a>
+      <a href="/Music-Equipment-and-Instrument-Store/admin/cust login.php"><button>Login Again</button></a>
     </div>
   </div>
 </body>
