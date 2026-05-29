@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>Forgot Password</title>
-  <link rel="stylesheet" href="customer.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="header">ADMIN PORTAL</div>
@@ -11,7 +11,8 @@
     <div class="card">
       <h2>Forgot Password</h2>
       <p>Enter your email to reset password</p>
-   <label>Email Address</label>
+
+      <label>Email Address</label>
       <input type="email" placeholder="Enter your email">
 
       <a href="login.html"><button>Send Reset Link</button></a>
