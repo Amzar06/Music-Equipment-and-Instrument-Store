@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>Logout</title>
-  <link rel="stylesheet" href="customer.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="header">ADMIN PORTAL</div>

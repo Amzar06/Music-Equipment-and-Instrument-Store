@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>Register</title>
-  <link rel="stylesheet" href="customer.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="header">ADMIN PORTAL</div>
@@ -15,11 +15,11 @@
       <label>Full Name</label>
       <input type="text" placeholder="Enter your full name">
 
-            <label>Email Address</label>
+      <label>Email Address</label>
       <input type="email" placeholder="Enter your email">
 
       <label>Password</label>
-      <input type="password" placeholder="Enter your password">
+       <input type="password" placeholder="Enter your password">
 
       <label>Confirm Password</label>
       <input type="password" placeholder="Confirm your password">

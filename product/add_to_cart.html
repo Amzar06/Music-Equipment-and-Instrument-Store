@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'database (1).php';
+include 'database.php';
 
 if (!isset($_SESSION['cust_id'])) {
     $_SESSION['cust_id'] = 1; 
@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prod_id'])) {
     $insert_item->execute();
     $insert_item->close();
     
-    header("Location: product page.php?added=" . urlencode($prod_id));
+    header("Location: product page.html?added=" . urlencode($prod_id));
     exit;
 } else {
     header("Location: product page.html");
