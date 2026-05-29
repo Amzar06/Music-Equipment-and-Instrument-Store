@@ -11,20 +11,24 @@ $orders = [];
 $db_error = null;
 if (isset($conn)) {
     try {
-        // left join addresses only since order_tracking might not exist in the database yet
+        // Fetch only columns that exist in the old 'orders' table schema 
+        // to prevent 'Unknown column' errors if the DB is un-updated.
         $query = $conn->prepare("
-            SELECT o.order_id, o.total_amount, o.status, a.city, a.state, o.order_date
-            FROM orders o 
-            LEFT JOIN addresses a ON o.address_id = a.address_id 
-            WHERE o.cust_id = ?
-            ORDER BY o.order_date DESC
+            SELECT order_id, total_amount, status, order_date
+            FROM orders 
+            WHERE cust_id = ?
+            ORDER BY order_date DESC
         ");
         if ($query) {
             $query->bind_param("i", $cust_id);
             if ($query->execute()) {
                 $result = $query->get_result();
                 while($row = $result->fetch_assoc()) {
-                    $row['tracking_number'] = null; // Set missing tracking number to null so HTML renders gracefully
+                    // Set default nulls for missing columns so HTML gracefully falls back
+                    $row['city'] = null;
+                    $row['state'] = null;
+                    $row['tracking_number'] = null; 
+                    
                     $orders[] = $row;
                 }
             } else {
