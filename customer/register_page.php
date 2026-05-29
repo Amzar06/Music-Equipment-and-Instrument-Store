@@ -27,7 +27,7 @@
 
       <input type="password" placeholder="Confirm your password">
 
-      <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php"><button>Register</button></a>
+      <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php">Register</a>
     </div>
   </div>
 
