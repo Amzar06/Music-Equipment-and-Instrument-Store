@@ -5,16 +5,15 @@
   <link rel="stylesheet" href="customer.css">
 </head>
 <body>
-  <div class="header">ADMIN PORTAL</div>
 
   <div class="container">
     <div class="card">
       <h2>Welcome User</h2>
       <p>Select an option below</p>
-    <a href="edit-profile.html"><button>Edit Profile</button></a><br><br>
-      <a href="change-password.html"><button>Change Password</button></a><br><br>
-      <a href="product-details.html"><button>View Products</button></a><br><br>
-      <a href="logout.html"><button>Logout</button></a>
+    <a href="edit-profile_page.php"><button>Edit Profile</button></a><br><br>
+      <a href="change-password.php"><button>Change Password</button></a><br><br>
+      <a href="product-details.php"><button>View Products</button></a><br><br>
+      <button type="logout_page.php">Register</button>
     </div>
   </div>
 </body>
