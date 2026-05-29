@@ -13,7 +13,7 @@
     <a href="edit_profile_page.php"><button>Edit Profile</button></a><br><br>
       <a href="change_password.php"><button>Change Password</button></a><br><br>
       <a href="product_details.php"><button>View Products</button></a><br><br>
-       <a href="logout.html"><button>Logout</button></a>
+       <a href="logout.php">Logout<</a>
     </div>
   </div>
 </body>
