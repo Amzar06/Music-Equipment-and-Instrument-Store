@@ -52,7 +52,7 @@ if (isset($conn)) {
         <p style="color: #333; font-size: 14px; margin-top: 12px; font-weight: 500;">DuitNow / Touch 'n Go</p>
     </div>
 
-    <form action="payment page.php" method="POST">
+    <form action="payment page.php" method="POST" enctype="multipart/form-data">
         <!-- Receipt Upload -->
         <div style="text-align: left; margin-bottom: 24px;">
             <label style="display: block; margin-bottom: 8px; font-weight: 500;">Upload Payment Receipt *</label>
