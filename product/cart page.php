@@ -7,6 +7,24 @@ if (!isset($_SESSION['cust_id'])) {
 }
 $cust_id = $_SESSION['cust_id'];
 
+if (isset($_GET['remove_id'])) {
+    $remove_id = intval($_GET['remove_id']);
+    if (isset($conn) && !$conn->connect_error) {
+        $del_query = $conn->prepare("
+            DELETE ci FROM cart_items ci
+            JOIN cart c ON ci.cart_id = c.id
+            WHERE ci.id = ? AND c.user_id = ?
+        ");
+        if ($del_query) {
+            $del_query->bind_param("ii", $remove_id, $cust_id);
+            $del_query->execute();
+            $del_query->close();
+        }
+        header("Location: cart page.php");
+        exit();
+    }
+}
+
 $cart_items = [];
 $total_price = 0.00;
 $db_error = null;
@@ -71,7 +89,11 @@ if (!isset($conn) || $conn->connect_error) {
                         <strong><?php echo htmlspecialchars($item['prod_name']); ?></strong> <br> 
                         <span style='font-size:0.9em;color:var(--text-secondary);'>(Buy)</span>
                     </div>
-                    <div class='cart-item-price'>RM <?php echo number_format($item['prod_sale_price'] ?? 0, 2); ?></div>
+                    <div class='cart-item-price'>
+                        RM <?php echo number_format($item['prod_sale_price'] ?? 0, 2); ?>
+                        <br>
+                        <a href="?remove_id=<?php echo $item['id']; ?>" style="color: #fca5a5; font-size: 0.85em; text-decoration: none;">Cancel</a>
+                    </div>
                 </div>
             <?php endforeach; ?>
         <?php endif; ?>
