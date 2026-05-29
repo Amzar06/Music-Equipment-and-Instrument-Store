@@ -15,7 +15,7 @@
       <a href="change_password.php"><button>Change Password</button></a><br><br>
       <a href="product_details.php"><button>View Products</button></a><br><br>
       <div class="text-center mt-4" style="font-size: 14px;">
-       <a href="logout.php">Logout</a>
+      <a href="product_details.php"><button>View Products</button></a><br><br>
     </div>
   </div>
 </body>
