@@ -8,10 +8,21 @@ if (!isset($_SESSION['cust_id'])) {
 $cust_id = $_SESSION['cust_id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prod_id'])) {
-    $prod_id = $_POST['prod_id'];
+    $prod_id = intval($_POST['prod_id']);
+    
+    // Check if connection exists
+    if (!isset($conn) || $conn->connect_error) {
+        header("Location: product page.php?error=db");
+        exit;
+    }
     
     // Check if cart exists for user
     $cart_query = $conn->prepare("SELECT cart_id FROM cart WHERE cust_id = ?");
+    if (!$cart_query) {
+        header("Location: product page.php?error=query");
+        exit;
+    }
+    
     $cart_query->bind_param("i", $cust_id);
     $cart_query->execute();
     $result = $cart_query->get_result();
@@ -22,6 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prod_id'])) {
     } else {
         // Create new cart
         $create_cart = $conn->prepare("INSERT INTO cart (cust_id) VALUES (?)");
+        if (!$create_cart) {
+            header("Location: product page.php?error=create");
+            exit;
+        }
         $create_cart->bind_param("i", $cust_id);
         $create_cart->execute();
         $cart_id = $create_cart->insert_id;
@@ -31,6 +46,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prod_id'])) {
     
     // Insert item into cart_items
     $insert_item = $conn->prepare("INSERT INTO cart_items (cart_id, prod_id) VALUES (?, ?)");
+    if (!$insert_item) {
+        header("Location: product page.php?error=insert");
+        exit;
+    }
     $insert_item->bind_param("ii", $cart_id, $prod_id);
     $insert_item->execute();
     $insert_item->close();

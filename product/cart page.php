@@ -9,8 +9,11 @@ $cust_id = $_SESSION['cust_id'];
 
 $cart_items = [];
 $total_price = 0.00;
+$db_error = null;
 
-if (isset($conn)) {
+if (!isset($conn) || $conn->connect_error) {
+    $db_error = "Database connection failed";
+} else {
     $query = $conn->prepare("
         SELECT ci.cart_item_id, p.prod_name, p.prod_sale_price 
         FROM cart_items ci
@@ -18,14 +21,19 @@ if (isset($conn)) {
         JOIN products p ON ci.prod_id = p.prod_id
         WHERE c.cust_id = ?
     ");
-    if ($query) {
+    if (!$query) {
+        $db_error = "Query preparation failed: " . $conn->error;
+    } else {
         $query->bind_param("i", $cust_id);
-        $query->execute();
-        $result = $query->get_result();
-        while($row = $result->fetch_assoc()) {
-            $cart_items[] = $row;
-            if (isset($row['prod_sale_price'])) {
-                $total_price += $row['prod_sale_price'];
+        if (!$query->execute()) {
+            $db_error = "Query execution failed: " . $query->error;
+        } else {
+            $result = $query->get_result();
+            while($row = $result->fetch_assoc()) {
+                $cart_items[] = $row;
+                if (isset($row['prod_sale_price'])) {
+                    $total_price += $row['prod_sale_price'];
+                }
             }
         }
         $query->close();
@@ -43,6 +51,12 @@ if (isset($conn)) {
 
 <div class="container">
     <h2>Your Cart</h2>
+
+    <?php if ($db_error): ?>
+        <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <strong>Error:</strong> <?php echo htmlspecialchars($db_error); ?>
+        </div>
+    <?php endif; ?>
 
     <div class="cart-list">
         <?php if (empty($cart_items)): ?>
