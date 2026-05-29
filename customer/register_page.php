@@ -1,61 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Customer Register</title>
+  <title>Register</title>
   <link rel="stylesheet" href="customer.css">
 </head>
-
 <body>
 
-  <div class="header">ADMIN PORTAL</div>
+<div class="container">
+  <div class="card">
+    <h2>Create Account</h2>
+    <p>Register a new account</p>
 
-  <div class="container">
+    <form action="login.php" method="post">
 
-    <div class="card">
+      <label>Full Name</label>
+      <input type="text" name="fullname" placeholder="Enter your full name">
 
-      <h2>Create Account</h2>
-      <p>Register a new customer account</p>
+      <label>Email Address</label>
+      <input type="email" name="email" placeholder="Enter your email">
 
-      <form action="cust login.php" method="POST">
+      <label>Password</label>
+      <input type="password" name="password" placeholder="Enter your password">
 
-        <label>Full Name</label>
-        <input type="text" 
-               name="fullname"
-               placeholder="Enter your full name" 
-               required>
+      <label>Confirm Password</label>
+      <input type="password" name="confirm_password" placeholder="Confirm your password">
 
-        <label>Email Address</label>
-        <input type="email" 
-               name="email"
-               placeholder="Enter your email" 
-               required>
+      <button type="submit">Register</button>
 
-        <label>Password</label>
-        <input type="password" 
-               name="password"
-               placeholder="Enter your password" 
-               required>
-
-        <label>Confirm Password</label>
-        <input type="password" 
-               name="confirm_password"
-               placeholder="Confirm your password" 
-               required>
-
-        <button type="submit">Register</button>
-
-      </form>
-
-      <br>
-
-      <p>
-        Already have an account?
-        <a href="cust login.php">Login</a>
-      </p>
-
-    </div>
-
+    </form>
   </div>
+</div>
 
 </body>
 </html>
