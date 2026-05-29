@@ -1,5 +1,6 @@
 <?php
-include 'database.php';
+session_start();
+include '../database.php';
 
 $tracking_number = isset($_GET['tracking']) ? trim($_GET['tracking']) : '';
 $tracking_data = null;

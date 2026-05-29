@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'database.php';
+include '../database.php';
 
 if (!isset($_SESSION['cust_id'])) {
     $_SESSION['cust_id'] = 1; 
