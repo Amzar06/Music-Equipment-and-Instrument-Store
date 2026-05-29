@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>Product Details</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="customer.css">
 </head>
 <body>
   <div class="header">ADMIN PORTAL</div>
