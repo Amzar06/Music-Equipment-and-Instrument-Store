@@ -68,10 +68,10 @@ if (isset($conn)) {
     </div>
 
     <div style="display: flex; gap: 16px; margin-top: 32px;">
-        <a href="product page.html" style="flex: 1; text-align: center; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 0;">Back to Shop</a>
+        <a href="product page.php" style="flex: 1; text-align: center; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 0;">Back to Shop</a>
         
         <?php if (!empty($cart_items)): ?>
-            <a href="address page.html" style="flex: 1; text-align: center; padding: 12px; background: var(--accent); color: white; border-radius: 8px; margin: 0;">Proceed to Checkout</a>
+            <a href="address page.php" style="flex: 1; text-align: center; padding: 12px; background: var(--accent); color: white; border-radius: 8px; margin: 0;">Proceed to Checkout</a>
         <?php else: ?>
             <span style="flex: 1; text-align: center; padding: 12px; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); border-radius: 8px; margin: 0; cursor: not-allowed;">Proceed to Checkout</span>
         <?php endif; ?>

@@ -35,10 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prod_id'])) {
     $insert_item->execute();
     $insert_item->close();
     
-    header("Location: product page.html?added=" . urlencode($prod_id));
+    header("Location: product page.php?added=" . urlencode($prod_id));
     exit;
 } else {
-    header("Location: product page.html");
+    header("Location: product page.php");
     exit;
 }
 ?>

@@ -69,7 +69,7 @@ if (isset($conn)) {
                     <td style="font-weight: 600; color: var(--success);">RM <?php echo number_format($order['total_amount'] ?? 0, 2); ?></td>
                     <td>
                         <?php if ($order['tracking_number']): ?>
-                            <a href="track order.html?tracking=<?php echo urlencode($order['tracking_number']); ?>" style="margin-top: 0; font-weight: 600; text-decoration: underline; color: var(--accent);"><?php echo htmlspecialchars($order['tracking_number']); ?></a>
+                            <a href="track order.php?tracking=<?php echo urlencode($order['tracking_number']); ?>" style="margin-top: 0; font-weight: 600; text-decoration: underline; color: var(--accent);"><?php echo htmlspecialchars($order['tracking_number']); ?></a>
                         <?php else: ?>
                             <span style="color: var(--text-secondary);"><?php echo htmlspecialchars($order['status']); ?>...</span>
                         <?php endif; ?>
@@ -81,8 +81,8 @@ if (isset($conn)) {
     </table>
 
     <div style="display: flex; gap: 16px; justify-content: center; margin-top: 32px;">
-        <a href="product page.html" style="padding: 12px 24px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 0;">Continue Shopping</a>
-        <a href="track order.html" style="padding: 12px 24px; background: var(--accent); color: white; border-radius: 8px; margin: 0;">Track Order</a>
+        <a href="product page.php" style="padding: 12px 24px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 0;">Continue Shopping</a>
+        <a href="track order.php" style="padding: 12px 24px; background: var(--accent); color: white; border-radius: 8px; margin: 0;">Track Order</a>
     </div>
 </div>
 

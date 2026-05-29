@@ -43,7 +43,7 @@ if (isset($conn)) {
     <h2>Receipt Submitted!</h2>
     <p style="font-size: 1.25rem; font-weight: 600; margin-bottom: 8px; color: var(--text);">Total Paid: RM <?php echo number_format($total_price, 2); ?></p>
     <p class="mb-4">Your payment receipt has been received and will be verified by an admin shortly.<br>Once verified, your order will be processed for delivery.</p>
-    <a href="payment history.html" style="padding: 12px 24px; background: var(--accent); color: white; border-radius: 8px; display: inline-block;">View Order History</a>
+    <a href="payment history.php" style="padding: 12px 24px; background: var(--accent); color: white; border-radius: 8px; display: inline-block;">View Order History</a>
 </div>
 
 </body>
