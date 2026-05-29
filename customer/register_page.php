@@ -1,60 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Customer Register</title>
+  <title>Register</title>
   <link rel="stylesheet" href="customer.css">
 </head>
-
 <body>
 
-  <div class="header">ADMIN PORTAL</div>
-
   <div class="container">
-
     <div class="card">
-
       <h2>Create Account</h2>
-      <p>Register a new customer account</p>
+      <p>Register a new account</p>
 
-      <form action="cust login.php" method="POST">
+      <label>Full Name</label>
 
-        <label>Full Name</label>
-        <input type="text" 
-               name="fullname"
-               placeholder="Enter your full name" 
-               required>
+      <input type="text" placeholder="Enter your full name">
 
-        <label>Email Address</label>
-        <input type="email" 
-               name="email"
-               placeholder="Enter your email" 
-               required>
+      <label>Email Address</label>
 
-        <label>Password</label>
-        <input type="password" 
-               name="password"
-               placeholder="Enter your password" 
-               required>
+      <input type="email" placeholder="Enter your email">
 
-        <label>Confirm Password</label>
-        <input type="password" 
-               name="confirm_password"
-               placeholder="Confirm your password" 
-               required>
+      <label>Password</label>
 
-        <button type="submit">Register</button>
+      <input type="password" placeholder="Enter your password">
 
-      </form>
+      <label>Confirm Password</label>
 
-      <br>
+      <input type="password" placeholder="Confirm your password">
 
-      <p>
-        Already have an account?
-        <a href="cust login.php">Login</a>
-      </p>
-
+      <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php"><button>Register</button></a>
     </div>
-
   </div>
 
 </body>
