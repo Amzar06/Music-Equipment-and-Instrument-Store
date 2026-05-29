@@ -14,7 +14,7 @@ require_once('admin_header.php');
 $sales_query = mysqli_query($conn, "SELECT SUM(total_amount) as revenue FROM orders WHERE status='completed'");
 $sales_total = ($sales_query && mysqli_num_rows($sales_query) > 0) ? (float)mysqli_fetch_assoc($sales_query)['revenue'] : 0.00;
 
-$rental_query = mysqli_query($conn, "SELECT SUM(total_price) as revenue FROM rentals WHERE status='returned'");
+$rental_query = mysqli_query($conn, "SELECT SUM(total_amount) as revenue FROM rentals WHERE status='returned'");
 $rental_total = ($rental_query && mysqli_num_rows($rental_query) > 0) ? (float)mysqli_fetch_assoc($rental_query)['revenue'] : 0.00;
 ?>
 
