@@ -13,7 +13,7 @@
     
     <div id="rentSummary" style="margin-bottom: 24px; padding: 16px; background: #f8fafc; border: 1px solid var(--card-border); border-radius: 8px; display: none; text-align: center;"></div>
     
-    <form action="qr payment.html" method="GET" id="addressForm">
+    <form action="qr payment.php" method="GET" id="addressForm">
         <div>
             <input type="text" name="street" placeholder="Street Address" required>
         </div>
@@ -30,7 +30,7 @@
         </div>
         
         <div style="display: flex; gap: 16px; margin-top: 16px;">
-            <a href="cart page.html" style="flex: 1; text-align: center; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 0;">Back to Cart</a>
+            <a href="cart page.php" style="flex: 1; text-align: center; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 0;">Back to Cart</a>
             <button type="submit" style="flex: 1; margin-top: 0;">Continue to Payment</button>
         </div>
     </form>

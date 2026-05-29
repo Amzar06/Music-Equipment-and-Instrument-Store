@@ -14,7 +14,7 @@
     <h2>Welcome Back</h2>
     <p class="text-center mb-4">Log in to your account</p>
 
-    <form action="product page.html" method="POST">
+    <form action="product page.php" method="POST">
         <div>
             <input type="email" name="email" placeholder="Enter Email" required>
         </div>

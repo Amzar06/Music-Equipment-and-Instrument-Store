@@ -38,7 +38,7 @@ if ($tracking_number) {
 <div class="container text-center" style="max-width: 600px;">
     <h2>Track Your Order</h2>
     
-    <form action="track order.html" method="GET" style="margin-bottom: 32px; flex-direction: row; gap: 12px; margin-top: 0;">
+    <form action="track order.php" method="GET" style="margin-bottom: 32px; flex-direction: row; gap: 12px; margin-top: 0;">
         <input type="text" name="tracking" placeholder="Enter Tracking Number" value="<?php echo htmlspecialchars($tracking_number ? $tracking_number : 'TRK-992384A'); ?>" required style="flex: 1;">
         <button type="submit" style="width: auto; padding: 12px 24px; flex-shrink: 0; margin-top: 0;">Track</button>
     </form>
@@ -84,8 +84,8 @@ if ($tracking_number) {
     <?php endif; ?>
 
     <div style="display: flex; gap: 16px; justify-content: center;">
-        <a href="payment history.html" style="padding: 12px 24px; background: #f8fafc; border: 1px solid var(--card-border); border-radius: 8px; display: inline-block;">Back to Order History</a>
-        <a href="product page.html" style="padding: 12px 24px; background: var(--accent); color: white; border-radius: 8px; display: inline-block; margin-top: 0;">Continue Shopping</a>
+        <a href="payment history.php" style="padding: 12px 24px; background: #f8fafc; border: 1px solid var(--card-border); border-radius: 8px; display: inline-block;">Back to Order History</a>
+        <a href="product page.php" style="padding: 12px 24px; background: var(--accent); color: white; border-radius: 8px; display: inline-block; margin-top: 0;">Continue Shopping</a>
     </div>
 </div>
 

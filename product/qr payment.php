@@ -52,7 +52,7 @@ if (isset($conn)) {
         <p style="color: #333; font-size: 14px; margin-top: 12px; font-weight: 500;">DuitNow / Touch 'n Go</p>
     </div>
 
-    <form action="payment page.html" method="POST">
+    <form action="payment page.php" method="POST">
         <!-- Receipt Upload -->
         <div style="text-align: left; margin-bottom: 24px;">
             <label style="display: block; margin-bottom: 8px; font-weight: 500;">Upload Payment Receipt *</label>
@@ -60,7 +60,7 @@ if (isset($conn)) {
         </div>
 
         <div style="display: flex; gap: 16px; margin-top: 16px;">
-            <a href="address page.html" style="flex: 1; text-align: center; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 0; display: inline-block;">Back</a>
+            <a href="address page.php" style="flex: 1; text-align: center; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 0; display: inline-block;">Back</a>
             <button type="submit" style="flex: 1; margin: 0;">Submit Receipt</button>
         </div>
     </form>
