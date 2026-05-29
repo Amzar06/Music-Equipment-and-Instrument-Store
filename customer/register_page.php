@@ -5,7 +5,6 @@
   <link rel="stylesheet" href="customer.css">
 </head>
 <body>
-  <div class="header">ADMIN PORTAL</div>
 
   <div class="container">
     <div class="card">
@@ -24,7 +23,7 @@
       <label>Confirm Password</label>
       <input type="password" placeholder="Confirm your password">
 
-      <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php"><button>Register</button></a>
+ <a href="login.html"><button>Register</button></a>
     </div>
   </div>
 </body>
