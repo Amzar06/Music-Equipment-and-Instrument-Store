@@ -1,31 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Register</title>
-  <link rel="stylesheet" href="customer.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Customer Register</title>
+
+    <link rel="stylesheet" href="customer.css">
+
+    <style>
+        body{
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+            background:#f3f3f3;
+        }
+    </style>
 </head>
+
 <body>
-  <div class="header">ADMIN PORTAL</div>
 
-  <div class="container">
-    <div class="card">
-      <h2>Create Account</h2>
-      <p>Register a new account</p>
+<div class="container login-container">
 
-      <label>Full Name</label>
-      <input type="text" placeholder="Enter your full name">
+    <h2>Create Account</h2>
+    <p class="text-center mb-4">Register a new customer account</p>
 
-      <label>Email Address</label>
-      <input type="email" placeholder="Enter your email">
+    <form action="cust login.php" method="POST">
 
-      <label>Password</label>
-       <input type="password" placeholder="Enter your password">
+        <div>
+            <input type="text" 
+                   name="fullname" 
+                   placeholder="Enter Full Name" 
+                   required>
+        </div>
 
-      <label>Confirm Password</label>
-      <input type="password" placeholder="Confirm your password">
+        <div>
+            <input type="email" 
+                   name="email" 
+                   placeholder="Enter Email" 
+                   required>
+        </div>
 
-      <a href="login.html"><button>Register</button></a>
+        <div>
+            <input type="password" 
+                   name="password" 
+                   placeholder="Enter Password" 
+                   required>
+        </div>
+
+        <div>
+            <input type="password" 
+                   name="confirm_password" 
+                   placeholder="Confirm Password" 
+                   required>
+        </div>
+
+        <button type="submit">Register</button>
+
+    </form>
+
+    <div class="text-center mt-4" style="font-size:14px; margin-top:20px;">
+
+        Already have an account?
+        <a href="cust login.php">Login</a>
+
     </div>
-  </div>
+
+</div>
+
 </body>
 </html>
