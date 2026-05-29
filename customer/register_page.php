@@ -10,7 +10,7 @@
     <div class="card">
       <h2>Create Account</h2>
       <p>Register a new account</p>
-      
+
       <label>Full Name</label>
       <input type="text" placeholder="Enter your full name">
 
@@ -23,8 +23,9 @@
       <label>Confirm Password</label>
       <input type="password" placeholder="Confirm your password">
 
- <a href="login.html"><button>Register</button></a>
+      <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php"><button>Register</button></a>
     </div>
   </div>
+
 </body>
 </html>
