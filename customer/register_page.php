@@ -17,7 +17,7 @@
 
       <label>Email Address</label>
       <input type="email" placeholder="Enter your email">
-  <label>Password</label>
+      <label>Password</label>
       <input type="password" placeholder="Enter your password">
 
       <label>Confirm Password</label>
