@@ -1,4 +1,4 @@
-<?php
+<?php 
 session_start();
 if (!isset($_SESSION['staff_id'])) {
     header("Location: admin_login.php");
@@ -6,12 +6,22 @@ if (!isset($_SESSION['staff_id'])) {
 }
 require_once('../database.php');
 
-// Fetching all counts
+$page_title = "Dashboard";
+$active = "dashboard";
+
+// ==========================================
+// 1. FETCHING METRICS (Including the missing active/pending lines)
+// ==========================================
 $total_products  = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM products"))['total'];
 $total_orders    = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM orders"))['total'];
+$pending_orders  = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM orders WHERE status = 'Pending'"))['total'];
 $total_rentals   = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM rentals"))['total'];
+$active_rentals  = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM rentals WHERE status = 'Active'"))['total'];
 $total_customers = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM customers"))['total'];
 
+// ==========================================
+// 2. FETCHING RECENT ACTIVITY 
+// ==========================================
 // Fetching 5 most recent orders
 $recent_orders = mysqli_query($conn, "
     SELECT o.order_id, c.cust_name, o.total_amount, o.status 
@@ -19,90 +29,120 @@ $recent_orders = mysqli_query($conn, "
     JOIN customers c ON o.cust_id = c.cust_id 
     ORDER BY o.order_date DESC LIMIT 5
 ");
+
+// Fetching 5 most recent rentals (This was missing)
+$recent_rentals = mysqli_query($conn, "
+    SELECT r.rental_id, c.cust_name, r.end_date, r.status 
+    FROM rentals r 
+    JOIN customers c ON r.cust_id = c.cust_id 
+    ORDER BY r.created_at DESC LIMIT 5
+");
+
+// Load the layout frame
+require_once('admin_header.php');
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Admin Dashboard | Music Store</title>
-    <link rel="stylesheet" href="admin.css">
-</head>
-<body>
-
-<aside class="sidebar">
-    <h2>Music Store Admin</h2>
-    <ul class="nav-links">
-        <li><a href="admin_dashboard.php" class="active">Dashboard</a></li>
-        <li><a href="admin_products.php">Inventory</a></li>
-        <li><a href="admin_order_list.php">Orders</a></li>
-        <li><a href="admin_rental_list.php">Rentals</a></li>
-        <li><a href="manage_customer.php">Customers</a></li>
-        <li><a href="admin_report.php">Reports</a></li>
-    </ul>
-    <div style="margin-top: auto;">
-        <a href="admin_logout.php" style="color: #ef4444; text-decoration: none; font-size: 0.9rem;">Logout</a>
+<div class="stats-grid">
+    <div class="stat-card">
+        <span>Total Products</span>
+        <h3><?php echo $total_products; ?></h3>
     </div>
-</aside>
-
-<div class="main-content">
-    <header>
-        <div class="welcome-msg">
-            <h1>Dashboard Overview</h1>
-            <p style="color: #6b7280;"><?php echo date('l, d F Y'); ?></p>
-        </div>
-        <div class="admin-profile">
-            <span style="font-weight: 600;"><?php echo $_SESSION['staff_name']; ?></span>
-        </div>
-    </header>
-
-    <div class="stats-grid">
-        <div class="stat-card">
-            <span>Total Products</span>
-            <h3><?php echo $total_products; ?></h3>
-        </div>
-        <div class="stat-card">
-            <span>Total Orders</span>
-            <h3><?php echo $total_orders; ?></h3>
-        </div>
-        <div class="stat-card">
-            <span>Active Rentals</span>
-            <h3><?php echo $total_rentals; ?></h3>
-        </div>
-        <div class="stat-card">
-            <span>Customers</span>
-            <h3><?php echo $total_customers; ?></h3>
+    <div class="stat-card">
+        <span>Total Orders</span>
+        <h3><?php echo $total_orders; ?></h3>
+        <div style="font-size: 0.85rem; color: #ef4444; font-weight: 500; margin-top: 4px;">
+            <?php echo $pending_orders; ?> pending processing
         </div>
     </div>
+    <div class="stat-card">
+        <span>Lifetime Rentals</span>
+        <h3><?php echo $total_rentals; ?></h3>
+        <div style="font-size: 0.85rem; color: #f59e0b; font-weight: 500; margin-top: 4px;">
+            <?php echo $active_rentals; ?> currently active
+        </div>
+    </div>
+    <div class="stat-card">
+        <span>Customers</span>
+        <h3><?php echo $total_customers; ?></h3>
+    </div>
+</div>
 
-    <div class="table-container">
-        <h3 style="margin-bottom: 20px;">Recent Sales Orders</h3>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    
+    <div class="table-container" style="margin-top: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin-bottom: 0;">Recent Sales Orders</h3>
+            <a href="admin_order_list.php" style="font-size: 0.85rem; color: var(--accent-color); text-decoration: none; font-weight: 600;">View All</a>
+        </div>
         <table>
             <thead>
                 <tr>
                     <th>Order ID</th>
-                    <th>Customer Name</th>
-                    <th>Total Amount</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
                     <th>Status</th>
                 </tr>
             </thead>
             <tbody>
-                <?php while($order = mysqli_fetch_assoc($recent_orders)): ?>
-                <tr>
-                    <td>#<?php echo $order['order_id']; ?></td>
-                    <td><?php echo $order['cust_name']; ?></td>
-                    <td>RM <?php echo number_format($order['total_amount'], 2); ?></td>
-                    <td>
-                        <span class="status-pill <?php echo strtolower($order['status']); ?>">
-                            <?php echo $order['status']; ?>
-                        </span>
-                    </td>
-                </tr>
-                <?php endwhile; ?>
+                <?php if (mysqli_num_rows($recent_orders) > 0): ?>
+                    <?php while($order = mysqli_fetch_assoc($recent_orders)): ?>
+                    <tr>
+                        <td>#<?php echo $order['order_id']; ?></td>
+                        <td style="font-weight: 500;"><?php echo $order['cust_name']; ?></td>
+                        <td>RM <?php echo number_format($order['total_amount'], 2); ?></td>
+                        <td>
+                            <span class="status-pill <?php echo strtolower($order['status']); ?>">
+                                <?php echo $order['status']; ?>
+                            </span>
+                        </td>
+                    </tr>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 20px; color: #9ca3af;">No orders found.</td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
+
+    <div class="table-container" style="margin-top: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin-bottom: 0;">Recent Rentals</h3>
+            <a href="admin_rental_list.php" style="font-size: 0.85rem; color: var(--accent-color); text-decoration: none; font-weight: 600;">View All</a>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Rental ID</th>
+                    <th>Customer</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (mysqli_num_rows($recent_rentals) > 0): ?>
+                    <?php while($rental = mysqli_fetch_assoc($recent_rentals)): ?>
+                    <tr>
+                        <td>#<?php echo $rental['rental_id']; ?></td>
+                        <td style="font-weight: 500;"><?php echo $rental['cust_name']; ?></td>
+                        <td><?php echo date('d M Y', strtotime($rental['end_date'])); ?></td>
+                        <td>
+                            <span class="status-pill <?php echo strtolower($rental['status']); ?>">
+                                <?php echo $rental['status']; ?>
+                            </span>
+                        </td>
+                    </tr>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 20px; color: #9ca3af;">No rentals found.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+
 </div>
 
-</body>
-</html>
+<?php require_once('admin_footer.php'); ?> 
