@@ -30,7 +30,7 @@
         </div>
         
         <div style="display: flex; gap: 16px; margin-top: 16px;">
-            <a href="cart page.php" style="flex: 1; text-align: center; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 0;">Back to Cart</a>
+            <a href="product page.php" style="flex: 1; text-align: center; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 0;">Back to Product</a>
             <button type="submit" style="flex: 1; margin-top: 0;">Continue to Payment</button>
         </div>
     </form>
