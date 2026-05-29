@@ -26,6 +26,18 @@ if (isset($conn)) {
             }
         }
         $query->close();
+        
+        // After calculating the total, empty the user's cart so checkout is complete
+        $del_query = $conn->prepare("
+            DELETE ci FROM cart_items ci
+            JOIN cart c ON ci.cart_id = c.id
+            WHERE c.user_id = ?
+        ");
+        if ($del_query) {
+            $del_query->bind_param("i", $cust_id);
+            $del_query->execute();
+            $del_query->close();
+        }
     }
 }
 ?>
