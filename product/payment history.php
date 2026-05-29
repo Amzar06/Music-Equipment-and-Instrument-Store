@@ -10,28 +10,32 @@ $cust_id = $_SESSION['cust_id'];
 $orders = [];
 $db_error = null;
 if (isset($conn)) {
-    // left join addresses and order_tracking
-    $query = $conn->prepare("
-        SELECT o.order_id, o.total_amount, o.status, a.city, a.state, o.order_date, ot.tracking_number 
-        FROM orders o 
-        LEFT JOIN addresses a ON o.address_id = a.address_id 
-        LEFT JOIN order_tracking ot ON o.order_id = ot.order_id
-        WHERE o.cust_id = ?
-        ORDER BY o.order_date DESC
-    ");
-    if ($query) {
-        $query->bind_param("i", $cust_id);
-        if ($query->execute()) {
-            $result = $query->get_result();
-            while($row = $result->fetch_assoc()) {
-                $orders[] = $row;
+    try {
+        // left join addresses only since order_tracking might not exist in the database yet
+        $query = $conn->prepare("
+            SELECT o.order_id, o.total_amount, o.status, a.city, a.state, o.order_date
+            FROM orders o 
+            LEFT JOIN addresses a ON o.address_id = a.address_id 
+            WHERE o.cust_id = ?
+            ORDER BY o.order_date DESC
+        ");
+        if ($query) {
+            $query->bind_param("i", $cust_id);
+            if ($query->execute()) {
+                $result = $query->get_result();
+                while($row = $result->fetch_assoc()) {
+                    $row['tracking_number'] = null; // Set missing tracking number to null so HTML renders gracefully
+                    $orders[] = $row;
+                }
+            } else {
+                $db_error = "Execution failed: " . $query->error;
             }
+            $query->close();
         } else {
-            $db_error = "Execution failed: " . $query->error;
+            $db_error = "Preparation failed: " . $conn->error;
         }
-        $query->close();
-    } else {
-        $db_error = "Preparation failed: " . $conn->error;
+    } catch (mysqli_sql_exception $e) {
+        $db_error = "Database Error: " . $e->getMessage();
     }
 } else {
     $db_error = "Database connection not established.";
