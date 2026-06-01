@@ -29,7 +29,7 @@
 
     /* Subtle hover effect */
     .btn-link:hover {
-      background-color: #154fc2b6;
+      background-color: #08193d;
     }
   </style>
 </head>
