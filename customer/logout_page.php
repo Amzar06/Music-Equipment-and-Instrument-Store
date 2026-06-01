@@ -5,7 +5,7 @@
   <link rel="stylesheet" href="customer.css">
 </head>
 <body>
-  <div class="header">ADMIN PORTAL</div>
+  <div>
 
   <div class="container">
     <div class="card">
