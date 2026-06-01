@@ -5,7 +5,6 @@
   <link rel="stylesheet" href="customer.css">
 </head>
 <body>
-  <div class="header">ADMIN PORTAL</div>
 
   <div class="container">
     <div class="card">
@@ -21,7 +20,7 @@
       <label>Confirm New Password</label>
       <input type="password" placeholder="Confirm new password">
 
-      <a href="home.html"><button>Update Password</button></a>
+      <a href="home_page.php"><button>Update Password</button></a>
     </div>
   </div>
 </body>
