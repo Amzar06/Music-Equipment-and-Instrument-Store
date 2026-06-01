@@ -5,7 +5,6 @@
   <link rel="stylesheet" href="customer.css">
 </head>
 <body>
-  <div class="header">ADMIN PORTAL</div>
 
   <div class="container">
     <div class="card">
@@ -13,10 +12,10 @@
       <p>Update your profile information</p>
 
       <label>Full Name</label>
-      <input type="text" value="John Doe">
+      <input type="text" value="Name">style="color: #b0b2b6be;
 
       <label>Email Address</label>
-      <input type="email" value="john@email.com">
+      <input type="email" value="@email.com">
       <label>Phone Number</label>
       <input type="text" value="0123456789">
 
