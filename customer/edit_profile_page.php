@@ -16,6 +16,7 @@
 
       <label>Email Address</label>
       <input type="email" placeholder="john@gmail.com"> style="color: #919294ab;">
+      
       <label>Phone Number</label>
       <input type="text" placeholder="0123456789"> style="color: #919294ab;">
 
