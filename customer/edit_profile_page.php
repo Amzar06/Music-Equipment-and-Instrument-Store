@@ -12,7 +12,7 @@
       <p>Update your profile information</p>
 
       <label>Full Name</label>
-      <input type="text" value="Name">style="color: #b0b2b6be;
+      <input type="text" value="John Doe" style="color: #dbe8ffc4;">
 
       <label>Email Address</label>
       <input type="email" value="@email.com">
