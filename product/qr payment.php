@@ -8,24 +8,29 @@ if (!isset($_SESSION['cust_id'])) {
 $cust_id = $_SESSION['cust_id'];
 
 $total_price = 0.00;
-if (isset($conn)) {
-    $query = $conn->prepare("
-        SELECT p.prod_sale_price 
-        FROM cart_items ci
-        JOIN cart c ON ci.cart_id = c.cart_id
-        JOIN products p ON ci.prod_id = p.prod_id
-        WHERE c.cust_id = ?
-    ");
-    if ($query) {
-        $query->bind_param("i", $cust_id);
-        $query->execute();
-        $result = $query->get_result();
-        while($row = $result->fetch_assoc()) {
-            if (isset($row['prod_sale_price'])) {
-                $total_price += $row['prod_sale_price'];
+
+if (isset($_GET['amount'])) {
+    $total_price = floatval($_GET['amount']);
+} else {
+    if (isset($conn)) {
+        $query = $conn->prepare("
+            SELECT p.prod_sale_price 
+            FROM cart_items ci
+            JOIN cart c ON ci.cart_id = c.id
+            JOIN products p ON ci.instrument_id = p.prod_id
+            WHERE c.user_id = ?
+        ");
+        if ($query) {
+            $query->bind_param("i", $cust_id);
+            $query->execute();
+            $result = $query->get_result();
+            while($row = $result->fetch_assoc()) {
+                if (isset($row['prod_sale_price'])) {
+                    $total_price += $row['prod_sale_price'];
+                }
             }
+            $query->close();
         }
-        $query->close();
     }
 }
 ?>

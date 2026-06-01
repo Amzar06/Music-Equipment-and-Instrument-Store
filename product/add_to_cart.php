@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prod_id'])) {
     }
     
     // Check if cart exists for user
-    $cart_query = $conn->prepare("SELECT cart_id FROM cart WHERE cust_id = ?");
+    $cart_query = $conn->prepare("SELECT id FROM cart WHERE user_id = ?");
     if (!$cart_query) {
         header("Location: product page.php?error=query");
         exit;
@@ -29,10 +29,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prod_id'])) {
     
     if ($result->num_rows > 0) {
         $cart = $result->fetch_assoc();
-        $cart_id = $cart['cart_id'];
+        $cart_id = $cart['id'];
     } else {
         // Create new cart
-        $create_cart = $conn->prepare("INSERT INTO cart (cust_id) VALUES (?)");
+        $create_cart = $conn->prepare("INSERT INTO cart (user_id) VALUES (?)");
         if (!$create_cart) {
             header("Location: product page.php?error=create");
             exit;
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prod_id'])) {
     $cart_query->close();
     
     // Insert item into cart_items
-    $insert_item = $conn->prepare("INSERT INTO cart_items (cart_id, prod_id) VALUES (?, ?)");
+    $insert_item = $conn->prepare("INSERT INTO cart_items (cart_id, instrument_id) VALUES (?, ?)");
     if (!$insert_item) {
         header("Location: product page.php?error=insert");
         exit;

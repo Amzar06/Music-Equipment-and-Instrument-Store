@@ -12,9 +12,9 @@ if (isset($conn)) {
     $query = $conn->prepare("
         SELECT p.prod_sale_price 
         FROM cart_items ci
-        JOIN cart c ON ci.cart_id = c.cart_id
-        JOIN products p ON ci.prod_id = p.prod_id
-        WHERE c.cust_id = ?
+        JOIN cart c ON ci.cart_id = c.id
+        JOIN products p ON ci.instrument_id = p.prod_id
+        WHERE c.user_id = ?
     ");
     if ($query) {
         $query->bind_param("i", $cust_id);
@@ -26,6 +26,18 @@ if (isset($conn)) {
             }
         }
         $query->close();
+        
+        // After calculating the total, empty the user's cart so checkout is complete
+        $del_query = $conn->prepare("
+            DELETE ci FROM cart_items ci
+            JOIN cart c ON ci.cart_id = c.id
+            WHERE c.user_id = ?
+        ");
+        if ($del_query) {
+            $del_query->bind_param("i", $cust_id);
+            $del_query->execute();
+            $del_query->close();
+        }
     }
 }
 ?>

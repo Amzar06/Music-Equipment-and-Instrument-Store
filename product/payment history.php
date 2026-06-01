@@ -8,25 +8,41 @@ if (!isset($_SESSION['cust_id'])) {
 $cust_id = $_SESSION['cust_id'];
 
 $orders = [];
+$db_error = null;
 if (isset($conn)) {
-    // left join addresses and order_tracking
-    $query = $conn->prepare("
-        SELECT o.order_id, o.total_amount, o.status, a.city, a.state, o.order_date, ot.tracking_number 
-        FROM orders o 
-        LEFT JOIN addresses a ON o.address_id = a.address_id 
-        LEFT JOIN order_tracking ot ON o.order_id = ot.order_id
-        WHERE o.cust_id = ?
-        ORDER BY o.order_date DESC
-    ");
-    if ($query) {
-        $query->bind_param("i", $cust_id);
-        $query->execute();
-        $result = $query->get_result();
-        while($row = $result->fetch_assoc()) {
-            $orders[] = $row;
+    try {
+        // Fetch only columns that exist in the old 'orders' table schema 
+        // to prevent 'Unknown column' errors if the DB is un-updated.
+        $query = $conn->prepare("
+            SELECT order_id, total_amount, status, order_date
+            FROM orders 
+            WHERE cust_id = ?
+            ORDER BY order_date DESC
+        ");
+        if ($query) {
+            $query->bind_param("i", $cust_id);
+            if ($query->execute()) {
+                $result = $query->get_result();
+                while($row = $result->fetch_assoc()) {
+                    // Set default nulls for missing columns so HTML gracefully falls back
+                    $row['city'] = null;
+                    $row['state'] = null;
+                    $row['tracking_number'] = null; 
+                    
+                    $orders[] = $row;
+                }
+            } else {
+                $db_error = "Execution failed: " . $query->error;
+            }
+            $query->close();
+        } else {
+            $db_error = "Preparation failed: " . $conn->error;
         }
-        $query->close();
+    } catch (mysqli_sql_exception $e) {
+        $db_error = "Database Error: " . $e->getMessage();
     }
+} else {
+    $db_error = "Database connection not established.";
 }
 ?>
 <!DOCTYPE html>
@@ -40,6 +56,12 @@ if (isset($conn)) {
 
 <div class="container" style="max-width: 800px;">
     <h2>Order History</h2>
+    
+    <?php if ($db_error): ?>
+        <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <strong>Error:</strong> <?php echo htmlspecialchars($db_error); ?>
+        </div>
+    <?php endif; ?>
     
     <table>
         <thead>
@@ -61,7 +83,7 @@ if (isset($conn)) {
                     <td>#<?php echo htmlspecialchars($order['order_id']); ?></td>
                     <td>
                         <?php if ($order['city']): ?>
-                            <?php echo htmlspecialchars($order['city']); ?><br><?php echo htmlspecialchars($order['state']); ?>
+                            <?php echo htmlspecialchars($order['city'] ?? ''); ?><br><?php echo htmlspecialchars($order['state'] ?? ''); ?>
                         <?php else: ?>
                             <span style="color: var(--text-secondary);">No Address</span>
                         <?php endif; ?>
@@ -69,9 +91,9 @@ if (isset($conn)) {
                     <td style="font-weight: 600; color: var(--success);">RM <?php echo number_format($order['total_amount'] ?? 0, 2); ?></td>
                     <td>
                         <?php if ($order['tracking_number']): ?>
-                            <a href="track order.php?tracking=<?php echo urlencode($order['tracking_number']); ?>" style="margin-top: 0; font-weight: 600; text-decoration: underline; color: var(--accent);"><?php echo htmlspecialchars($order['tracking_number']); ?></a>
+                            <a href="track order.php?tracking=<?php echo urlencode($order['tracking_number'] ?? ''); ?>" style="margin-top: 0; font-weight: 600; text-decoration: underline; color: var(--accent);"><?php echo htmlspecialchars($order['tracking_number'] ?? ''); ?></a>
                         <?php else: ?>
-                            <span style="color: var(--text-secondary);"><?php echo htmlspecialchars($order['status']); ?>...</span>
+                            <span style="color: var(--text-secondary);"><?php echo htmlspecialchars($order['status'] ?? ''); ?>...</span>
                         <?php endif; ?>
                     </td>
                 </tr>
