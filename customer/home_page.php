@@ -15,7 +15,7 @@
 
     .btn-link {
       display: inline-block;
-      width: 320px;             /* Forces all blocks to be the exact same wide width */
+      width: 420px;             /* Forces all blocks to be the exact same wide width */
       padding: 12px 0;          /* Adds vertical padding for a better clickable area */
       background-color: #1d61f2;/* The dark blue color from your image */
       color: white;
