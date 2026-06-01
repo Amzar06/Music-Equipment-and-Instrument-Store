@@ -12,14 +12,14 @@
       <p>Update your profile information</p>
 
       <label>Full Name</label>
-      <input type="text" placeholder="John Doe"> style="color: #919294ab;">
+      <input type="text" placeholder="Name"> style="color: #919294ab;">
 
       <label>Email Address</label>
-      <input type="email" value="@email.com">
+      <input type="email" placeholder="john@gmail.com"> style="color: #919294ab;">
       <label>Phone Number</label>
-      <input type="text" value="0123456789">
+      <input type="text" placeholder="0123456789"> style="color: #919294ab;">
 
-      <a href="home.html"><button>Save Changes</button></a>
+      <a href="home_page.php"><button>Save Changes</button></a>
     </div>
   </div>
 </body>
