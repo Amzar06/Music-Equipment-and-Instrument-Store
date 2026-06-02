@@ -34,46 +34,49 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $query->close();
             
             if (!empty($cart_items) && $total_price > 0) {
-                // 1. Process Address
-                // Combine street into city since db might lack a street column
-                $street = $_POST['street'] ?? '';
-                $city = $_POST['city'] ?? '';
-                $postcode = $_POST['postcode'] ?? '';
-                $state = $_POST['state'] ?? '';
-                $combined_city = trim($street . ', ' . $city, ', ');
                 
-                $addr_id = null;
-                $addr = $conn->prepare("INSERT INTO addresses (cust_id, city, state, postcode) VALUES (?, ?, ?, ?)");
-                if ($addr) {
-                    $addr->bind_param("isss", $cust_id, $combined_city, $state, $postcode);
-                    $addr->execute();
-                    $addr_id = $conn->insert_id;
-                    $addr->close();
-                }
+                // Try to insert the new orders into older database schemas
+                try {
+                    // 1. Process Address
+                    $street = $_POST['street'] ?? '';
+                    $city = $_POST['city'] ?? '';
+                    $postcode = $_POST['postcode'] ?? '';
+                    $state = $_POST['state'] ?? '';
+                    $combined_city = trim($street . ', ' . $city, ', ');
+                    
+                    $addr_id = null;
+                    $addr = $conn->prepare("INSERT INTO addresses (cust_id, city, state, postcode) VALUES (?, ?, ?, ?)");
+                    if ($addr) {
+                        $addr->bind_param("isss", $cust_id, $combined_city, $state, $postcode);
+                        $addr->execute();
+                        $addr_id = $conn->insert_id;
+                        $addr->close();
+                    }
 
-                // 2. Process Order 
-                // Using a safe insert, omitting address_id to prevent crashes if DB schema is older
-                $ord = $conn->prepare("INSERT INTO orders (cust_id, total_amount, status) VALUES (?, ?, 'Pending')");
-                if ($ord) {
-                    $ord->bind_param("id", $cust_id, $total_price);
-                    if ($ord->execute()) {
-                        $order_id = $conn->insert_id;
-                        $ord->close();
-                        
-                        // Try older schema linking as fallback if orders doesn't have address_id
-                        // Do order items
-                        $oi = $conn->prepare("INSERT INTO order_items (order_id, prod_id, order_qty, unit_price) VALUES (?, ?, 1, ?)");
-                        if ($oi) {
-                            foreach ($cart_items as $item) {
-                                $oi->bind_param("iid", $order_id, $item['prod_id'], $item['prod_sale_price']);
-                                $oi->execute();
+                    // 2. Process Order 
+                    $ord = $conn->prepare("INSERT INTO orders (cust_id, total_amount, status) VALUES (?, ?, 'Pending')");
+                    if ($ord) {
+                        $ord->bind_param("id", $cust_id, $total_price);
+                        if ($ord->execute()) {
+                            $order_id = $conn->insert_id;
+                            $ord->close();
+                            
+                            // Do order items
+                            $oi = $conn->prepare("INSERT INTO order_items (order_id, prod_id, order_qty, unit_price) VALUES (?, ?, 1, ?)");
+                            if ($oi) {
+                                foreach ($cart_items as $item) {
+                                    $oi->bind_param("iid", $order_id, $item['prod_id'], $item['prod_sale_price']);
+                                    $oi->execute();
+                                }
+                                $oi->close();
                             }
-                            $oi->close();
                         }
                     }
+                } catch (mysqli_sql_exception $e) {
+                    $db_error = "Database Error generating order: " . $e->getMessage();
                 }
 
-                // 3. Clear Cart
+                // 3. ALWAYS Clear Cart regardless of whether the active DB schema supports full order logging
                 $del_query = $conn->prepare("
                     DELETE ci FROM cart_items ci
                     JOIN cart c ON ci.cart_id = c.id
@@ -86,9 +89,6 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
-    } catch (mysqli_sql_exception $e) {
-        $db_error = "Database Error generating order: " . $e->getMessage();
-    }
 }
 ?>
 <!DOCTYPE html>
@@ -101,6 +101,12 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 
 <div class="container text-center">
+    <?php if ($db_error): ?>
+        <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 16px; border-radius: 8px; margin-bottom: 16px; text-align: left;">
+            <strong>Error:</strong> <?php echo htmlspecialchars($db_error); ?>
+        </div>
+    <?php endif; ?>
+    
     <div style="font-size: 4rem; color: var(--success); margin-bottom: 16px;">✓</div>
     <h2>Receipt Submitted!</h2>
     <p style="font-size: 1.25rem; font-weight: 600; margin-bottom: 8px; color: var(--text);">Total Paid: RM <?php echo number_format($total_price, 2); ?></p>
