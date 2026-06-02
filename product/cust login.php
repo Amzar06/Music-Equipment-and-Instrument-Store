@@ -30,7 +30,7 @@
     </form>
 
     <div class="text-center mt-4" style="font-size: 14px;">
-        Don't have an account? <a href="#">Register</a>
+        Don't have an account? <a href="/Music-Equipment-and-Instrument-Store/customer/register_page.php">Register</a>
     </div>
 </div>
 
