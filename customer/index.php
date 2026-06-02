@@ -12,7 +12,7 @@
         <h2>Customer Portal</h2>
         <p>Welcome to the system</p>
 
-        <a href="c/Music-Equipment-and-Instrument-Store/product/cust login.php" style="display: inline-block; width: 80%; text-decoration: none;">
+        <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php" style="display: inline-block; width: 80%; text-decoration: none;">
             <button type="button" style="width: 100%; padding: 12px 0; background-color: #1e62ec; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;">Login</button>
         </a>
 
