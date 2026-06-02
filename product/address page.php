@@ -1,8 +1,34 @@
 <?php
 session_start();
+include '../database.php';
 if (!isset($_SESSION['cust_id'])) {
     header("Location: cust login.php");
     exit();
+}
+
+$type = $_GET['type'] ?? '';
+$product_id = $_GET['product_id'] ?? 0;
+$days = $_GET['days'] ?? 1;
+$total = 0;
+$rent_summary = "";
+
+if ($type === 'rent') {
+    if (isset($conn)) {
+        $stmt = $conn->prepare("SELECT prod_rental_price FROM products WHERE prod_id = ?");
+        if ($stmt) {
+            $stmt->bind_param("i", $product_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($row = $result->fetch_assoc()) {
+                $price = $row['prod_rental_price'];
+                $total = $days * $price;
+                $rent_summary = "<h3 style='margin-bottom: 8px;'>Rental Summary</h3>";
+                $rent_summary .= "<p style='margin: 0; color: var(--text-secondary);'><strong>Duration:</strong> $days Day(s)</p>";
+                $rent_summary .= "<p style='margin: 0; margin-top: 4px; font-size: 1.1rem; color: var(--success);'><strong>Total Price:</strong> RM " . number_format($total, 2) . "</p>";
+            }
+            $stmt->close();
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -18,9 +44,19 @@ if (!isset($_SESSION['cust_id'])) {
     <h2>Delivery Address</h2>
     <p class="text-center mb-4">Please provide your details below</p>
     
-    <div id="rentSummary" style="margin-bottom: 24px; padding: 16px; background: #f8fafc; border: 1px solid var(--card-border); border-radius: 8px; display: none; text-align: center;"></div>
+    <?php if ($type === 'rent' && $rent_summary !== ""): ?>
+    <div id="rentSummary" style="margin-bottom: 24px; padding: 16px; background: #f8fafc; border: 1px solid var(--card-border); border-radius: 8px; text-align: center;">
+        <?php echo $rent_summary; ?>
+    </div>
+    <?php endif; ?>
     
     <form action="qr payment.php" method="GET" id="addressForm">
+        <?php if ($type === 'rent'): ?>
+            <input type="hidden" name="type" value="rent">
+            <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($product_id); ?>">
+            <input type="hidden" name="days" value="<?php echo htmlspecialchars($days); ?>">
+            <input type="hidden" name="amount" value="<?php echo htmlspecialchars($total); ?>">
+        <?php endif; ?>
         <div>
             <input type="text" name="street" placeholder="Street Address" required>
         </div>
@@ -42,22 +78,6 @@ if (!isset($_SESSION['cust_id'])) {
         </div>
     </form>
 </div>
-
-<script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const type = urlParams.get('type');
-    if (type === 'rent') {
-        const days = parseInt(urlParams.get('days')) || 1;
-        const price = parseFloat(urlParams.get('price')) || 0;
-        const total = days * price;
-        const summary = document.getElementById('rentSummary');
-        summary.style.display = 'block';
-        summary.innerHTML = `<h3 style="margin-bottom: 8px;">Rental Summary</h3>
-                             <p style="margin: 0; color: var(--text-secondary);"><strong>Duration:</strong> ${days} Day(s)</p>
-                             <p style="margin: 0; margin-top: 4px; font-size: 1.1rem; color: var(--success);"><strong>Total Price:</strong> RM ${total.toFixed(2)}</p>
-                             <input type="hidden" name="amount" value="${total.toFixed(2)}" form="addressForm">`;
-    }
-</script>
 
 </body>
 </html>
