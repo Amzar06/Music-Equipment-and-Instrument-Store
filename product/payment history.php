@@ -17,7 +17,7 @@ if (isset($conn)) {
         $query = $conn->prepare("
             SELECT order_id, total_amount, status, order_date
             FROM orders 
-            WHERE user_id = ?
+            WHERE cust_id = ?
             ORDER BY order_date DESC
         ");
         if ($query) {

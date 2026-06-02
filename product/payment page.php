@@ -53,7 +53,7 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     // 2. Process Order 
-                    $ord = $conn->prepare("INSERT INTO orders (user_id, total_amount, status) VALUES (?, ?, 'Pending')");
+                    $ord = $conn->prepare("INSERT INTO orders (cust_id, total_amount, status) VALUES (?, ?, 'Pending')");
                     if ($ord) {
                         $ord->bind_param("id", $cust_id, $total_price);
                         if ($ord->execute()) {
@@ -108,7 +108,6 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     
     <div style="font-size: 4rem; color: var(--success); margin-bottom: 16px;">✓</div>
     <h2>Receipt Submitted!</h2>
-    <p style="font-size: 1.25rem; font-weight: 600; margin-bottom: 8px; color: var(--text);">Total Paid: RM <?php echo number_format($total_price, 2); ?></p>
     <p class="mb-4">Your payment receipt has been received and will be verified by an admin shortly.<br>Once verified, your order will be processed for delivery.</p>
     <a href="payment history.php" style="padding: 12px 24px; background: var(--accent); color: white; border-radius: 8px; display: inline-block;">View Order History</a>
 </div>
