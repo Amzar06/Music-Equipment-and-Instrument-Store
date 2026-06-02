@@ -5,14 +5,13 @@ $product_id = isset($_GET['id']) ? intval($_GET['id']) : 1;
 
 // Simulating a database query result based on the ID
 if ($product_id === 1) {
-    $product_name        = "Fender Stratocaster Electric Guitar";
-    $product_price       = "RM 3,250.00";
-    $product_description = "Classic sunburst electric guitar with vintage-style pickups and a smooth maple neck.";
+    $product_name        = "";
+    $product_price       = "";
+    $product_description = "";
 } else {
-    // Fallback/Default mock data if another ID is accessed
-    $product_name        = "Yamaha P-45 Digital Piano";
-    $product_price       = "RM 2,400.00";
-    $product_description = "88-key weighted action digital piano, perfect for beginners and intermediate players.";
+    $product_name        = "";
+    $product_price       = "";
+    $product_description = "";
 }
 ?>
 <!DOCTYPE html>
