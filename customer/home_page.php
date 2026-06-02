@@ -1,67 +1,122 @@
-<?php
+<?php include "includes/header.php"; ?>
 
-session_start();
-
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: /Music-Equipment-and-Instrument-Store/product/cust login.php");
-    exit(); 
-}
-
-
-$user_name = $_SESSION['user_name'] ?? "User";
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Home Page</title>
-  <link rel="stylesheet" href="customer.css">
-  <style>
-    .button-group {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 15px; 
-      margin-top: 20px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Musical Instrument Store</title>
 
-    .btn-link {
-      display: inline-block;
-      width: 450px;             
-      padding: 12px 0;          
-      background-color: #1d61f2;
-      color: white;
-      text-align: center;
-      text-decoration: none;    
-      border-radius: 8px;       
-      font-weight: bold;
-      font-size: 14px;
-      transition: background-color 0.2s ease;
-    }
+    <link rel="stylesheet" href="customer.css">
 
-    .btn-link:hover {
-      background-color: #124ec4; 
-    }
-  </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
 
-  <div class="container">
-    <div class="card" style="text-align: center;"> 
-      
-      <h2>Welcome, <?php echo htmlspecialchars($user_name); ?>!</h2>
-      <p>Select an option below:</p>
+<!-- HERO SECTION -->
+<div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
 
-      <div class="button-group">
-        <a href="edit_profile_page.php" class="btn-link">Edit Profile</a>
-        <a href="change_password_page.php" class="btn-link">Change Password</a>
-        <a href="product_details_page.php" class="btn-link">View Products</a>
-        <a href="logout_page.php" class="btn-link" style="background-color: #d9534f;">Log Out</a> 
-      </div>
+    <div class="carousel-inner">
 
-    </div> 
-  </div> 
+        <div class="carousel-item active">
+            <img src="images/guitar.jpg" class="d-block w-100" height="500">
+            <div class="carousel-caption">
+                <h1>Musical Instruments For Everyone</h1>
+                <p>Buy or rent your favorite instruments today.</p>
+                <a href="product.php" class="btn btn-primary">Shop Now</a>
+            </div>
+        </div>
+
+        <div class="carousel-item">
+            <img src="images/piano.jpg" class="d-block w-100" height="500">
+            <div class="carousel-caption">
+                <h1>Premium Pianos</h1>
+                <p>Perfect for beginners and professionals.</p>
+                <a href="product.php" class="btn btn-primary">Explore</a>
+            </div>
+        </div>
+
+        <div class="carousel-item">
+            <img src="images/drum.jpg" class="d-block w-100" height="500">
+            <div class="carousel-caption">
+                <h1>Rent Before You Buy</h1>
+                <p>Affordable rental plans available.</p>
+                <a href="product.php" class="btn btn-primary">View Rentals</a>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- FEATURED PRODUCTS -->
+<section class="container py-5">
+
+    <h2 class="mb-4">Featured Instruments</h2>
+
+    <div class="row">
+
+        <div class="col-md-4">
+            <img src="images/guitar.jpg" class="img-fluid rounded">
+            <h5 class="mt-3">Acoustic Guitar</h5>
+            <a href="product.php" class="btn btn-dark">View</a>
+        </div>
+
+        <div class="col-md-4">
+            <img src="images/piano.jpg" class="img-fluid rounded">
+            <h5 class="mt-3">Digital Piano</h5>
+            <a href="product.php" class="btn btn-dark">View</a>
+        </div>
+
+        <div class="col-md-4">
+            <img src="images/drum.jpg" class="img-fluid rounded">
+            <h5 class="mt-3">Drum Set</h5>
+            <a href="product.php" class="btn btn-dark">View</a>
+        </div>
+
+    </div>
+
+</section>
+
+<!-- SHOP BY CATEGORY -->
+<section class="container py-5">
+
+    <h2 class="mb-4">Shop By Category</h2>
+
+    <div class="row">
+
+        <div class="col-md-3">
+            <a href="product.php?category=guitar" class="btn btn-outline-dark w-100">
+                Guitars
+            </a>
+        </div>
+
+        <div class="col-md-3">
+            <a href="product.php?category=piano" class="btn btn-outline-dark w-100">
+                Pianos
+            </a>
+        </div>
+
+        <div class="col-md-3">
+            <a href="product.php?category=drum" class="btn btn-outline-dark w-100">
+                Drums
+            </a>
+        </div>
+
+        <div class="col-md-3">
+            <a href="product.php?category=violin" class="btn btn-outline-dark w-100">
+                Violins
+            </a>
+        </div>
+
+    </div>
+
+</section>
+
+<?php include "includes/footer.php"; ?>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
