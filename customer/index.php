@@ -48,7 +48,7 @@
             Login or register when you're ready to purchase or rent.
         </p>
 
-        <a href="product_details.php">
+        <a href="/Music-Equipment-and-Instrument-Store/admin/admin_products.php">
             <button>View Products</button>
         </a>
 
