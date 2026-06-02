@@ -85,7 +85,7 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 $start_date = date('Y-m-d');
                 $end_date = date('Y-m-d', strtotime("+$rent_days days"));
                 
-                $rent = $conn->prepare("INSERT INTO rentals (cust_id, address_id, start_date, end_date, status, total_amount) VALUES (?, ?, ?, ?, 'Active', ?)");
+                $rent = $conn->prepare("INSERT INTO rentals (cust_id, address_id, start_date, end_date, status, total_amount) VALUES (?, ?, ?, ?, 'active', ?)");
                 if ($rent) {
                     $rent->bind_param("iissd", $cust_id, $addr_id, $start_date, $end_date, $total_price);
                     if ($rent->execute()) {
@@ -106,7 +106,7 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             } else {
                 // 2b. Process Order 
-                $ord = $conn->prepare("INSERT INTO orders (cust_id, address_id, total_amount, status) VALUES (?, ?, ?, 'Pending')");
+                $ord = $conn->prepare("INSERT INTO orders (cust_id, address_id, total_amount, status) VALUES (?, ?, ?, 'pending')");
                 if ($ord) {
                     $ord->bind_param("iid", $cust_id, $addr_id, $total_price);
                     if ($ord->execute()) {
