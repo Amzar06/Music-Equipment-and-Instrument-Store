@@ -72,35 +72,63 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $combined_city = trim($street . ', ' . $city, ', ');
             
             $addr_id = null;
-            $addr = $conn->prepare("INSERT INTO addresses (user_id, address_line, city, state, postcode) VALUES (?, ?, ?, ?, ?)");
+            $addr = $conn->prepare("INSERT INTO addresses (cust_id, city, state, postcode) VALUES (?, ?, ?, ?)");
             if ($addr) {
-                $addr->bind_param("issss", $cust_id, $street, $city, $state, $postcode);
+                $addr->bind_param("isss", $cust_id, $combined_city, $state, $postcode);
                 $addr->execute();
                 $addr_id = $conn->insert_id;
                 $addr->close();
             }
 
-            // 2. Process Order 
-            $ord = $conn->prepare("INSERT INTO orders (cust_id, total_amount, status) VALUES (?, ?, 'pending')");
-            if ($ord) {
-                $ord->bind_param("id", $cust_id, $total_price);
-                if ($ord->execute()) {
-                    $order_id = $conn->insert_id;
-                    $ord->close();
-                    
-                    // Do order items
-                    $oi = $conn->prepare("INSERT INTO order_items (order_id, prod_id, quantity, unit_price) VALUES (?, ?, ?, ?)");
-                    if ($oi) {
-                        foreach ($cart_items as $item) {
-                            $oi->bind_param("iiid", $order_id, $item['prod_id'], $item['quantity'], $item['prod_sale_price']);
-                            $oi->execute();
+            if ($is_rent) {
+                // 2a. Process Rental
+                $start_date = date('Y-m-d');
+                $end_date = date('Y-m-d', strtotime("+$rent_days days"));
+                
+                $rent = $conn->prepare("INSERT INTO rentals (cust_id, address_id, start_date, end_date, status, total_amount) VALUES (?, ?, ?, ?, 'Active', ?)");
+                if ($rent) {
+                    $rent->bind_param("iissd", $cust_id, $addr_id, $start_date, $end_date, $total_price);
+                    if ($rent->execute()) {
+                        $rental_id = $conn->insert_id;
+                        $rent->close();
+                        
+                        $ri = $conn->prepare("INSERT INTO rental_items (rental_id, prod_id, rental_qty, rental_rate, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?)");
+                        if ($ri) {
+                            foreach ($cart_items as $item) {
+                                $ri->bind_param("iiidss", $rental_id, $item['prod_id'], $item['quantity'], $item['prod_sale_price'], $start_date, $end_date);
+                                $ri->execute();
+                            }
+                            $ri->close();
                         }
-                        $oi->close();
+                    } else {
+                        $rent->close();
+                    }
+                }
+            } else {
+                // 2b. Process Order 
+                $ord = $conn->prepare("INSERT INTO orders (cust_id, address_id, total_amount, status) VALUES (?, ?, ?, 'Pending')");
+                if ($ord) {
+                    $ord->bind_param("iid", $cust_id, $addr_id, $total_price);
+                    if ($ord->execute()) {
+                        $order_id = $conn->insert_id;
+                        $ord->close();
+                        
+                        // Do order items
+                        $oi = $conn->prepare("INSERT INTO order_items (order_id, prod_id, quantity, unit_price) VALUES (?, ?, ?, ?)");
+                        if ($oi) {
+                            foreach ($cart_items as $item) {
+                                $oi->bind_param("iiid", $order_id, $item['prod_id'], $item['quantity'], $item['prod_sale_price']);
+                                $oi->execute();
+                            }
+                            $oi->close();
+                        }
+                    } else {
+                        $ord->close();
                     }
                 }
             }
         } catch (mysqli_sql_exception $e) {
-            $db_error = "Database Error generating order: " . $e->getMessage();
+            $db_error = "Database Error generating order or rental: " . $e->getMessage();
         }
 
         if (!$is_rent) {
