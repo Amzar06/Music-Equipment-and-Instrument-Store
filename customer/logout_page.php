@@ -27,7 +27,7 @@ session_destroy();
       <h2>You Have Logged Out</h2>
       <p>Thank you for using the system!</p>
 
-      <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php">
+      <a href="../product/cust login.php">
         <button type="button">Login Again</button>
       </a>
     </div>

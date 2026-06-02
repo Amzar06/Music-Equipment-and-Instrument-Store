@@ -1,47 +1,45 @@
 <?php
 session_start();
+include '../database.php';
+$error = '';
+$success = '';
 
-
-$error_message = "";
-$success_message = "";
-
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  
-    $fullname         = trim($_POST['fullname'] ?? '');
-    $email            = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
-    $password         = $_POST['password'] ?? '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = $_POST['name'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
 
-
-    if (empty($fullname) || empty($email) || empty($password) || empty($confirm_password)) {
-        $error_message = "All fields are required.";
-    } 
-  
-    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error_message = "Please enter a valid email address.";
-    } 
-
-    elseif ($password !== $confirm_password) {
-        $error_message = "Passwords do not match.";
-    } 
-   
-    elseif (strlen($password) < 8) {
-        $error_message = "Password must be at least 8 characters long.";
-    } 
-    else {
-        
-
-        $success_message = "Account created successfully! Redirecting to login...";
-        
-        header("Refresh: 2; URL=/Music-Equipment-and-Instrument-Store/product/cust login.php");
+    if ($password !== $confirm_password) {
+        $error = "Passwords do not match.";
+    } elseif (isset($conn)) {
+        // Using plain text to match cust login.php
+        $stmt = $conn->prepare("SELECT cust_id FROM customers WHERE cust_email = ?");
+        if ($stmt) {
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            if ($stmt->get_result()->num_rows > 0) {
+                $error = "Email already registered.";
+            } else {
+                $insert = $conn->prepare("INSERT INTO customers (cust_name, cust_email, cust_password) VALUES (?, ?, ?)");
+                if ($insert) {
+                    $insert->bind_param("sss", $name, $email, $password);
+                    if ($insert->execute()) {
+                        $success = "Registration successful! You can now login.";
+                    } else {
+                        $error = "Registration failed.";
+                    }
+                    $insert->close();
+                }
+            }
+            $stmt->close();
+        }
     }
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>Register</title>
   <link rel="stylesheet" href="customer.css">
 </head>
@@ -52,35 +50,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       <h2>Create Account</h2>
       <p>Register a new account</p>
 
-      <?php if (!empty($error_message)): ?>
-          <div class="alert error" style="color: #d9534f; margin-bottom: 15px; font-weight: bold;"><?php echo htmlspecialchars($error_message); ?></div>
+      <?php if ($error): ?>
+          <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 0.9em; text-align: center;">
+              <?php echo htmlspecialchars($error); ?>
+          </div>
       <?php endif; ?>
-      
-      <?php if (!empty($success_message)): ?>
-          <div class="alert success" style="color: #5cb85c; margin-bottom: 15px; font-weight: bold;"><?php echo htmlspecialchars($success_message); ?></div>
+      <?php if ($success): ?>
+          <div style="background: #dcfce7; border: 1px solid #86efac; color: #166534; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 0.9em; text-align: center;">
+              <?php echo htmlspecialchars($success); ?>
+          </div>
       <?php endif; ?>
 
-      <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="POST">
-        
-        <label for="fullname">Full Name</label>
-        <input type="text" id="fullname" name="fullname" placeholder="Enter your full name" value="<?php echo isset($fullname) ? htmlspecialchars($fullname) : ''; ?>" required>
+      <form action="register_page.php" method="POST">
+          <label>Full Name</label>
+          <input type="text" name="name" placeholder="Enter your full name" required>
 
-        <label for="email">Email Address</label>
-        <input type="email" id="email" name="email" placeholder="Enter your email" value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>" required>
+          <label>Email Address</label>
+          <input type="email" name="email" placeholder="Enter your email" required>
 
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+          <label>Password</label>
+          <input type="password" name="password" placeholder="Enter your password" required>
 
-        <label for="confirm_password">Confirm Password</label>
-        <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your password" required>
+          <label>Confirm Password</label>
+          <input type="password" name="confirm_password" placeholder="Confirm your password" required>
 
-        <button type="submit">Register</button>
+          <button type="submit" style="width: 100%; margin-top: 12px;">Register</button>
       </form>
       
-      <div style="margin-top: 15px; text-align: center;">
-          <p style="font-size: 14px; color: #666;">Already have an account? <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php" style="color: #007bff; text-decoration: none;">Login here</a></p>
+      <div style="margin-top: 20px; text-align: center; font-size: 14px;">
+          Already have an account? <a href="../product/cust login.php" style="color: var(--accent); text-decoration: none;">Login here</a>
       </div>
-
     </div>
   </div>
 

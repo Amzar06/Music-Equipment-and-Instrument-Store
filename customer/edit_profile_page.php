@@ -1,84 +1,108 @@
 <?php
 session_start();
+include '../database.php';
+if (!isset($_SESSION['cust_id'])) {
+    header("Location: ../product/cust login.php");
+    exit();
+}
+$cust_id = $_SESSION['cust_id'];
 
+$success = '';
+$error = '';
 
-$error_message = "";
-$success_message = "";
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $cust_name = $_POST['cust_name'] ?? '';
+    $cust_email = $_POST['cust_email'] ?? '';
+    $cust_phone_number = $_POST['cust_phone_number'] ?? '';
+    $cust_address = $_POST['cust_address'] ?? '';
+    
+    if (isset($conn)) {
+        // Prevent duplicate emails
+        $check = $conn->prepare("SELECT cust_id FROM customers WHERE cust_email = ? AND cust_id != ?");
+        if ($check) {
+            $check->bind_param("si", $cust_email, $cust_id);
+            $check->execute();
+            if ($check->get_result()->num_rows > 0) {
+                $error = "Email is already taken by another account.";
+            } else {
+                $update = $conn->prepare("UPDATE customers SET cust_name = ?, cust_email = ?, cust_phone_number = ?, cust_address = ? WHERE cust_id = ?");
+                if ($update) {
+                    $update->bind_param("ssssi", $cust_name, $cust_email, $cust_phone_number, $cust_address, $cust_id);
+                    if ($update->execute()) {
+                        $success = "Profile updated successfully!";
+                    } else {
+                        $error = "Failed to update profile.";
+                    }
+                    $update->close();
+                }
+            }
+            $check->close();
+        }
+    }
+}
 
-
-$current_name  = "";
-$current_email = "";
-$current_phone = "";
-
-
-// 2. HANDLE FORM SUBMISSION
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Retrieve and sanitize user inputs
-    $fullname = trim($_POST['fullname'] ?? '');
-    $email    = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
-    $phone    = trim($_POST['phone'] ?? '');
-
-    // Basic Validation
-    if (empty($fullname) || empty($email) || empty($phone)) {
-        $error_message = "All fields are required.";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error_message = "Please enter a valid email address.";
-    } else {
-        /* 3. DATABASE UPDATE LOGIC (Placeholder)
-          This is where you execute an UPDATE SQL query to save the new details.
-          
-          Example:
-          $sql = "UPDATE users SET name = ?, email = ?, phone = ? WHERE id = ?";
-        */
-
-        // Update our local variables so the form displays the new data right away
-        $current_name  = $fullname;
-        $current_email = $email;
-        $current_phone = $phone;
-
-        $success_message = "Profile updated successfully!";
-        
-        // Optional: Redirect back to home page after 2 seconds
-        header("Refresh: 2; URL=home_page.php");
+// Fetch current info
+$user_data = ['cust_name' => '', 'cust_email' => '', 'cust_phone_number' => '', 'cust_address' => ''];
+if (isset($conn)) {
+    $stmt = $conn->prepare("SELECT cust_name, cust_email, cust_phone_number, cust_address FROM customers WHERE cust_id = ?");
+    if ($stmt) {
+        $stmt->bind_param("i", $cust_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            $user_data = [
+                'cust_name' => $row['cust_name'] ?? '',
+                'cust_email' => $row['cust_email'] ?? '',
+                'cust_phone_number' => $row['cust_phone_number'] ?? '',
+                'cust_address' => $row['cust_address'] ?? ''
+            ];
+        }
+        $stmt->close();
     }
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>Edit Profile</title>
   <link rel="stylesheet" href="customer.css">
 </head>
 <body>
 
   <div class="container">
-    <div class="card">
+    <div class="card" style="width: 100%; max-width: 500px;">
       <h2>Edit Profile</h2>
-      <p>Update your profile information</p>
+      <p style="margin-bottom: 24px;">Update your profile information</p>
 
-      <?php if (!empty($error_message)): ?>
-          <div class="alert error" style="color: red; margin-bottom: 15px;"><?php echo htmlspecialchars($error_message); ?></div>
+      <?php if ($error): ?>
+          <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 0.9em; text-align: center;">
+              <?php echo htmlspecialchars($error); ?>
+          </div>
       <?php endif; ?>
-      
-      <?php if (!empty($success_message)): ?>
-          <div class="alert success" style="color: green; margin-bottom: 15px;"><?php echo htmlspecialchars($success_message); ?></div>
+      <?php if ($success): ?>
+          <div style="background: #dcfce7; border: 1px solid #86efac; color: #166534; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 0.9em; text-align: center;">
+              <?php echo htmlspecialchars($success); ?>
+          </div>
       <?php endif; ?>
 
-      <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="POST">
-        
-        <label for="fullname">Full Name</label>
-        <input type="text" id="fullname" name="fullname" value="<?php echo htmlspecialchars($current_name); ?>" placeholder="Name" required> 
+      <form action="edit_profile_page.php" method="POST">
+          <label>Full Name</label>
+          <input type="text" name="cust_name" value="<?php echo htmlspecialchars($user_data['cust_name']); ?>" required>
 
-        <label for="email">Email Address</label>
-        <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($current_email); ?>" placeholder="john@gmail.com" required>
+          <label>Email Address</label>
+          <input type="email" name="cust_email" value="<?php echo htmlspecialchars($user_data['cust_email']); ?>" required>
+          
+          <label>Phone Number</label>
+          <input type="text" name="cust_phone_number" value="<?php echo htmlspecialchars($user_data['cust_phone_number']); ?>">
+          
+          <label>Address</label>
+          <input type="text" name="cust_address" value="<?php echo htmlspecialchars($user_data['cust_address']); ?>">
 
-        <label for="phone">Phone Number</label>
-        <input type="text" id="phone" name="phone" value="<?php echo htmlspecialchars($current_phone); ?>" placeholder="0123456789" required> 
-
-        <button type="submit">Save Changes</button>
+          <div style="display: flex; gap: 16px; margin-top: 24px;">
+              <a href="user_profile_page.php" style="flex:1; text-decoration:none;"><button type="button" style="width:100%; background: rgba(255,255,255,0.1);">Back</button></a>
+              <button type="submit" style="flex:1; width:100%;">Save Changes</button>
+          </div>
       </form>
-      
     </div>
   </div>
 </body>
