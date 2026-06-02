@@ -2,9 +2,9 @@
 session_start();
 include '../database.php';
 
-// Mock session for cart logic if not logged in
 if (!isset($_SESSION['cust_id'])) {
-    $_SESSION['cust_id'] = 1; 
+    header("Location: cust login.php");
+    exit();
 }
 $cust_id = $_SESSION['cust_id'];
 

@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (!isset($_SESSION['cust_id'])) {
+    header("Location: cust login.php");
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
