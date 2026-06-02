@@ -45,7 +45,7 @@ $_SESSION['username'] = "Alex";
             font-size: 22px;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 40px;
+            letter-spacing: 1px;
             color: #1d4e89; /* Matches the deep blue logo text in image 2 */
         }
 
