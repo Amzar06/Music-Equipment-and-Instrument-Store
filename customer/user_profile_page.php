@@ -1,9 +1,11 @@
 <?php
 session_start();
 
-$user_name  = $_SESSION['user_name']  ?? "";
-$user_email = $_SESSION['user_email'] ?? "";
-$user_phone = $_SESSION['user_phone'] ?? "";
+
+$user_name  = $_SESSION['user_name']  ?? "John Doe";
+$user_email = $_SESSION['user_email'] ?? "john@email.com";
+$user_phone = $_SESSION['user_phone'] ?? "0123456789";
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -13,6 +15,8 @@ $user_phone = $_SESSION['user_phone'] ?? "";
   <link rel="stylesheet" href="customer.css">
 </head>
 <body>
+
+
 
   <div class="container">
     <div class="card">
@@ -27,8 +31,6 @@ $user_phone = $_SESSION['user_phone'] ?? "";
       
       <label for="phone">Phone Number</label>
       <input type="text" id="phone" value="<?php echo htmlspecialchars($user_phone); ?>" readonly>
-      
-      <button type="button" class="btn-create" style="margin-top: 25px;" onclick="location.href='create_account.php'">Create Account</button>
       
     </div>
   </div>
