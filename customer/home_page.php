@@ -54,10 +54,10 @@ $user_name = $_SESSION['user_name'] ?? "User";
       <p>Select an option below:</p>
 
       <div class="button-group">
-        <a href="edit_profile.php" class="btn-link">Edit Profile</a>
-        <a href="change_password.php" class="btn-link">Change Password</a>
-        <a href="product_details.php" class="btn-link">View Products</a>
-        <a href="logout.php" class="btn-link" style="background-color: #d9534f;">Log Out</a> 
+        <a href="edit_profile_page.php" class="btn-link">Edit Profile</a>
+        <a href="change_password_page.php" class="btn-link">Change Password</a>
+        <a href="product_details_page.php" class="btn-link">View Products</a>
+        <a href="logout_page.php" class="btn-link" style="background-color: #d9534f;">Log Out</a> 
       </div>
 
     </div> 
