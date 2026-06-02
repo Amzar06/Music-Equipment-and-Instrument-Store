@@ -54,16 +54,6 @@
 
         <br><br>
 
-        <a href="cust_login.php">
-            <button>Login</button>
-        </a>
-
-        <br><br>
-
-        <a href="customer_register.php">
-            <button>Register</button>
-        </a>
-
         <hr>
 
         <h3>Featured Instruments</h3>
