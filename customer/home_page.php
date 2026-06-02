@@ -5,7 +5,7 @@ session_start();
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: /Music-Equipment-and-Instrument-Store/product/cust login.php");
-    exit(); // Stop executing the rest of the script
+    exit(); 
 }
 
 
