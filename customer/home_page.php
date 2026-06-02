@@ -94,7 +94,7 @@
                 Digital Piano
             </div>
             <h5 class="mt-3">Digital Piano</h5>
-            <a href="product.php" class="btn btn-dark">View</a>
+            <a href="/Music-Equipment-and-Instrument-Store/admin/admin_products.php" class="btn btn-dark">View</a>
         </div>
 
         <div class="col-md-4">
