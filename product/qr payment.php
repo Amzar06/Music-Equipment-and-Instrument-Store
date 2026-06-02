@@ -59,6 +59,12 @@ if (isset($_GET['amount'])) {
     </div>
 
     <form action="payment page.php" method="POST" enctype="multipart/form-data">
+        <!-- Capture Address Details -->
+        <input type="hidden" name="street" value="<?php echo htmlspecialchars($_GET['street'] ?? ''); ?>">
+        <input type="hidden" name="city" value="<?php echo htmlspecialchars($_GET['city'] ?? ''); ?>">
+        <input type="hidden" name="postcode" value="<?php echo htmlspecialchars($_GET['postcode'] ?? ''); ?>">
+        <input type="hidden" name="state" value="<?php echo htmlspecialchars($_GET['state'] ?? ''); ?>">
+
         <!-- Receipt Upload -->
         <div style="text-align: left; margin-bottom: 24px;">
             <label style="display: block; margin-bottom: 8px; font-weight: 500;">Upload Payment Receipt *</label>

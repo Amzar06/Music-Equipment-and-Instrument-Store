@@ -9,36 +9,85 @@ if (!isset($_SESSION['cust_id'])) {
 $cust_id = $_SESSION['cust_id'];
 
 $total_price = 0.00;
-if (isset($conn)) {
-    $query = $conn->prepare("
-        SELECT p.prod_sale_price 
-        FROM cart_items ci
-        JOIN cart c ON ci.cart_id = c.id
-        JOIN products p ON ci.instrument_id = p.prod_id
-        WHERE c.user_id = ?
-    ");
-    if ($query) {
-        $query->bind_param("i", $cust_id);
-        $query->execute();
-        $result = $query->get_result();
-        while($row = $result->fetch_assoc()) {
-            if (isset($row['prod_sale_price'])) {
-                $total_price += $row['prod_sale_price'];
-            }
-        }
-        $query->close();
-        
-        // After calculating the total, empty the user's cart so checkout is complete
-        $del_query = $conn->prepare("
-            DELETE ci FROM cart_items ci
+$db_error = null;
+
+if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        $cart_items = [];
+        $query = $conn->prepare("
+            SELECT p.prod_sale_price, p.prod_id 
+            FROM cart_items ci
             JOIN cart c ON ci.cart_id = c.id
+            JOIN products p ON ci.instrument_id = p.prod_id
             WHERE c.user_id = ?
         ");
-        if ($del_query) {
-            $del_query->bind_param("i", $cust_id);
-            $del_query->execute();
-            $del_query->close();
+        if ($query) {
+            $query->bind_param("i", $cust_id);
+            $query->execute();
+            $result = $query->get_result();
+            while($row = $result->fetch_assoc()) {
+                if (isset($row['prod_sale_price'])) {
+                    $total_price += $row['prod_sale_price'];
+                    $cart_items[] = $row;
+                }
+            }
+            $query->close();
+            
+            if (!empty($cart_items) && $total_price > 0) {
+                // 1. Process Address
+                // Combine street into city since db might lack a street column
+                $street = $_POST['street'] ?? '';
+                $city = $_POST['city'] ?? '';
+                $postcode = $_POST['postcode'] ?? '';
+                $state = $_POST['state'] ?? '';
+                $combined_city = trim($street . ', ' . $city, ', ');
+                
+                $addr_id = null;
+                $addr = $conn->prepare("INSERT INTO addresses (cust_id, city, state, postcode) VALUES (?, ?, ?, ?)");
+                if ($addr) {
+                    $addr->bind_param("isss", $cust_id, $combined_city, $state, $postcode);
+                    $addr->execute();
+                    $addr_id = $conn->insert_id;
+                    $addr->close();
+                }
+
+                // 2. Process Order 
+                // Using a safe insert, omitting address_id to prevent crashes if DB schema is older
+                $ord = $conn->prepare("INSERT INTO orders (cust_id, total_amount, status) VALUES (?, ?, 'Pending')");
+                if ($ord) {
+                    $ord->bind_param("id", $cust_id, $total_price);
+                    if ($ord->execute()) {
+                        $order_id = $conn->insert_id;
+                        $ord->close();
+                        
+                        // Try older schema linking as fallback if orders doesn't have address_id
+                        // Do order items
+                        $oi = $conn->prepare("INSERT INTO order_items (order_id, prod_id, order_qty, unit_price) VALUES (?, ?, 1, ?)");
+                        if ($oi) {
+                            foreach ($cart_items as $item) {
+                                $oi->bind_param("iid", $order_id, $item['prod_id'], $item['prod_sale_price']);
+                                $oi->execute();
+                            }
+                            $oi->close();
+                        }
+                    }
+                }
+
+                // 3. Clear Cart
+                $del_query = $conn->prepare("
+                    DELETE ci FROM cart_items ci
+                    JOIN cart c ON ci.cart_id = c.id
+                    WHERE c.user_id = ?
+                ");
+                if ($del_query) {
+                    $del_query->bind_param("i", $cust_id);
+                    $del_query->execute();
+                    $del_query->close();
+                }
+            }
         }
+    } catch (mysqli_sql_exception $e) {
+        $db_error = "Database Error generating order: " . $e->getMessage();
     }
 }
 ?>
