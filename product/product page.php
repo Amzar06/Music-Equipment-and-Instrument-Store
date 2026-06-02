@@ -51,7 +51,7 @@ if (isset($conn)) {
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h2 style="margin: 0;">Our Instruments</h2>
         <div>
-            <a href="logout.php" style="margin: 0 12px 0 0; padding: 10px 20px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 8px;">Logout</a>
+            <a href="../customer/logout_page.php" style="margin: 0 12px 0 0; padding: 10px 20px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 8px;">Logout</a>
             <a href="cart page.php" style="margin: 0; padding: 10px 20px; background: rgba(255,255,255,0.1); border-radius: 8px;">View Cart</a>
         </div>
     </div>
