@@ -20,7 +20,7 @@ $link_style    = "display: inline-block; width: 80%; text-decoration: none;";
         <h2>Customer Portal</h2>
         <p>Welcome to the system</p>
 
-        <a href="/Music-Equipment-and-Instrument-Store/product" style="<?php echo $link_style; ?>">
+        <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php" style="<?php echo $link_style; ?>">
             <button type="button" style="<?php echo $button_style; ?>">Login</button>
         </a>
 
