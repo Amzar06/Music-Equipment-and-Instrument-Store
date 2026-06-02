@@ -38,7 +38,7 @@ if ($product_id === 1) {
       <textarea id="description" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background-color: #f9f9f9; resize: none;" readonly><?php echo htmlspecialchars($product_description); ?></textarea>
       
       <div style="margin-top: 30px; text-align: center;">
-          <a href="home_page.php" style="display: block; background-color: #1d61f2; color: white; border: none; padding: 12px 20px; border-radius: 4px; font-weight: bold; text-decoration: none; font-size: 14px; max-width: 260px; margin: 0 auto 20px auto;">Search</a>
+          <a href="/Music-Equipment-and-Instrument-Store/admin/admin_products.php" style="display: block; background-color: #1d61f2; color: white; border: none; padding: 12px 20px; border-radius: 4px; font-weight: bold; text-decoration: none; font-size: 14px; max-width: 260px; margin: 0 auto 20px auto;">Search</a>
       </div>
 
       <div style="text-align: center;">
