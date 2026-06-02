@@ -12,8 +12,7 @@ $total_price = 0.00;
 $db_error = null;
 
 if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-        $cart_items = [];
+    $cart_items = [];
         $query = $conn->prepare("
             SELECT p.prod_sale_price, p.prod_id 
             FROM cart_items ci
