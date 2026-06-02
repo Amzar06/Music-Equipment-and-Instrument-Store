@@ -116,7 +116,7 @@ CREATE TABLE `order_items` (
   `order_item_id` int(11) NOT NULL,
   `order_id` int(11) NOT NULL,
   `prod_id` int(11) NOT NULL,
-  `order_qty` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL,
   `unit_price` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
