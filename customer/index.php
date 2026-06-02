@@ -1,11 +1,9 @@
 <?php
-// Start the session to check if the user is logged in
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// Simulated session data for demonstration purposes. 
-// Remove or comment out these 2 lines once your actual login system is connected!
+
 $_SESSION['user_id'] = 1; 
 $_SESSION['username'] = "Alex"; 
 ?>
@@ -16,7 +14,6 @@ $_SESSION['username'] = "Alex";
     <link rel="stylesheet" href="customer.css">
 
     <style>
-        /* Modern Layout & Positioning (Preserving original font colors) */
         * {
             margin: 0;
             padding: 0;
@@ -28,13 +25,12 @@ $_SESSION['username'] = "Alex";
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        /* --- NAVIGATION HEADER --- */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 25px 100px; /* Increased padding to breathe and push elements elegantly to the sides */
-            border-bottom: 1px solid #eaeaea;
+            border-bottom: 2px solid #eaeaea;
             position: sticky;
             top: 0;
             background: #fff;
