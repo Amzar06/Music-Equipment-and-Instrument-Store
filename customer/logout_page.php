@@ -18,19 +18,17 @@ session_destroy();
 <head>
   <meta charset="UTF-8">
   <title>Logout</title>
-  <link rel="stylesheet" href="customer.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <div class="container">
-    <div class="card" style="text-align: center;">
+  <div class="container" style="justify-content: center; text-align: center; max-width: 400px; margin: 100px auto;">
       <h2>You Have Logged Out</h2>
-      <p>Thank you for using the system!</p>
+      <p style="margin-bottom: 24px;">Thank you for using the system!</p>
 
       <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php">
         <button type="button">Login Again</button>
       </a>
-    </div>
   </div>
 
 </body>
