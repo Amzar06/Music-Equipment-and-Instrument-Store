@@ -18,7 +18,7 @@
 
         <br><br>
 
-        <a href="customer_register_page.php" style="display: inline-block; width: 80%; text-decoration: none;">
+        <a href="register_page.php" style="display: inline-block; width: 80%; text-decoration: none;">
             <button type="button" style="width: 100%; padding: 12px 0; background-color: #1e62ec; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;">Register</button>
         </a>
 
