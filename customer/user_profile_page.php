@@ -2,9 +2,9 @@
 session_start();
 
 
-$user_name  = $_SESSION['user_name']  ?? "John Doe";
-$user_email = $_SESSION['user_email'] ?? "john@email.com";
-$user_phone = $_SESSION['user_phone'] ?? "0123456789";
+$user_name  = $_SESSION['user_name']  ?? "";
+$user_email = $_SESSION['user_email'] ?? "";
+$user_phone = $_SESSION['user_phone'] ?? "";
 
 ?>
 <!DOCTYPE html>
@@ -16,7 +16,6 @@ $user_phone = $_SESSION['user_phone'] ?? "0123456789";
 </head>
 <body>
 
-  <div class="header">ADMIN PORTAL</div>
 
   <div class="container">
     <div class="card">
