@@ -6,6 +6,28 @@
 </head>
 <body>
 
+.button-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px; 
+      margin-top: 20px;
+    }
+
+    .btn-link {
+      display: inline-block;
+      width: 450px;             
+      padding: 12px 0;          
+      background-color: #1d61f2;
+      color: white;
+      text-align: center;
+      text-decoration: none;    
+      border-radius: 8px;       
+      font-weight: bold;
+      font-size: 14px;
+      transition: background-color 0.2s ease;
+    }
+
 <div class="container">
     <div class="card">
 
