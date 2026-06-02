@@ -12,15 +12,15 @@
         <h2>Customer Portal</h2>
         <p>Welcome to the system</p>
 
-        <a href="cust_login.php">
-            <button type="button">Login</button>
-        </a>
+        <div class="btn-group">
+            <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php">
+                <button type="button">Login</button>
+            </a>
 
-        <br><br>
-
-        <a href="customer_register_page.php">
-            <button type="button">Register</button>
-        </a>
+            <a href="customer_register_page.php">
+                <button type="button">Register</button>
+            </a>
+        </div>
 
     </div>
 </div>
