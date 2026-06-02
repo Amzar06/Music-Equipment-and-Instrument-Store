@@ -25,6 +25,7 @@ $_SESSION['username'] = "Alex";
 
         body {
             background-color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         /* --- NAVIGATION HEADER --- */
@@ -32,8 +33,8 @@ $_SESSION['username'] = "Alex";
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 20px; /* Reduced to 20px to move the logo and buttons completely to the corners */
-            border-bottom: 1px solid #ddd;
+            padding: 25px 80px; /* Increased padding to breathe and push elements elegantly to the sides */
+            border-bottom: 1px solid #eaeaea;
             position: sticky;
             top: 0;
             background: #fff;
@@ -41,22 +42,34 @@ $_SESSION['username'] = "Alex";
         }
 
         .logo h1 {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            color: #1d4e89; /* Matches the deep blue logo text in image 2 */
+        }
+
+        nav {
+            margin-left: auto;
+            margin-right: 40px; /* Separates the main nav menu cleanly from the profile actions */
         }
 
         nav ul {
             display: flex;
             list-style: none;
-            gap: 25px;
+            gap: 20px;
         }
 
         nav ul li a {
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
+            color: #666; /* Gray links like image 2 */
+            transition: color 0.2s;
+        }
+
+        nav ul li a:hover {
+            color: #1d4e89;
         }
 
         .auth-buttons {
@@ -67,20 +80,23 @@ $_SESSION['username'] = "Alex";
 
         /* Clean Sign In / Join Buttons from Screenshot */
         .btn-signin {
-            background: none;
-            border: 1px solid #ccc;
-            padding: 6px 16px;
+            background: #2457a3; /* Royal blue background for the primary button block look */
+            color: #fff !important;
+            border: 1px solid #1d4e89;
+            padding: 8px 18px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 13px;
-            font-weight: 500;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .btn-join {
             background: #111;
-            color: #fff; /* Button background contrast color */
+            color: #fff; 
             border: none;
-            padding: 7px 16px;
+            padding: 8px 18px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 13px;
@@ -91,28 +107,22 @@ $_SESSION['username'] = "Alex";
         .user-profile-menu {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             font-size: 14px;
             font-weight: 500;
         }
 
-        .avatar {
-            width: 32px;
-            height: 32px;
-            background: #f0f0f0;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #666;
-            border: 1px solid #ddd;
-        }
-
         .logout-link {
-            font-size: 12px;
+            background: #2457a3; /* Gives Log Out the matching blue structural button design */
+            color: #fff;
+            border: 1px solid #1d4e89;
+            padding: 8px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
             text-decoration: none;
-            margin-left: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         /* --- HERO BANNER --- */
@@ -133,7 +143,7 @@ $_SESSION['username'] = "Alex";
             text-transform: uppercase;
             letter-spacing: 2px;
             margin-bottom: 8px;
-            color: #fff; /* Keeps text legible over background image */
+            color: #fff; 
         }
 
         .hero-content p {
@@ -181,7 +191,6 @@ $_SESSION['username'] = "Alex";
             flex-direction: column;
         }
 
-        /* Box styling changed to modern image display card */
         .product-image {
             width: 100%;
             height: 300px;
@@ -198,7 +207,7 @@ $_SESSION['username'] = "Alex";
         }
 
         .product-box p {
-            color: #666; /* Kept your original hex color style */
+            color: #666; 
             font-size: 14px;
             margin-bottom: 12px;
         }
@@ -234,9 +243,6 @@ $_SESSION['username'] = "Alex";
         <div class="auth-buttons">
             <?php if (isset($_SESSION['user_id'])): ?>
                 <div class="user-profile-menu">
-                    <div class="avatar">
-                        <?php echo strtoupper(substr($_SESSION['username'], 0, 1)); ?>
-                    </div>
                     <a href="profile.php" class="btn-signin">Profile</a>
                     <a href="logout.php" class="logout-link">Log Out</a>
                 </div>
