@@ -61,7 +61,7 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             $ord->close();
                             
                             // Do order items
-                            $oi = $conn->prepare("INSERT INTO order_items (order_id, prod_id, order_qty, unit_price) VALUES (?, ?, 1, ?)");
+                            $oi = $conn->prepare("INSERT INTO order_items (order_id, prod_id, quantity, unit_price) VALUES (?, ?, 1, ?)");
                             if ($oi) {
                                 foreach ($cart_items as $item) {
                                     $oi->bind_param("iid", $order_id, $item['prod_id'], $item['prod_sale_price']);
