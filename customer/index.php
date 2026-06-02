@@ -64,7 +64,7 @@ $_SESSION['username'] = "Alex";
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
-            color: #666; /* Gray links like image 2 */
+            color: #666; 
             transition: color 0.2s;
         }
 
@@ -78,9 +78,9 @@ $_SESSION['username'] = "Alex";
             gap: 12px;
         }
 
-        /* Clean Sign In / Join Buttons from Screenshot */
+       
         .btn-signin {
-            background: #2457a3; /* Royal blue background for the primary button block look */
+            background: #2457a3; 
             color: #fff !important;
             border: 1px solid #1d4e89;
             padding: 8px 18px;
@@ -113,7 +113,7 @@ $_SESSION['username'] = "Alex";
         }
 
         .logout-link {
-            background: #2457a3; /* Gives Log Out the matching blue structural button design */
+            background: #2457a3; 
             color: #fff;
             border: 1px solid #1d4e89;
             padding: 8px 18px;
@@ -243,12 +243,12 @@ $_SESSION['username'] = "Alex";
         <div class="auth-buttons">
             <?php if (isset($_SESSION['user_id'])): ?>
                 <div class="user-profile-menu">
-                    <a href="profile.php" class="btn-signin">Profile</a>
-                    <a href="logout.php" class="logout-link">Log Out</a>
+                    <a href="user_profile_page.php" class="btn-signin">Profile</a>
+                    <a href="logout_page.php" class="logout-link">Log Out</a>
                 </div>
             <?php else: ?>
                 <button class="btn-signin" onclick="location.href='login.php'">Sign In</button>
-                <button class="btn-join" onclick="location.href='register.php'">Join</button>
+                <button class="btn-join" onclick="location.href='register_page.php'">Join</button>
             <?php endif; ?>
         </div>
     </header>
@@ -271,7 +271,7 @@ $_SESSION['username'] = "Alex";
                 <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1510915361894-db8b60106cb1?q=80&w=500');"></div>
                 <h4>Acoustic Guitar</h4>
                 <p>RM 499.00</p>
-                <a href="product_details.php">
+                <a href="product_details_page.php">
                     <button>View Details</button>
                 </a>
             </div>
