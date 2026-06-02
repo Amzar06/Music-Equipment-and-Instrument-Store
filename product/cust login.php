@@ -23,10 +23,10 @@
         </div>
 
         <div style="text-align: right; font-size: 14px;">
-            <a href="#" style="margin-top: 0;">Forgot Password?</a>
+            <a href="/Music-Equipment-and-Instrument-Store/customer/forgot_password_page.php" style="margin-top: 0;">Forgot Password?</a>
         </div>
 
-        <button type="submit">Login</button>
+        <button type="/Music-Equipment-and-Instrument-Store/customer/home_page.php">Login</button>
     </form>
 
     <div class="text-center mt-4" style="font-size: 14px;">
