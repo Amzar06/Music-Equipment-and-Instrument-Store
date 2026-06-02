@@ -44,7 +44,7 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     $combined_city = trim($street . ', ' . $city, ', ');
                     
                     $addr_id = null;
-                    $addr = $conn->prepare("INSERT INTO addresses (cust_id, city, state, postcode) VALUES (?, ?, ?, ?)");
+                    $addr = $conn->prepare("INSERT INTO addresses (user_id, city, state, postcode) VALUES (?, ?, ?, ?)");
                     if ($addr) {
                         $addr->bind_param("isss", $cust_id, $combined_city, $state, $postcode);
                         $addr->execute();
@@ -53,7 +53,7 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     // 2. Process Order 
-                    $ord = $conn->prepare("INSERT INTO orders (cust_id, total_amount, status) VALUES (?, ?, 'Pending')");
+                    $ord = $conn->prepare("INSERT INTO orders (user_id, total_amount, status) VALUES (?, ?, 'Pending')");
                     if ($ord) {
                         $ord->bind_param("id", $cust_id, $total_price);
                         if ($ord->execute()) {
