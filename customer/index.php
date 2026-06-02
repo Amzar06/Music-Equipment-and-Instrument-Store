@@ -7,7 +7,7 @@ if (session_status() == PHP_SESSION_NONE) {
 // Simulated session data for demonstration purposes. 
 // Remove or comment out these 2 lines once your actual login system is connected!
 $_SESSION['user_id'] = 1; 
-$_SESSION['username'] = ""; 
+$_SESSION['username'] = "Alex"; 
 ?>
 <!DOCTYPE html>
 <html>
@@ -32,7 +32,7 @@ $_SESSION['username'] = "";
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 40px;
+            padding: 15px 20px; /* Reduced to 20px to move the logo and buttons completely to the corners */
             border-bottom: 1px solid #ddd;
             position: sticky;
             top: 0;
@@ -237,8 +237,7 @@ $_SESSION['username'] = "";
                     <div class="avatar">
                         <?php echo strtoupper(substr($_SESSION['username'], 0, 1)); ?>
                     </div>
-                    <span>Hi, <strong><?php echo htmlspecialchars($_SESSION['username']); ?></strong></span>
-                    <a href="profile.php" class="btn-signin" style="margin-left: 10px;">Profile</a>
+                    <a href="profile.php" class="btn-signin">Profile</a>
                     <a href="logout.php" class="logout-link">Log Out</a>
                 </div>
             <?php else: ?>
