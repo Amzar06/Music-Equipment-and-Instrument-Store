@@ -33,7 +33,7 @@ $_SESSION['username'] = "Alex";
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 40px 80px; /* Increased padding to breathe and push elements elegantly to the sides */
+            padding: 80px 80px; /* Increased padding to breathe and push elements elegantly to the sides */
             border-bottom: 1px solid #eaeaea;
             position: sticky;
             top: 0;
