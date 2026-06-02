@@ -7,7 +7,7 @@ if (session_status() == PHP_SESSION_NONE) {
 // Simulated session data for demonstration purposes. 
 // Remove or comment out these 2 lines once your actual login system is connected!
 $_SESSION['user_id'] = 1; 
-$_SESSION['username'] = "Alex"; 
+$_SESSION['username'] = ""; 
 ?>
 <!DOCTYPE html>
 <html>
