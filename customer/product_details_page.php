@@ -38,13 +38,10 @@ if ($product_id === 1) {
       <textarea id="description" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background-color: #f9f9f9; resize: none;" readonly><?php echo htmlspecialchars($product_description); ?></textarea>
       
       <div style="margin-top: 30px; text-align: center;">
-          <form action="home_page.php" method="GET" style="display: inline-block; width: 100%; max-width: 300px; margin-bottom: 15px;">
-              <input type="text" name="search" placeholder="Search products..." style="width: 100%; padding: 10px; border: 1px solid #1d61f2; border-radius: 4px; box-sizing: border-box; margin-bottom: 10px;">
-              <button type="submit" style="background-color: #1d61f2; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%;">Search</button>
-          </form>
+          <a href="home_page.php" style="display: block; background-color: #1d61f2; color: white; border: none; padding: 12px 20px; border-radius: 4px; font-weight: bold; text-decoration: none; font-size: 14px; max-width: 260px; margin: 0 auto 20px auto;">Search</a>
       </div>
 
-      <div style="margin-top: 10px; text-align: center;">
+      <div style="text-align: center;">
           <a href="home_page.php" style="color: #1d61f2; text-decoration: none; font-weight: bold; font-size: 14px;">← Back to Dashboard</a>
       </div>
       
