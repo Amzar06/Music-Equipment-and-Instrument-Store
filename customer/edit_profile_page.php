@@ -6,9 +6,9 @@ $error_message = "";
 $success_message = "";
 
 
-$current_name  = "John Doe";
-$current_email = "john@gmail.com";
-$current_phone = "0123456789";
+$current_name  = "";
+$current_email = "";
+$current_phone = "";
 
 
 // 2. HANDLE FORM SUBMISSION
