@@ -1,15 +1,11 @@
 <?php
-// Start the session to access logged-in user details
 session_start();
 
-// Initialize message variables
+
 $error_message = "";
 $success_message = "";
 
-/* 1. FETCH CURRENT USER DATA (Placeholder)
-  In a real app, you'd pull this from a database based on the logged-in user's ID.
-  For now, we'll simulate existing data:
-*/
+
 $current_name  = "John Doe";
 $current_email = "john@gmail.com";
 $current_phone = "0123456789";
