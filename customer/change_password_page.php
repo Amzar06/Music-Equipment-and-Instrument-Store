@@ -1,46 +1,33 @@
 <?php
-// Start the session (assuming you use sessions to track logged-in users)
 session_start();
 
-// Initialize variables for messages
+
 $error_message = "";
 $success_message = "";
 
-// Check if the form is submitted
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Retrieve and sanitize user inputs
     $current_password = $_POST['current_password'] ?? '';
     $new_password     = $_POST['new_password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
 
-    // 1. Basic Validation: Check if fields are empty
     if (empty($current_password) || empty($new_password) || empty($confirm_password)) {
         $error_message = "All fields are required.";
     } 
-    // 2. Validation: Check if new passwords match
     elseif ($new_password !== $confirm_password) {
         $error_message = "New passwords do not match.";
     } 
-    // 3. Validation: Password strength (Optional, e.g., min 8 characters)
     elseif (strlen($new_password) < 8) {
         $error_message = "New password must be at least 8 characters long.";
     } 
     else {
-        /* 4. DATABASE LOGIC (Placeholder)
-           This is where you would connect to your database, verify the 
-           $current_password against the stored hash, and update it.
-           
-           Example flow:
-           - Fetch user's current password hash from DB.
-           - verify password: if (password_verify($current_password, $stored_hash))
-           - hash new password: $hashed_new = password_hash($new_password, PASSWORD_DEFAULT);
-           - update DB.
-        */
 
-        // Simulating a successful update:
+
+
         $success_message = "Password updated successfully!";
         
-        // Redirect to home_page.php after a brief delay, or instantly
+
         header("Refresh: 2; URL=home_page.php");
     }
 }
