@@ -28,7 +28,7 @@ $user_phone = $_SESSION['user_phone'] ?? "";
       <label for="phone">Phone Number</label>
       <input type="text" id="phone" value="<?php echo htmlspecialchars($user_phone); ?>" readonly>
       
-      <button type="button" class="btn-create" onclick="location.href='create_account.php'">Create Account</button>
+      <button type="button" class="btn-create" style="margin-top: 25px;" onclick="location.href='create_account.php'">Create Account</button>
       
     </div>
   </div>
