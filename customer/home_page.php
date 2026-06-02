@@ -41,7 +41,7 @@
                 <div class="text-center">
                     <h1>Musical Instruments For Everyone</h1>
                     <p>Buy or rent your favorite instruments today.</p>
-                    <a href="product.php" class="btn btn-primary">Shop Now</a>
+                    <a href="/Music-Equipment-and-Instrument-Store/admin/admin_products.php" class="btn btn-primary">Shop Now</a>
                 </div>
             </div>
         </div>
@@ -94,7 +94,7 @@
                 Digital Piano
             </div>
             <h5 class="mt-3">Digital Piano</h5>
-            <a href="/Music-Equipment-and-Instrument-Store/admin/admin_products.php" class="btn btn-dark">View</a>
+            <a href="product.php" class="btn btn-dark">View</a>
         </div>
 
         <div class="col-md-4">
