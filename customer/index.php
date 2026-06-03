@@ -1,17 +1,13 @@
 <?php
 session_start();
 include '../database.php';
-
-// Force authentication check: Redirect to login page if customer session isn't active
 if (!isset($_SESSION['cust_id'])) {
     header("Location: ../product/cust login.php");
     exit();
 }
-
 $cust_id = $_SESSION['cust_id'];
 $cust_name = "User";
 
-// Fetch the authenticated user's name dynamically from the database
 if (isset($conn)) {
     $stmt = $conn->prepare("SELECT cust_name FROM customers WHERE cust_id = ?");
     if ($stmt) {
@@ -26,9 +22,8 @@ if (isset($conn)) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>Musical Instrument Store</title>
     <link rel="stylesheet" href="customer.css">
 
@@ -48,7 +43,7 @@ if (isset($conn)) {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 20px; 
+            padding: 5px 10px; 
             border-bottom: 1px solid #eaeaea;
             position: sticky;
             top: 0;
@@ -113,16 +108,6 @@ if (isset($conn)) {
             gap: 12px;
         }
 
-        .welcome-text {
-            font-size: 14px;
-            font-weight: 500;
-            color: #333;
-        }
-
-        .welcome-text strong {
-            color: #1d61f2;
-        }
-
         .btn-signin {
             background: #1d61f2; 
             color: #fff !important;
@@ -147,13 +132,20 @@ if (isset($conn)) {
             font-size: 13px;
             font-weight: 500;
             white-space: nowrap;
-            text-decoration: none;
+        }
+
+        .user-profile-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 500;
         }
 
         .logout-link {
-            background: #e11d48; 
+            background: #1d61f2; 
             color: #fff;
-            border: 1px solid #e11d48;
+            border: 1px solid #1d61f2;
             padding: 8px 18px;
             border-radius: 4px;
             cursor: pointer;
@@ -162,12 +154,6 @@ if (isset($conn)) {
             text-decoration: none;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             white-space: nowrap;
-            transition: background 0.2s;
-        }
-
-        .logout-link:hover {
-            background: #be123c;
-            border-color: #be123c;
         }
 
         /* --- HERO BANNER --- */
@@ -256,6 +242,12 @@ if (isset($conn)) {
             font-size: 16px;
         }
 
+        .product-box p {
+            color: #666; 
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
         .product-box button {
             align-self: flex-start;
             background: #111;
@@ -278,7 +270,7 @@ if (isset($conn)) {
 
     <header>
         <div class="logo">
-            <h1>Instrument Store</h1>
+            <h1>Musical Instrument Store</h1>
         </div>
 
         <div class="search-container">
@@ -295,12 +287,14 @@ if (isset($conn)) {
         </nav>
 
         <div class="auth-buttons">
-            <?php if (isset($_SESSION['cust_id'])): ?>
-                <span class="welcome-text">Hello, <strong><?php echo htmlspecialchars($cust_name); ?></strong></span>
-                <a href="logout_page.php" class="logout-link">Log Out</a>
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <div class="user-profile-menu">
+                    <a href="register_page.php" class="btn-signin">Register</a>
+                    <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php" class="logout-link">Log In</a>
+                </div>
             <?php else: ?>
-                <a href="../product/cust login.php" class="btn-signin">Sign In</a>
-                <a href="register_page.php" class="btn-join">Join</a>
+                <button class="btn-signin" onclick="location.href='login.php'">Sign In</button>
+                <button class="btn-join" onclick="location.href='register_page.php'">Join</button>
             <?php endif; ?>
         </div>
     </header>
@@ -314,9 +308,11 @@ if (isset($conn)) {
     </section>
 
     <main class="main-container" id="featured">
+        
         <h3 class="section-title">Featured Instruments</h3>
 
         <div class="product-grid">
+
             <div class="product-box">
                 <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1510915361894-db8b60106cb1?q=80&w=500');"></div>
                 <h4>Acoustic Guitar</h4>
@@ -343,7 +339,7 @@ if (isset($conn)) {
 
             <div class="product-box">
                 <div class="product-image" style="background-image: url('https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcSSinNKHS_yQVS5TOue4wX8OHQ7gZzp6yN1rAVwW3wu4195BsczxYcv_r2A_ma3');"></div>
-                <h4>Ukulele</h4>
+                <h4>ukulele</h4>
                 <a href="product_details_page.php?id=5"><button>View Details</button></a>
             </div>
 
@@ -352,6 +348,7 @@ if (isset($conn)) {
                 <h4>Violin</h4>
                 <a href="product_details_page.php?id=6"><button>View Details</button></a>
             </div>
+
         </div>
     </main>
 
