@@ -297,7 +297,7 @@ if (isset($conn)) {
         <div class="auth-buttons">
             <?php if (isset($_SESSION['cust_id'])): ?>
                 <span class="welcome-text">Hello, <strong><?php echo htmlspecialchars($cust_name); ?></strong></span>
-                <a href="logout.php" class="logout-link">Log Out</a>
+                <a href="logout_page.php" class="logout-link">Log Out</a>
             <?php else: ?>
                 <a href="../product/cust login.php" class="btn-signin">Sign In</a>
                 <a href="register_page.php" class="btn-join">Join</a>
