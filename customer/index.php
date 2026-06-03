@@ -265,7 +265,7 @@ $_SESSION['username'] = "Alex";
         
         <nav>
             <ul>
-                <li><a href="#">All</a></li>
+                <li><a href="/Music-Equipment-and-Instrument-Store/product/product page.php">All</a></li>
                 <li><a href="#">Guitars</a></li>
                 <li><a href="#">Pianos</a></li>
                 <li><a href="#">Drums</a></li>
@@ -302,43 +302,37 @@ $_SESSION['username'] = "Alex";
             <div class="product-box">
                 <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1510915361894-db8b60106cb1?q=80&w=500');"></div>
                 <h4>Acoustic Guitar</h4>
-                <p>RM 499.00</p>
-                <a href="product_details_page.php"><button>View Details</button></a>
+                <a href="product_details_page.php?id=1"><button>View Details</button></a>
             </div>
 
             <div class="product-box">
                 <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1552422535-c45813c61732?q=80&w=500');"></div>
                 <h4>Digital Piano</h4>
-                <p>RM 1,299.00</p>
-                <a href="product_details.php"><button>View Details</button></a>
+                <a href="product_details_page.php?id=2"><button>View Details</button></a>
             </div>
 
             <div class="product-box">
                 <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1543443374-b6fe10a6ab7b?q=80&w=500');"></div>
                 <h4>Drum Set</h4>
-                <p>RM 899.00</p>
-                <a href="product_details.php"><button>View Details</button></a>
+                <a href="product_details_page.php?id=3"><button>View Details</button></a>
             </div>
 
             <div class="product-box">
                 <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?q=80&w=500');"></div>
                 <h4>Electric Guitar</h4>
-                <p>RM 1,150.00</p>
-                <a href="product_details.php"><button>View Details</button></a>
+                <a href="product_details_page.php?id=4"><button>View Details</button></a>
             </div>
 
             <div class="product-box">
                 <div class="product-image" style="background-image: url('https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcSSinNKHS_yQVS5TOue4wX8OHQ7gZzp6yN1rAVwW3wu4195BsczxYcv_r2A_ma3');"></div>
                 <h4>ukulele</h4>
-                <p>RM 180.00</p>
-                <a href="product_details.php"><button>View Details</button></a>
+                <a href="product_details_page.php?id=5"><button>View Details</button></a>
             </div>
 
             <div class="product-box">
                 <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1612225330812-01a9c6b355ec?q=80&w=500');"></div>
                 <h4>Violin</h4>
-                <p>RM 650.00</p>
-                <a href="product_details.php"><button>View Details</button></a>
+                <a href="product_details_page.php?id=6"><button>View Details</button></a>
             </div>
 
         </div>
