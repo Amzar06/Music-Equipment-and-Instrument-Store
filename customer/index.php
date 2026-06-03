@@ -338,4 +338,15 @@ $_SESSION['username'] = "Alex";
                 <a href="product_details.php"><button>View Details</button></a>
             </div>
 
-            <div
+            <div class="product-box">
+                <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1612225330812-01a9c6b355ec?q=80&w=500');"></div>
+                <h4>Violin</h4>
+                <p>RM 650.00</p>
+                <a href="product_details.php"><button>View Details</button></a>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>
