@@ -4,8 +4,6 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// Simulated session data for demonstration purposes. 
-// Remove or comment out these 2 lines once your actual login system is connected!
 $_SESSION['user_id'] = 1; 
 $_SESSION['username'] = "Alex"; 
 ?>
@@ -16,7 +14,6 @@ $_SESSION['username'] = "Alex";
     <link rel="stylesheet" href="customer.css">
 
     <style>
-        /* Modern Layout & Positioning (Preserving original font colors) */
         * {
             margin: 0;
             padding: 0;
@@ -28,12 +25,11 @@ $_SESSION['username'] = "Alex";
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        /* --- NAVIGATION HEADER --- */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 40px; 
+            padding: 5px 10px; 
             border-bottom: 1px solid #eaeaea;
             position: sticky;
             top: 0;
@@ -46,7 +42,7 @@ $_SESSION['username'] = "Alex";
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #1d4e89; 
+            color: #1d61f2; 
             white-space: nowrap;
         }
 
@@ -67,7 +63,7 @@ $_SESSION['username'] = "Alex";
         }
 
         .search-container input:focus {
-            border-color: #1d4e89;
+            border-color: #1d61f2;
         }
 
         nav {
@@ -89,7 +85,7 @@ $_SESSION['username'] = "Alex";
         }
 
         nav ul li a:hover {
-            color: #1d4e89;
+            color: #1d61f2;
         }
 
         .auth-buttons {
@@ -99,9 +95,9 @@ $_SESSION['username'] = "Alex";
         }
 
         .btn-signin {
-            background: #2457a3; 
+            background: #1d61f2; 
             color: #fff !important;
-            border: 1px solid #1d4e89;
+            border: 1px solid #1d61f2;
             padding: 8px 18px;
             border-radius: 4px;
             cursor: pointer;
@@ -133,9 +129,9 @@ $_SESSION['username'] = "Alex";
         }
 
         .logout-link {
-            background: #2457a3; 
+            background: #1d61f2; 
             color: #fff;
-            border: 1px solid #1d4e89;
+            border: 1px solid #1d61f2;
             padding: 8px 18px;
             border-radius: 4px;
             cursor: pointer;
