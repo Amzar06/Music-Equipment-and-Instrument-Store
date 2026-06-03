@@ -12,24 +12,24 @@ $orders = [];
 $db_error = null;
 if (isset($conn)) {
     try {
-        // Fetch only columns that exist in the old 'orders' table schema 
-        // to prevent 'Unknown column' errors if the DB is un-updated.
+        // Fetch both rentals and purchases grouped by date
         $query = $conn->prepare("
-            SELECT order_id, total_amount, status, order_date
-            FROM orders 
-            WHERE cust_id = ?
-            ORDER BY order_date DESC
+            SELECT 'Order' as type, o.order_id as id, o.total_amount, o.status, o.order_date as date, a.city, a.state 
+            FROM orders o
+            LEFT JOIN addresses a ON o.address_id = a.address_id
+            WHERE o.cust_id = ?
+            UNION ALL
+            SELECT 'Rental' as type, r.rental_id as id, r.total_amount, r.status, r.created_at as date, a.city, a.state
+            FROM rentals r
+            LEFT JOIN addresses a ON r.address_id = a.address_id
+            WHERE r.cust_id = ?
+            ORDER BY date DESC
         ");
         if ($query) {
-            $query->bind_param("i", $cust_id);
+            $query->bind_param("ii", $cust_id, $cust_id);
             if ($query->execute()) {
                 $result = $query->get_result();
                 while($row = $result->fetch_assoc()) {
-                    // Set default nulls for missing columns so HTML gracefully falls back
-                    $row['city'] = null;
-                    $row['state'] = null;
-                    $row['tracking_number'] = null; 
-                    
                     $orders[] = $row;
                 }
             } else {
@@ -67,35 +67,40 @@ if (isset($conn)) {
     <table>
         <thead>
             <tr>
-                <th>Order ID</th>
+                <th>Order Type & ID</th>
                 <th>Delivery Address</th>
                 <th>Total Price</th>
-                <th>Tracking Number</th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($orders)): ?>
                 <tr>
-                    <td colspan="4" style="text-align: center; padding: 24px; color: var(--text-secondary);">Your database currently has no past orders explicitly linked to you.</td>
+                    <td colspan="4" style="text-align: center; padding: 24px; color: var(--text-secondary);">Your database currently has no past transactions explicitly linked to you.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach($orders as $order): ?>
                 <tr>
-                    <td>#<?php echo htmlspecialchars($order['order_id']); ?></td>
+                    <td>
+                        <span style="font-size: 0.8rem; padding: 2px 6px; background: <?php echo $order['type'] === 'Rental' ? 'var(--secondary)' : 'var(--accent)'; ?>; color: white; border-radius: 4px; margin-right: 8px;"><?php echo htmlspecialchars($order['type']); ?></span>
+                        #<?php echo htmlspecialchars($order['id']); ?>
+                    </td>
                     <td>
                         <?php if ($order['city']): ?>
-                            <?php echo htmlspecialchars($order['city'] ?? ''); ?><br><?php echo htmlspecialchars($order['state'] ?? ''); ?>
+                            <?php echo htmlspecialchars($order['city']); ?><br><?php echo htmlspecialchars($order['state']); ?>
                         <?php else: ?>
                             <span style="color: var(--text-secondary);">No Address</span>
                         <?php endif; ?>
                     </td>
                     <td style="font-weight: 600; color: var(--success);">RM <?php echo number_format($order['total_amount'] ?? 0, 2); ?></td>
                     <td>
-                        <?php if ($order['tracking_number']): ?>
-                            <a href="track order.php?tracking=<?php echo urlencode($order['tracking_number'] ?? ''); ?>" style="margin-top: 0; font-weight: 600; text-decoration: underline; color: var(--accent);"><?php echo htmlspecialchars($order['tracking_number'] ?? ''); ?></a>
-                        <?php else: ?>
-                            <span style="color: var(--text-secondary);"><?php echo htmlspecialchars($order['status'] ?? ''); ?>...</span>
-                        <?php endif; ?>
+                        <span style="font-weight: 600; color: <?php 
+                            $status = strtolower($order['status'] ?? '');
+                            if (in_array($status, ['completed', 'delivered', 'returned', 'shipped'])) echo 'var(--success)';
+                            elseif (in_array($status, ['pending', 'processing', 'active'])) echo 'var(--secondary)';
+                            elseif (in_array($status, ['declined', 'cancelled'])) echo '#ef4444';
+                            else echo 'var(--text-secondary)';
+                        ?>;"><?php echo htmlspecialchars(ucfirst($order['status'] ?? 'Pending')); ?></span>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -105,7 +110,6 @@ if (isset($conn)) {
 
     <div style="display: flex; gap: 16px; justify-content: center; margin-top: 32px;">
         <a href="product page.php" style="padding: 12px 24px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 0;">Continue Shopping</a>
-        <a href="track order.php" style="padding: 12px 24px; background: var(--accent); color: white; border-radius: 8px; margin: 0;">Track Order</a>
     </div>
 </div>
 
