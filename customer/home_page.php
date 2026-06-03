@@ -41,7 +41,7 @@
                 <div class="text-center">
                     <h1>Musical Instruments For Everyone</h1>
                     <p>Buy or rent your favorite instruments today.</p>
-                    <a href="/Music-Equipment-and-Instrument-Store/admin/admin_products" class="btn btn-primary">Shop Now</a>
+                    <a href="../product/product page.php" class="btn btn-primary">Shop Now</a>
                 </div>
             </div>
         </div>
@@ -53,7 +53,7 @@
                 <div class="text-center">
                     <h1>Premium Pianos</h1>
                     <p>Perfect for beginners and professionals.</p>
-                    <a href="product.php" class="btn btn-primary">Explore</a>
+                    <a href="../product/product page.php" class="btn btn-primary">Explore</a>
                 </div>
             </div>
         </div>
@@ -65,7 +65,7 @@
                 <div class="text-center">
                     <h1>Rent Before You Buy</h1>
                     <p>Affordable rental plans available.</p>
-                    <a href="product.php" class="btn btn-primary">View Rentals</a>
+                    <a href="../product/product page.php" class="btn btn-primary">View Rentals</a>
                 </div>
             </div>
         </div>
@@ -86,7 +86,7 @@
                 Acoustic Guitar
             </div>
             <h5 class="mt-3">Acoustic Guitar</h5>
-            <a href="product.php" class="btn btn-dark">View</a>
+            <a href="../product/product page.php" class="btn btn-dark">View</a>
         </div>
 
         <div class="col-md-4">
@@ -94,7 +94,7 @@
                 Digital Piano
             </div>
             <h5 class="mt-3">Digital Piano</h5>
-            <a href="product.php" class="btn btn-dark">View</a>
+            <a href="../product/product page.php" class="btn btn-dark">View</a>
         </div>
 
         <div class="col-md-4">
@@ -102,7 +102,7 @@
                 Drum Set
             </div>
             <h5 class="mt-3">Drum Set</h5>
-            <a href="product.php" class="btn btn-dark">View</a>
+            <a href="../product/product page.php" class="btn btn-dark">View</a>
         </div>
 
     </div>
@@ -117,25 +117,25 @@
     <div class="row">
 
         <div class="col-md-3">
-            <a href="product.php?category=guitar" class="btn btn-outline-dark w-100">
+            <a href="../product/product page.php?category=guitar" class="btn btn-outline-dark w-100">
                 Guitars
             </a>
         </div>
 
         <div class="col-md-3">
-            <a href="product.php?category=piano" class="btn btn-outline-dark w-100">
+            <a href="../product/product page.php?category=piano" class="btn btn-outline-dark w-100">
                 Pianos
             </a>
         </div>
 
         <div class="col-md-3">
-            <a href="product.php?category=drum" class="btn btn-outline-dark w-100">
+            <a href="../product/product page.php?category=drum" class="btn btn-outline-dark w-100">
                 Drums
             </a>
         </div>
 
         <div class="col-md-3">
-            <a href="product.php?category=violin" class="btn btn-outline-dark w-100">
+            <a href="../product/product page.php?category=violin" class="btn btn-outline-dark w-100">
                 Violins
             </a>
         </div>
