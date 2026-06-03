@@ -13,8 +13,8 @@ if (isset($_GET['remove_id'])) {
     if (isset($conn) && !$conn->connect_error) {
         $del_query = $conn->prepare("
             DELETE ci FROM cart_items ci
-            JOIN cart c ON ci.cart_id = c.id
-            WHERE ci.id = ? AND c.user_id = ?
+            JOIN cart c ON ci.cart_id = c.cart_id
+            WHERE ci.cart_item_id = ? AND c.cust_id = ?
         ");
         if ($del_query) {
             $del_query->bind_param("ii", $remove_id, $cust_id);
@@ -34,11 +34,11 @@ if (!isset($conn) || $conn->connect_error) {
     $db_error = "Database connection failed";
 } else {
     $query = $conn->prepare("
-        SELECT ci.id, p.prod_name, p.prod_sale_price 
+        SELECT ci.cart_item_id, p.prod_name, p.prod_sale_price 
         FROM cart_items ci
-        JOIN cart c ON ci.cart_id = c.id
-        JOIN products p ON ci.instrument_id = p.prod_id
-        WHERE c.user_id = ?
+        JOIN cart c ON ci.cart_id = c.cart_id
+        JOIN products p ON ci.prod_id = p.prod_id
+        WHERE c.cust_id = ?
     ");
     if (!$query) {
         $db_error = "Query preparation failed: " . $conn->error;
@@ -93,7 +93,7 @@ if (!isset($conn) || $conn->connect_error) {
                     <div class='cart-item-price'>
                         RM <?php echo number_format($item['prod_sale_price'] ?? 0, 2); ?>
                         <br>
-                        <a href="?remove_id=<?php echo $item['id']; ?>" style="color: #fca5a5; font-size: 0.85em; text-decoration: none;">Cancel</a>
+                        <a href="?remove_id=<?php echo $item['cart_item_id']; ?>" style="color: #fca5a5; font-size: 0.85em; text-decoration: none;">Cancel</a>
                     </div>
                 </div>
             <?php endforeach; ?>
