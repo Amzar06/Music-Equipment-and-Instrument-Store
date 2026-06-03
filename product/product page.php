@@ -78,7 +78,7 @@ if (isset($conn)) {
             <div class="card" data-category="<?php echo htmlspecialchars(strtolower($product['category_name'])); ?>">
                 <!-- Image Placeholder if real one doesn't exist -->
                 <?php if (!empty($product['prod_image'])): ?>
-                    <div style="width: 100%; height: 180px; background-size: cover; background-position: center; background-image: url('<?php echo htmlspecialchars($product['prod_image']); ?>'); border-radius: 8px; margin-bottom: 16px;"></div>
+                    <div style="width: 100%; height: 180px; background-size: cover; background-position: center; background-image: url('../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>'); border-radius: 8px; margin-bottom: 16px;"></div>
                 <?php else: ?>
                     <div style="width: 100%; height: 180px; background-color: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.4); border: 2px dashed rgba(255,255,255,0.2);">[ No Image ]</div>
                 <?php endif; ?>
