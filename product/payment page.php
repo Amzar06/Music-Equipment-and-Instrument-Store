@@ -35,7 +35,7 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } else {
         $query = $conn->prepare("
-            SELECT p.prod_sale_price, p.prod_id, 1 as ci_quantity
+            SELECT p.prod_sale_price, p.prod_id, ci.quantity as ci_quantity
             FROM cart_items ci
             JOIN cart c ON ci.cart_id = c.cart_id
             JOIN products p ON ci.prod_id = p.prod_id

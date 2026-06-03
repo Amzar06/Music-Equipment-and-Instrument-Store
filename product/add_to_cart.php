@@ -44,15 +44,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prod_id'])) {
     }
     $cart_query->close();
     
-    // Insert item into cart_items
-    $insert_item = $conn->prepare("INSERT INTO cart_items (cart_id, prod_id) VALUES (?, ?)");
-    if (!$insert_item) {
-        header("Location: product page.php?error=insert");
-        exit;
+    // Check if item already exists in cart_items
+    $check_item = $conn->prepare("SELECT cart_item_id, quantity FROM cart_items WHERE cart_id = ? AND prod_id = ?");
+    $check_item->bind_param("ii", $cart_id, $prod_id);
+    $check_item->execute();
+    $item_result = $check_item->get_result();
+
+    if ($item_result->num_rows > 0) {
+        // Increment quantity
+        $item = $item_result->fetch_assoc();
+        $new_qty = $item['quantity'] + 1;
+        $update_item = $conn->prepare("UPDATE cart_items SET quantity = ? WHERE cart_item_id = ?");
+        $update_item->bind_param("ii", $new_qty, $item['cart_item_id']);
+        $update_item->execute();
+        $update_item->close();
+    } else {
+        // Insert new item into cart_items
+        $insert_item = $conn->prepare("INSERT INTO cart_items (cart_id, prod_id, quantity) VALUES (?, ?, 1)");
+        if (!$insert_item) {
+            header("Location: product page.php?error=insert");
+            exit;
+        }
+        $insert_item->bind_param("ii", $cart_id, $prod_id);
+        $insert_item->execute();
+        $insert_item->close();
     }
-    $insert_item->bind_param("ii", $cart_id, $prod_id);
-    $insert_item->execute();
-    $insert_item->close();
+    $check_item->close();
     
     header("Location: product page.php?added=" . urlencode($prod_id));
     exit;
