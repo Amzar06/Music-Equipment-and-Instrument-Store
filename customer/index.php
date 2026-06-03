@@ -332,9 +332,7 @@ $_SESSION['username'] = "Alex";
             </div>
 
             <div class="product-box">
-                <div class="product-image" style="background-image: url('Here is a clean image link of a wooden ukulele that will work perfectly for your website:
-
-[https://images.unsplash.com/photo-1541689592655-f5f52827a3b4?q=80&w=500](https://images.unsplash.com/photo-1541689592655-f5f52827a3b4%3Fq%3D80%26w%3D500)');"></div>
+                <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1541689592655-f5f52827a3b4?q=80&w=500');"></div>
                 <h4>Ukulele</h4>
                 <p>RM 180.00</p>
                 <a href="product_details.php"><button>View Details</button></a>
