@@ -2,7 +2,7 @@
 $host = "localhost";
 $user = "root";
 $password = "";
-$database = "music_equipment_instrument_store";
+$database = "music-equipment-and-instrument-store";
 
 $conn = mysqli_connect($host, $user, $password, $database);
 
