@@ -30,7 +30,7 @@ $result = mysqli_query($conn, $query);
                 <tr>
                     <td style="font-weight: 600; color: var(--text-main);"><?php echo htmlspecialchars($row['cust_name']); ?></td>
                     <td><?php echo htmlspecialchars($row['cust_email']); ?></td>
-                    <td><?php echo htmlspecialchars($row['cust_phone_number']); ?></td>
+                    <td><?php echo htmlspecialchars($row['cust_phone']); ?></td>
                     <td><?php echo date('d M Y', strtotime($row['created_at'] ?? 'now')); ?></td>
                 </tr>
                 <?php endwhile; ?>

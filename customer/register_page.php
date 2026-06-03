@@ -7,7 +7,6 @@ $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['name'] ?? '';
     $email = $_POST['email'] ?? '';
-    $phone = $_POST['phone'] ?? ''; // Added phone field
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
 
@@ -22,10 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->get_result()->num_rows > 0) {
                 $error = "Email already registered.";
             } else {
-                // Updated INSERT query and bind_param to include cust_phone
-                $insert = $conn->prepare("INSERT INTO customers (cust_name, cust_email, cust_phone, cust_password) VALUES (?, ?, ?, ?)");
+                $insert = $conn->prepare("INSERT INTO customers (cust_name, cust_email, cust_password) VALUES (?, ?, ?)");
                 if ($insert) {
-                    $insert->bind_param("ssss", $name, $email, $phone, $password);
+                    $insert->bind_param("sss", $name, $email, $password);
                     if ($insert->execute()) {
                         $success = "Registration successful! You can now login.";
                     } else {
@@ -69,9 +67,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
           <label>Email Address</label>
           <input type="email" name="email" placeholder="Enter your email" required>
-
-          <label>Phone Number</label>
-          <input type="tel" name="phone" placeholder="Enter your phone number" required>
 
           <label>Password</label>
           <input type="password" name="password" placeholder="Enter your password" required>

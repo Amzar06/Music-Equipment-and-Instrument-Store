@@ -4,8 +4,8 @@ include '../database.php';
 
 $login_error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['cust_email'] ?? '';
-    $password = $_POST['cust_password'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
     
     if (isset($conn) && !$conn->connect_error) {
         $stmt = $conn->prepare("SELECT cust_id FROM customers WHERE cust_email = ? AND cust_password = ?");
@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = $stmt->get_result();
             if ($row = $result->fetch_assoc()) {
                 $_SESSION['cust_id'] = $row['cust_id'];
-                header("Location: product page.php");
+                header("Location: ../customer/home_page.php");
                 exit();
             } else {
                 $login_error = "Invalid email or password.";
