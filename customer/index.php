@@ -28,7 +28,7 @@ $_SESSION['username'] = "Alex";
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        /* --- NAVIGATION HEADER (FIXED & BALANCED) --- */
+        /* --- NAVIGATION HEADER --- */
         header {
             display: flex;
             justify-content: space-between;
@@ -50,7 +50,6 @@ $_SESSION['username'] = "Alex";
             white-space: nowrap;
         }
 
-        /* Added a search container to fix top bar spacing */
         .search-container {
             flex-grow: 1;
             max-width: 400px;
@@ -125,7 +124,6 @@ $_SESSION['username'] = "Alex";
             white-space: nowrap;
         }
 
-        /* Dynamic User Profile Layout */
         .user-profile-menu {
             display: flex;
             align-items: center;
@@ -305,7 +303,6 @@ $_SESSION['username'] = "Alex";
 
         <div class="product-grid">
 
-            <!-- Item 1 -->
             <div class="product-box">
                 <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1510915361894-db8b60106cb1?q=80&w=500');"></div>
                 <h4>Acoustic Guitar</h4>
@@ -313,7 +310,6 @@ $_SESSION['username'] = "Alex";
                 <a href="product_details_page.php"><button>View Details</button></a>
             </div>
 
-            <!-- Item 2 -->
             <div class="product-box">
                 <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1552422535-c45813c61732?q=80&w=500');"></div>
                 <h4>Digital Piano</h4>
@@ -321,7 +317,6 @@ $_SESSION['username'] = "Alex";
                 <a href="product_details.php"><button>View Details</button></a>
             </div>
 
-            <!-- Item 3 -->
             <div class="product-box">
                 <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1543443374-b6fe10a6ab7b?q=80&w=500');"></div>
                 <h4>Drum Set</h4>
@@ -329,7 +324,6 @@ $_SESSION['username'] = "Alex";
                 <a href="product_details.php"><button>View Details</button></a>
             </div>
 
-            <!-- Item 4 -->
             <div class="product-box">
                 <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?q=80&w=500');"></div>
                 <h4>Electric Guitar</h4>
@@ -337,15 +331,13 @@ $_SESSION['username'] = "Alex";
                 <a href="product_details.php"><button>View Details</button></a>
             </div>
 
-            <!-- Item 5 - Ukulele with Specific Image -->
             <div class="product-box">
-                <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1507838153414-b4b713384a76?q=80&w=500');"></div>
+                <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1541689592655-f5f52827a3b4?q=80&w=500');"></div>
                 <h4>Ukulele</h4>
                 <p>RM 180.00</p>
                 <a href="product_details.php"><button>View Details</button></a>
             </div>
 
-            <!-- Item 6 - Violin with Specific Image -->
             <div class="product-box">
                 <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1612225330812-01a9c6b355ec?q=80&w=500');"></div>
                 <h4>Violin</h4>
