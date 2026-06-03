@@ -28,12 +28,12 @@ $_SESSION['username'] = "Alex";
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        /* --- NAVIGATION HEADER --- */
+        /* --- NAVIGATION HEADER (FIXED & BALANCED) --- */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 25px 40px; /* Reduced side padding to move the store name to the corner */
+            padding: 15px 40px; 
             border-bottom: 1px solid #eaeaea;
             position: sticky;
             top: 0;
@@ -46,18 +46,39 @@ $_SESSION['username'] = "Alex";
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #1d4e89; /* Matches the deep blue logo text */
+            color: #1d4e89; 
+            white-space: nowrap;
+        }
+
+        /* Added a search container to fix top bar spacing */
+        .search-container {
+            flex-grow: 1;
+            max-width: 400px;
+            margin: 0 30px;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-container input:focus {
+            border-color: #1d4e89;
         }
 
         nav {
-            margin-left: auto;
-            margin-right: 40px; /* Separates the main nav menu cleanly from the profile actions */
+            margin-right: 30px; 
         }
 
         nav ul {
             display: flex;
             list-style: none;
-            gap: 20px;
+            gap: 25px;
         }
 
         nav ul li a {
@@ -89,6 +110,7 @@ $_SESSION['username'] = "Alex";
             font-weight: 600;
             text-decoration: none;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            white-space: nowrap;
         }
 
         .btn-join {
@@ -100,6 +122,7 @@ $_SESSION['username'] = "Alex";
             cursor: pointer;
             font-size: 13px;
             font-weight: 500;
+            white-space: nowrap;
         }
 
         /* Dynamic User Profile Layout */
@@ -122,14 +145,15 @@ $_SESSION['username'] = "Alex";
             font-weight: 600;
             text-decoration: none;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            white-space: nowrap;
         }
 
         /* --- HERO BANNER --- */
         .hero-banner {
             position: relative;
             width: 100%;
-            height: 70vh;
-            background: linear-gradient(rgba(0,0,0,0.05), rgba(0,0,0,0.15)), url('https://images.unsplash.com/photo-1511192336575-5a79af67a629?q=80&w=1600') no-repeat center center/cover;
+            height: 60vh;
+            background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.35)), url('https://images.unsplash.com/photo-1511192336575-5a79af67a629?q=80&w=1600') no-repeat center center/cover;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -179,8 +203,8 @@ $_SESSION['username'] = "Alex";
 
         .product-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
             margin-top: 30px;
         }
 
@@ -198,6 +222,11 @@ $_SESSION['username'] = "Alex";
             margin-bottom: 15px;
             background-size: cover;
             background-position: center;
+            transition: transform 0.2s ease;
+        }
+
+        .product-box:hover .product-image {
+            transform: scale(1.02);
         }
 
         .product-box h4 {
@@ -216,10 +245,16 @@ $_SESSION['username'] = "Alex";
             background: #111;
             color: #fff;
             border: none;
-            padding: 6px 18px;
+            padding: 8px 20px;
             font-size: 12px;
             border-radius: 20px;
             cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .product-box button:hover {
+            background: #333;
         }
     </style>
 </head>
@@ -228,6 +263,10 @@ $_SESSION['username'] = "Alex";
     <header>
         <div class="logo">
             <h1>Musical Instrument Store</h1>
+        </div>
+
+        <div class="search-container">
+            <input type="text" placeholder="Search instruments, brands, gear...">
         </div>
         
         <nav>
@@ -270,27 +309,42 @@ $_SESSION['username'] = "Alex";
                 <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1510915361894-db8b60106cb1?q=80&w=500');"></div>
                 <h4>Acoustic Guitar</h4>
                 <p>RM 499.00</p>
-                <a href="product_details_page.php">
-                    <button>View Details</button>
-                </a>
+                <a href="product_details_page.php"><button>View Details</button></a>
             </div>
 
             <div class="product-box">
                 <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1552422535-c45813c61732?q=80&w=500');"></div>
                 <h4>Digital Piano</h4>
                 <p>RM 1,299.00</p>
-                <a href="product_details.php">
-                    <button>View Details</button>
-                </a>
+                <a href="product_details.php"><button>View Details</button></a>
             </div>
 
             <div class="product-box">
                 <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1543443374-b6fe10a6ab7b?q=80&w=500');"></div>
                 <h4>Drum Set</h4>
                 <p>RM 899.00</p>
-                <a href="product_details.php">
-                    <button>View Details</button>
-                </a>
+                <a href="product_details.php"><button>View Details</button></a>
+            </div>
+
+            <div class="product-box">
+                <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?q=80&w=500');"></div>
+                <h4>Electric Guitar</h4>
+                <p>RM 1,150.00</p>
+                <a href="product_details.php"><button>View Details</button></a>
+            </div>
+
+            <div class="product-box">
+                <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1573871669414-3f044a189fcf?q=80&w=500');"></div>
+                <h4>Ukulele</h4>
+                <p>RM 180.00</p>
+                <a href="product_details.php"><button>View Details</button></a>
+            </div>
+
+            <div class="product-box">
+                <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1615190998654-e4b5e8e25d5e?q=80&w=500');"></div>
+                <h4>Violin</h4>
+                <p>RM 650.00</p>
+                <a href="product_details.php"><button>View Details</button></a>
             </div>
 
         </div>
