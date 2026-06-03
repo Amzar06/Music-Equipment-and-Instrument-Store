@@ -4,8 +4,8 @@ include '../database.php';
 
 $login_error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['email'] ?? '';
-    $password = $_POST['password'] ?? '';
+    $email = $_POST['cust_email'] ?? '';
+    $password = $_POST['cust_password'] ?? '';
     
     if (isset($conn) && !$conn->connect_error) {
         $stmt = $conn->prepare("SELECT cust_id FROM customers WHERE cust_email = ? AND cust_password = ?");
