@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 14, 2026 at 07:29 AM
+-- Generation Time: Jun 03, 2026 at 07:33 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -74,6 +74,15 @@ CREATE TABLE `categories` (
   `category_name` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `categories`
+--
+
+INSERT INTO `categories` (`category_id`, `category_name`) VALUES
+(3, 'Pianos'),
+(4, 'Flutes'),
+(5, 'Acoustic Guitars');
+
 -- --------------------------------------------------------
 
 --
@@ -89,6 +98,13 @@ CREATE TABLE `customers` (
   `cust_address` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `customers`
+--
+
+INSERT INTO `customers` (`cust_id`, `cust_name`, `cust_email`, `cust_password`, `cust_phone_number`, `cust_address`, `created_at`) VALUES
+(1, 'Amzar', 'amzar06@gmail.com', 'abc123', '0123456789', 'taman saujana', '2026-06-03 05:27:47');
 
 -- --------------------------------------------------------
 
@@ -116,7 +132,7 @@ CREATE TABLE `order_items` (
   `order_item_id` int(11) NOT NULL,
   `order_id` int(11) NOT NULL,
   `prod_id` int(11) NOT NULL,
-  `quantity` int(11) NOT NULL,
+  `order_qty` int(11) NOT NULL,
   `unit_price` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -156,6 +172,13 @@ CREATE TABLE `products` (
   `status` enum('Available','Out of Stock','Discontinued') DEFAULT 'Available',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `products`
+--
+
+INSERT INTO `products` (`prod_id`, `category_id`, `staff_id`, `prod_name`, `prod_description`, `prod_sale_price`, `prod_rental_price`, `prod_qty`, `prod_image`, `status`, `created_at`) VALUES
+(1, 5, 1, 'Yamaha C40', 'Good Guitar, Great Guitar', 400.00, 0.00, 5, '1780462235_Guitar Jamz.jpeg', 'Available', '2026-06-03 04:50:35');
 
 -- --------------------------------------------------------
 
@@ -205,24 +228,6 @@ CREATE TABLE `staff` (
   `staff_phone_number` varchar(20) DEFAULT NULL,
   `staff_role` enum('Staff','Manager','Admin') NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `order_tracking`
---
-
-CREATE TABLE IF NOT EXISTS `order_tracking` (
-  `tracking_id` int(11) NOT NULL AUTO_INCREMENT,
-  `order_id` int(11) NOT NULL,
-  `tracking_number` varchar(100) NOT NULL,
-  `courier` varchar(100) NOT NULL,
-  `status` enum('Processing','Shipped','In Transit','Delivered') DEFAULT 'Processing',
-  `last_updated` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`tracking_id`),
-  UNIQUE KEY `tracking_number` (`tracking_number`),
-  KEY `order_id` (`order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -355,13 +360,13 @@ ALTER TABLE `cart_items`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `customers`
 --
 ALTER TABLE `customers`
-  MODIFY `cust_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `cust_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `orders`
@@ -385,7 +390,7 @@ ALTER TABLE `payments`
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `prod_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `prod_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `rentals`
@@ -472,12 +477,6 @@ ALTER TABLE `rentals`
 ALTER TABLE `rental_items`
   ADD CONSTRAINT `fk_ri_prod` FOREIGN KEY (`prod_id`) REFERENCES `products` (`prod_id`),
   ADD CONSTRAINT `fk_ri_rental` FOREIGN KEY (`rental_id`) REFERENCES `rentals` (`rental_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `order_tracking`
---
-ALTER TABLE `order_tracking`
-  ADD CONSTRAINT `fk_ot_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
