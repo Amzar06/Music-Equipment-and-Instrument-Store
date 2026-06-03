@@ -34,7 +34,7 @@ if (!isset($conn) || $conn->connect_error) {
     $db_error = "Database connection failed";
 } else {
     $query = $conn->prepare("
-        SELECT ci.cart_item_id, p.prod_name, p.prod_sale_price 
+        SELECT ci.cart_item_id, p.prod_name, p.prod_sale_price, ci.quantity
         FROM cart_items ci
         JOIN cart c ON ci.cart_id = c.cart_id
         JOIN products p ON ci.prod_id = p.prod_id
@@ -51,7 +51,8 @@ if (!isset($conn) || $conn->connect_error) {
             while($row = $result->fetch_assoc()) {
                 $cart_items[] = $row;
                 if (isset($row['prod_sale_price'])) {
-                    $total_price += $row['prod_sale_price'];
+                    $qty = $row['quantity'] ?? 1;
+                    $total_price += ($row['prod_sale_price'] * $qty);
                 }
             }
         }
@@ -88,10 +89,10 @@ if (!isset($conn) || $conn->connect_error) {
                 <div class='cart-item'>
                     <div class='cart-item-info'>
                         <strong><?php echo htmlspecialchars($item['prod_name']); ?></strong> <br> 
-                        <span style='font-size:0.9em;color:var(--text-secondary);'>(Buy)</span>
+                        <span style='font-size:0.9em;color:var(--text-secondary);'>Qty: <?php echo $item['quantity']; ?> (Buy)</span>
                     </div>
                     <div class='cart-item-price'>
-                        RM <?php echo number_format($item['prod_sale_price'] ?? 0, 2); ?>
+                        RM <?php echo number_format(($item['prod_sale_price'] ?? 0) * ($item['quantity'] ?? 1), 2); ?>
                         <br>
                         <a href="?remove_id=<?php echo $item['cart_item_id']; ?>" style="color: #fca5a5; font-size: 0.85em; text-decoration: none;">Cancel</a>
                     </div>
