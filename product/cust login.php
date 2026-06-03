@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = $stmt->get_result();
             if ($row = $result->fetch_assoc()) {
                 $_SESSION['cust_id'] = $row['cust_id'];
-                header("Location: product page.php");
+                header("Location: ../customer/home_page.php");
                 exit();
             } else {
                 $login_error = "Invalid email or password.";
