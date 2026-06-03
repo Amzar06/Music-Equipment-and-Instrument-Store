@@ -275,8 +275,8 @@ $_SESSION['username'] = "Alex";
         <div class="auth-buttons">
             <?php if (isset($_SESSION['user_id'])): ?>
                 <div class="user-profile-menu">
-                    <a href="user_profile_page.php" class="btn-signin">Profile</a>
-                    <a href="logout_page.php" class="logout-link">Log Out</a>
+                    <a href="register_page.php" class="btn-signin">Register</a>
+                    <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php" class="logout-link">Log In</a>
                 </div>
             <?php else: ?>
                 <button class="btn-signin" onclick="location.href='login.php'">Sign In</button>
