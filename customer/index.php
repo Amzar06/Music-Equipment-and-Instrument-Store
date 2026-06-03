@@ -332,9 +332,9 @@ $_SESSION['username'] = "Alex";
             </div>
 
             <div class="product-box">
-                <div class="product-image" style="background-image: url('https://images.unsplash.com/photo-1528143358801-41376859bab1?q=80&w=500');"></div>
-                <h4>Saxophone</h4>
-                <p>RM 2,450.00</p>
+                <div class="product-image" style="background-image: url('https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcSSinNKHS_yQVS5TOue4wX8OHQ7gZzp6yN1rAVwW3wu4195BsczxYcv_r2A_ma3');"></div>
+                <h4>ukulele</h4>
+                <p>RM 180.00</p>
                 <a href="product_details.php"><button>View Details</button></a>
             </div>
 
