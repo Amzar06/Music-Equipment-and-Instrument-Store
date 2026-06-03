@@ -35,11 +35,11 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } else {
         $query = $conn->prepare("
-            SELECT p.prod_sale_price, p.prod_id, ci.quantity as ci_quantity
+            SELECT p.prod_sale_price, p.prod_id, 1 as ci_quantity
             FROM cart_items ci
-            JOIN cart c ON ci.cart_id = c.id
-            JOIN products p ON ci.instrument_id = p.prod_id
-            WHERE c.user_id = ?
+            JOIN cart c ON ci.cart_id = c.cart_id
+            JOIN products p ON ci.prod_id = p.prod_id
+            WHERE c.cust_id = ?
         ");
         if ($query) {
             $query->bind_param("i", $cust_id);
@@ -135,8 +135,8 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
             // 3. ALWAYS Clear Cart if it was a cart checkout
             $del_query = $conn->prepare("
                 DELETE ci FROM cart_items ci
-                JOIN cart c ON ci.cart_id = c.id
-                WHERE c.user_id = ?
+                JOIN cart c ON ci.cart_id = c.cart_id
+                WHERE c.cust_id = ?
             ");
             if ($del_query) {
                 $del_query->bind_param("i", $cust_id);
