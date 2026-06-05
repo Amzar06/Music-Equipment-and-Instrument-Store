@@ -154,3 +154,81 @@ td {
 
 .pending { background: #fef3c7; color: #92400e; }
 .completed { background: #d1fae5; color: #065f46; }
+
+/* --- ADMIN LOGIN SPECIFIC STYLES --- */
+body.login-body {
+    background-color: #f3f4f6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.login-card {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-card h2 {
+    margin-top: 0;
+    color: var(--text-main, #111827);
+    font-weight: 700;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.password-container {
+    position: relative;
+}
+
+.toggle-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.toggle-btn:hover {
+    color: var(--text-main, #111827);
+}
+
+.login-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--black, #111827);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.login-btn:hover {
+    opacity: 0.9;
+}
+
+.error-message {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-align: center;
+    border: 1px solid #fca5a5;
+}
