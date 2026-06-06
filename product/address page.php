@@ -5,6 +5,7 @@ if (!isset($_SESSION['cust_id'])) {
     header("Location: cust login.php");
     exit();
 }
+$cust_id = $_SESSION['cust_id'];
 
 $type = $_GET['type'] ?? '';
 $product_id = $_GET['product_id'] ?? 0;
@@ -26,17 +27,19 @@ $existing_addresses = [];
 
 if (isset($conn)) {
     // 1. Fetch registration address from customers table
-    $stmt_cust = $conn->prepare("SELECT cust_name, cust_address FROM customers WHERE cust_id = ?");
+    $stmt_cust = $conn->prepare("SELECT cust_name, cust_street, cust_city, cust_state, cust_postcode FROM customers WHERE cust_id = ?");
     $stmt_cust->bind_param("i", $cust_id);
     $stmt_cust->execute();
     $res_cust = $stmt_cust->get_result();
     if ($cust = $res_cust->fetch_assoc()) {
-        if (!empty($cust['cust_address'])) {
+        if (!empty($cust['cust_street']) || !empty($cust['cust_city'])) {
             $existing_addresses[] = [
                 'address_id' => 'reg',
                 'full_name' => $cust['cust_name'],
-                'city' => $cust['cust_address'],
-                'state' => '(Registration Address)',
+                'street' => $cust['cust_street'],
+                'city' => $cust['cust_city'],
+                'state' => $cust['cust_state'],
+                'postcode' => $cust['cust_postcode'],
                 'is_reg' => true
             ];
         }
@@ -110,8 +113,13 @@ if ($type === 'rent') {
                 <select name="existing_address_id" id="existingAddr" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #7dd3fc; background: white;" onchange="toggleAddressType()">
                     <option value="new">-- Create New Address --</option>
                     <?php foreach ($existing_addresses as $addr): ?>
-                        <option value="<?php echo $addr['address_id']; ?>">
-                            <?php echo htmlspecialchars($addr['full_name'] . " - " . $addr['city'] . ", " . $addr['state']); ?>
+                        <option value="<?php echo $addr['address_id']; ?>" 
+                                data-street="<?php echo htmlspecialchars($addr['street'] ?? ''); ?>"
+                                data-city="<?php echo htmlspecialchars($addr['city'] ?? ''); ?>"
+                                data-state="<?php echo htmlspecialchars($addr['state'] ?? ''); ?>"
+                                data-postcode="<?php echo htmlspecialchars($addr['postcode'] ?? ''); ?>"
+                                data-name="<?php echo htmlspecialchars($addr['full_name'] ?? ''); ?>">
+                            <?php echo htmlspecialchars($addr['full_name'] . " - " . ($addr['city'] ?: $addr['street'])); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
@@ -121,25 +129,25 @@ if ($type === 'rent') {
         <div id="newAddressFields">
             <div style="margin-bottom: 16px;">
                 <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary);">Reception Name *</label>
-                <input type="text" name="full_name" placeholder="Name of Person Receiving" id="fullName">
+                <input type="text" name="full_name" placeholder="Name of Person Receiving" id="fullName" required>
             </div>
             <div style="margin-bottom: 16px;">
                 <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary);">Street Address *</label>
-                <input type="text" name="street" placeholder="No, Building, Street" id="street">
+                <input type="text" name="street" placeholder="No, Building, Street" id="street" required>
             </div>
             <div style="display: flex; gap: 16px; margin-bottom: 16px;">
                 <div style="flex: 1;">
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary);">City *</label>
-                    <input type="text" name="city" placeholder="City" id="city">
+                    <input type="text" name="city" placeholder="City" id="city" required>
                 </div>
                 <div style="flex: 1;">
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary);">Postcode *</label>
-                    <input type="text" name="postcode" placeholder="Postcode" id="postcode">
+                    <input type="text" name="postcode" placeholder="Postcode" id="postcode" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                 </div>
             </div>
             <div style="margin-bottom: 24px;">
                 <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary);">State *</label>
-                <input type="text" name="state" placeholder="State" id="state">
+                <input type="text" name="state" placeholder="State" id="state" required>
             </div>
         </div>
         
@@ -154,16 +162,47 @@ if ($type === 'rent') {
 function toggleAddressType() {
     const select = document.getElementById('existingAddr');
     const fields = document.getElementById('newAddressFields');
-    const inputs = fields.querySelectorAll('input');
+    
+    // Inputs
+    const fullNameInp = document.getElementById('fullName');
+    const streetInp = document.getElementById('street');
+    const cityInp = document.getElementById('city');
+    const postcodeInp = document.getElementById('postcode');
+    const stateInp = document.getElementById('state');
     
     if (select && select.value !== 'new') {
-        fields.style.opacity = '0.4';
-        fields.style.pointerEvents = 'none';
-        inputs.forEach(i => i.required = false);
+        const opt = select.options[select.selectedIndex];
+        
+        // Fill and Lock
+        fullNameInp.value = opt.getAttribute('data-name') || '';
+        streetInp.value = opt.getAttribute('data-street') || '';
+        cityInp.value = opt.getAttribute('data-city') || '';
+        postcodeInp.value = opt.getAttribute('data-postcode') || '';
+        stateInp.value = opt.getAttribute('data-state') || '';
+        
+        // Set to ReadOnly
+        fullNameInp.readOnly = true;
+        streetInp.readOnly = true;
+        cityInp.readOnly = true;
+        postcodeInp.readOnly = true;
+        stateInp.readOnly = true;
+        
+        fields.style.opacity = '0.7'; 
     } else {
+        // Clear and Unlock
+        fullNameInp.value = '';
+        streetInp.value = '';
+        cityInp.value = '';
+        postcodeInp.value = '';
+        stateInp.value = '';
+        
+        fullNameInp.readOnly = false;
+        streetInp.readOnly = false;
+        cityInp.readOnly = false;
+        postcodeInp.readOnly = false;
+        stateInp.readOnly = false;
+        
         fields.style.opacity = '1';
-        fields.style.pointerEvents = 'auto';
-        inputs.forEach(i => i.required = true);
     }
 }
 // Initialize

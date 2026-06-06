@@ -81,18 +81,20 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 $addr_id = intval($existing_address_id);
             } elseif ($existing_address_id === 'reg') {
                 // Fetch from registration
-                $stmt_cust = $conn->prepare("SELECT cust_name, cust_address FROM customers WHERE cust_id = ?");
+                $stmt_cust = $conn->prepare("SELECT cust_name, cust_street, cust_city, cust_state, cust_postcode FROM customers WHERE cust_id = ?");
                 $stmt_cust->bind_param("i", $cust_id);
                 $stmt_cust->execute();
                 $cust_info = $stmt_cust->get_result()->fetch_assoc();
                 $stmt_cust->close();
                 
                 $reg_name = $cust_info['cust_name'] ?? 'Customer';
-                $reg_addr = $cust_info['cust_address'] ?? '';
+                $reg_street = $cust_info['cust_street'] ?? '';
+                $reg_city = $cust_info['cust_city'] ?? '';
+                $reg_state = $cust_info['cust_state'] ?? '';
+                $reg_postcode = $cust_info['cust_postcode'] ?? '';
                 
                 $addr = $conn->prepare("INSERT INTO addresses (cust_id, full_name, street, city, state, postcode) VALUES (?, ?, ?, ?, ?, ?)");
-                $empty = "";
-                $addr->bind_param("isssss", $cust_id, $reg_name, $reg_addr, $empty, $empty, $empty);
+                $addr->bind_param("isssss", $cust_id, $reg_name, $reg_street, $reg_city, $reg_state, $reg_postcode);
                 $addr->execute();
                 $addr_id = $conn->insert_id;
                 $addr->close();
