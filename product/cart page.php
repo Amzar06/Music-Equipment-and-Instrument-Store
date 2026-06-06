@@ -8,6 +8,22 @@ if (!isset($_SESSION['cust_id'])) {
 }
 $cust_id = $_SESSION['cust_id'];
 
+if (isset($_GET['action']) && isset($_GET['item_id'])) {
+    $item_id = intval($_GET['item_id']);
+    $action = $_GET['action'];
+    
+    if (isset($conn) && !$conn->connect_error) {
+        if ($action === 'inc') {
+            $conn->query("UPDATE cart_items SET quantity = quantity + 1 WHERE cart_item_id = $item_id");
+        } elseif ($action === 'dec') {
+            // Only decrement if current quantity is > 1
+            $conn->query("UPDATE cart_items SET quantity = IF(quantity > 1, quantity - 1, 1) WHERE cart_item_id = $item_id");
+        }
+        header("Location: cart page.php");
+        exit();
+    }
+}
+
 if (isset($_GET['remove_id'])) {
     $remove_id = intval($_GET['remove_id']);
     if (isset($conn) && !$conn->connect_error) {
@@ -89,7 +105,11 @@ if (!isset($conn) || $conn->connect_error) {
                 <div class='cart-item'>
                     <div class='cart-item-info'>
                         <strong><?php echo htmlspecialchars($item['prod_name']); ?></strong> <br> 
-                        <span style='font-size:0.9em;color:var(--text-secondary);'>Qty: <?php echo $item['quantity']; ?> (Buy)</span>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+                            <a href="?action=dec&item_id=<?php echo $item['cart_item_id']; ?>" style="margin-top:0; padding: 2px 10px; background: #e2e8f0; border-radius: 4px; color: #475569; font-weight: bold; text-decoration: none;">-</a>
+                            <span style='font-size:1rem; font-weight: 600;'>Qty: <?php echo $item['quantity']; ?></span>
+                            <a href="?action=inc&item_id=<?php echo $item['cart_item_id']; ?>" style="margin-top:0; padding: 2px 10px; background: #e2e8f0; border-radius: 4px; color: #475569; font-weight: bold; text-decoration: none;">+</a>
+                        </div>
                     </div>
                     <div class='cart-item-price'>
                         RM <?php echo number_format(($item['prod_sale_price'] ?? 0) * ($item['quantity'] ?? 1), 2); ?>
