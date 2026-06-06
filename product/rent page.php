@@ -75,6 +75,19 @@ if (isset($conn)) {
         <p style="margin: 0; font-weight: 600; font-size: 0.95rem;">Important: Customers are permitted to rent only one instrument once per week. Please plan your schedule accordingly.</p>
     </div>
 
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        .flatpickr-calendar { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 12px; }
+        .flatpickr-day.selected { background: var(--accent) !important; border-color: var(--accent) !important; }
+    </style>
+
+    <!-- Rental Warning Message -->
+    <div style="background: #fffbeb; border: 1px solid #fef3c7; color: #92400e; padding: 16px; border-radius: 12px; margin-bottom: 32px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <span style="font-size: 1.5rem;">⚠️</span>
+        <p style="margin: 0; font-weight: 600; font-size: 0.95rem;">Important: Customers are permitted to rent only one instrument once per week. Please plan your schedule accordingly.</p>
+    </div>
+
     <div class="product-grid" id="productGrid">
     <?php if (empty($products)): ?>
         <div style="text-align: center; color: var(--text-secondary); grid-column: 1 / -1; padding: 48px;">
@@ -101,15 +114,15 @@ if (isset($conn)) {
                         <input type="hidden" name="type" value="rent">
                         <input type="hidden" name="price" value="<?php echo htmlspecialchars($product['prod_rental_price']); ?>">
                         
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-                            <div>
-                                <label style="display:block; font-size: 0.8rem; font-weight: 700; color: #64748b; margin-bottom: 4px;">Start Date</label>
-                                <input type="date" name="start_date" required min="<?php echo date('Y-m-d'); ?>" style="padding: 8px; font-size: 0.85rem;">
-                            </div>
-                            <div>
-                                <label style="display:block; font-size: 0.8rem; font-weight: 700; color: #64748b; margin-bottom: 4px;">End Date</label>
-                                <input type="date" name="end_date" required min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>" style="padding: 8px; font-size: 0.85rem;">
-                            </div>
+                        <!-- Hidden fields to store split dates for backend -->
+                        <input type="hidden" name="start_date" id="start_date_<?php echo $product['prod_id']; ?>">
+                        <input type="hidden" name="end_date" id="end_date_<?php echo $product['prod_id']; ?>">
+
+                        <div style="margin-bottom: 16px;">
+                            <label style="display:block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 6px;">Select Rental Period</label>
+                            <input type="text" class="range-picker" placeholder="Choose dates.." readonly 
+                                   data-prod-id="<?php echo $product['prod_id']; ?>"
+                                   style="padding: 12px; font-size: 0.95rem; background: white; cursor: pointer; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%;">
                         </div>
                         <button type="submit" class="rent-btn" style="width: 100%;">Rent Now</button>
                     </form>
@@ -120,7 +133,27 @@ if (isset($conn)) {
     </div>
 </div>
 
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    flatpickr(".range-picker", {
+        mode: "range",
+        minDate: "today",
+        dateFormat: "Y-m-d",
+        onClose: function(selectedDates, dateStr, instance) {
+            if (selectedDates.length === 2) {
+                const prodId = instance.element.getAttribute('data-prod-id');
+                const start = instance.formatDate(selectedDates[0], "Y-m-d");
+                const end = instance.formatDate(selectedDates[1], "Y-m-d");
+                
+                document.getElementById('start_date_' + prodId).value = start;
+                document.getElementById('end_date_' + prodId).value = end;
+            }
+        }
+    });
+});
+</script>
 function filterCategory() {
     const selected = document.getElementById('categoryFilter').value;
     const cards = document.querySelectorAll('.card');
