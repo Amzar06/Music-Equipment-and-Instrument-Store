@@ -39,7 +39,7 @@ if (isset($conn)) {
 <head>
     <meta charset="UTF-8">
     <title>Products</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2.0">
     <style>
         /* Smooth transition for filtering */
         .card { transition: opacity 0.3s ease; }

@@ -39,13 +39,8 @@ if (isset($conn)) {
 <head>
     <meta charset="UTF-8">
     <title>Rent Instruments</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        .card { transition: opacity 0.3s ease; }
-        .nav-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
-        .nav-link { padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--text-secondary); background: rgba(255,255,255,0.05); }
-        .nav-link.active { background: var(--accent); color: white; }
-    </style>
+    <link rel="stylesheet" href="style.css?v=2.0">
+
 </head>
 <body>
 
