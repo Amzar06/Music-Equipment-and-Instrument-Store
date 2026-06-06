@@ -25,12 +25,31 @@ $rent_summary = "";
 $existing_addresses = [];
 
 if (isset($conn)) {
-    // Fetch existing addresses
+    // 1. Fetch registration address from customers table
+    $stmt_cust = $conn->prepare("SELECT cust_name, cust_address FROM customers WHERE cust_id = ?");
+    $stmt_cust->bind_param("i", $cust_id);
+    $stmt_cust->execute();
+    $res_cust = $stmt_cust->get_result();
+    if ($cust = $res_cust->fetch_assoc()) {
+        if (!empty($cust['cust_address'])) {
+            $existing_addresses[] = [
+                'address_id' => 'reg',
+                'full_name' => $cust['cust_name'],
+                'city' => $cust['cust_address'],
+                'state' => '(Registration Address)',
+                'is_reg' => true
+            ];
+        }
+    }
+    $stmt_cust->close();
+
+    // 2. Fetch previously used addresses
     $stmt_addr = $conn->prepare("SELECT * FROM addresses WHERE cust_id = ? ORDER BY created_at DESC");
     $stmt_addr->bind_param("i", $cust_id);
     $stmt_addr->execute();
     $res_addr = $stmt_addr->get_result();
     while($row = $res_addr->fetch_assoc()) {
+        $row['is_reg'] = false;
         $existing_addresses[] = $row;
     }
     $stmt_addr->close();

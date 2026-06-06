@@ -9,6 +9,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
+    $phone = $_POST['phone'] ?? '';
+    $address = $_POST['address'] ?? '';
 
     if ($password !== $confirm_password) {
         $error = "Passwords do not match.";
@@ -21,9 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->get_result()->num_rows > 0) {
                 $error = "Email already registered.";
             } else {
-                $insert = $conn->prepare("INSERT INTO customers (cust_name, cust_email, cust_password) VALUES (?, ?, ?)");
+                $insert = $conn->prepare("INSERT INTO customers (cust_name, cust_email, cust_password, cust_phone_number, cust_address) VALUES (?, ?, ?, ?, ?)");
                 if ($insert) {
-                    $insert->bind_param("sss", $name, $email, $password);
+                    $insert->bind_param("sssss", $name, $email, $password, $phone, $address);
                     if ($insert->execute()) {
                         $success = "Registration successful! You can now login.";
                     } else {
@@ -67,6 +69,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
           <label>Email Address</label>
           <input type="email" name="email" placeholder="Enter your email" required>
+
+          <label>Phone Number</label>
+          <input type="text" name="phone" placeholder="Enter your phone number" required>
+
+          <label>Home Address</label>
+          <textarea name="address" placeholder="Enter your full street address, city, state, and postcode" required style="width: 100%; border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; font-family: inherit; margin-bottom: 20px;"></textarea>
 
           <label>Password</label>
           <input type="password" name="password" placeholder="Enter your password" required>
