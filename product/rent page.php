@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-</script>
+
 function filterCategory() {
     const selected = document.getElementById('categoryFilter').value;
     const cards = document.querySelectorAll('.card');
