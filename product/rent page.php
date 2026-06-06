@@ -82,11 +82,7 @@ if (isset($conn)) {
         .flatpickr-day.selected { background: var(--accent) !important; border-color: var(--accent) !important; }
     </style>
 
-    <!-- Rental Warning Message -->
-    <div style="background: #fffbeb; border: 1px solid #fef3c7; color: #92400e; padding: 16px; border-radius: 12px; margin-bottom: 32px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-        <span style="font-size: 1.5rem;">⚠️</span>
-        <p style="margin: 0; font-weight: 600; font-size: 0.95rem;">Important: Customers are permitted to rent only one instrument once per week. Please plan your schedule accordingly.</p>
-    </div>
+
 
     <div class="product-grid" id="productGrid">
     <?php if (empty($products)): ?>
