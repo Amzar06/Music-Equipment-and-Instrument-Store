@@ -59,8 +59,8 @@ if (isset($conn)) {
     </div>
 
     <div class="nav-tabs">
-        <a href="product page.php" class="nav-link">Buy Instruments</a>
-        <a href="rent page.php" class="nav-link active">Rent Instruments</a>
+        <a href="product page.php" class="nav-link buy">Buy Instruments</a>
+        <a href="rent page.php" class="nav-link rent active">Rent Instruments</a>
     </div>
 
     <!-- Category Sort Section -->
