@@ -22,6 +22,19 @@ if (!empty($start_date) && !empty($end_date)) {
 
 $total = 0;
 $rent_summary = "";
+$existing_addresses = [];
+
+if (isset($conn)) {
+    // Fetch existing addresses
+    $stmt_addr = $conn->prepare("SELECT * FROM addresses WHERE cust_id = ? ORDER BY created_at DESC");
+    $stmt_addr->bind_param("i", $cust_id);
+    $stmt_addr->execute();
+    $res_addr = $stmt_addr->get_result();
+    while($row = $res_addr->fetch_assoc()) {
+        $existing_addresses[] = $row;
+    }
+    $stmt_addr->close();
+}
 
 if ($type === 'rent') {
     if (isset($conn)) {
@@ -71,27 +84,72 @@ if ($type === 'rent') {
             <input type="hidden" name="days" value="<?php echo htmlspecialchars($days); ?>">
             <input type="hidden" name="amount" value="<?php echo htmlspecialchars($total); ?>">
         <?php endif; ?>
-        <div>
-            <input type="text" name="street" placeholder="Street Address" required>
-        </div>
-        <div style="display: flex; gap: 16px;">
-            <div style="flex: 1;">
-                <input type="text" name="city" placeholder="City" required>
+
+        <?php if (!empty($existing_addresses)): ?>
+            <div style="margin-bottom: 24px; padding: 16px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px;">
+                <label style="display: block; font-weight: 700; margin-bottom: 12px; color: #0369a1;">Use Existing Address</label>
+                <select name="existing_address_id" id="existingAddr" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #7dd3fc; background: white;" onchange="toggleAddressType()">
+                    <option value="new">-- Create New Address --</option>
+                    <?php foreach ($existing_addresses as $addr): ?>
+                        <option value="<?php echo $addr['address_id']; ?>">
+                            <?php echo htmlspecialchars($addr['full_name'] . " - " . $addr['city'] . ", " . $addr['state']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
-            <div style="flex: 1;">
-                <input type="text" name="postcode" placeholder="Postcode" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+        <?php endif; ?>
+
+        <div id="newAddressFields">
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary);">Reception Name *</label>
+                <input type="text" name="full_name" placeholder="Name of Person Receiving" id="fullName">
             </div>
-        </div>
-        <div>
-            <input type="text" name="state" placeholder="State" required>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary);">Street Address *</label>
+                <input type="text" name="street" placeholder="No, Building, Street" id="street">
+            </div>
+            <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                <div style="flex: 1;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary);">City *</label>
+                    <input type="text" name="city" placeholder="City" id="city">
+                </div>
+                <div style="flex: 1;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary);">Postcode *</label>
+                    <input type="text" name="postcode" placeholder="Postcode" id="postcode">
+                </div>
+            </div>
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary);">State *</label>
+                <input type="text" name="state" placeholder="State" id="state">
+            </div>
         </div>
         
         <div style="display: flex; gap: 16px; margin-top: 16px;">
-            <a href="product page.php" style="flex: 1; text-align: center; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 0;">Back to Product</a>
+            <a href="product page.php" style="flex: 1; text-align: center; padding: 12px; border-radius: 8px; margin: 0; background: #f1f5f9; color: #475569;">Back</a>
             <button type="submit" style="flex: 1; margin-top: 0;">Continue to Payment</button>
         </div>
     </form>
 </div>
+
+<script>
+function toggleAddressType() {
+    const select = document.getElementById('existingAddr');
+    const fields = document.getElementById('newAddressFields');
+    const inputs = fields.querySelectorAll('input');
+    
+    if (select && select.value !== 'new') {
+        fields.style.opacity = '0.4';
+        fields.style.pointerEvents = 'none';
+        inputs.forEach(i => i.required = false);
+    } else {
+        fields.style.opacity = '1';
+        fields.style.pointerEvents = 'auto';
+        inputs.forEach(i => i.required = true);
+    }
+}
+// Initialize
+document.addEventListener('DOMContentLoaded', toggleAddressType);
+</script>
 
 </body>
 </html>

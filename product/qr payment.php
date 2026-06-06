@@ -69,10 +69,12 @@ if (isset($_GET['amount'])) {
         <?php endif; ?>
         
         <!-- Capture Address Details -->
+        <input type="hidden" name="full_name" value="<?php echo htmlspecialchars($_GET['full_name'] ?? ''); ?>">
         <input type="hidden" name="street" value="<?php echo htmlspecialchars($_GET['street'] ?? ''); ?>">
         <input type="hidden" name="city" value="<?php echo htmlspecialchars($_GET['city'] ?? ''); ?>">
         <input type="hidden" name="postcode" value="<?php echo htmlspecialchars($_GET['postcode'] ?? ''); ?>">
         <input type="hidden" name="state" value="<?php echo htmlspecialchars($_GET['state'] ?? ''); ?>">
+        <input type="hidden" name="existing_address_id" value="<?php echo htmlspecialchars($_GET['existing_address_id'] ?? 'new'); ?>">
 
         <!-- Receipt Upload -->
         <div style="text-align: left; margin-bottom: 24px;">

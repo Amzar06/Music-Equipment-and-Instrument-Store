@@ -69,17 +69,24 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
             // 1. Process Address
             $street = $_POST['street'] ?? '';
             $city = $_POST['city'] ?? '';
+            $full_name = $_POST['full_name'] ?? '';
+            $street = $_POST['street'] ?? '';
+            $city = $_POST['city'] ?? '';
             $postcode = $_POST['postcode'] ?? '';
             $state = $_POST['state'] ?? '';
-            $combined_city = trim($street . ', ' . $city, ', ');
+            $existing_address_id = $_POST['existing_address_id'] ?? 'new';
             
             $addr_id = null;
-            $addr = $conn->prepare("INSERT INTO addresses (cust_id, city, state, postcode) VALUES (?, ?, ?, ?)");
-            if ($addr) {
-                $addr->bind_param("isss", $cust_id, $combined_city, $state, $postcode);
-                $addr->execute();
-                $addr_id = $conn->insert_id;
-                $addr->close();
+            if ($existing_address_id !== 'new') {
+                $addr_id = intval($existing_address_id);
+            } else {
+                $addr = $conn->prepare("INSERT INTO addresses (cust_id, full_name, street, city, state, postcode) VALUES (?, ?, ?, ?, ?, ?)");
+                if ($addr) {
+                    $addr->bind_param("isssss", $cust_id, $full_name, $street, $city, $state, $postcode);
+                    $addr->execute();
+                    $addr_id = $conn->insert_id;
+                    $addr->close();
+                }
             }
 
             if ($is_rent) {

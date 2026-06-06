@@ -50,7 +50,7 @@ if (!isset($conn) || $conn->connect_error) {
     $db_error = "Database connection failed";
 } else {
     $query = $conn->prepare("
-        SELECT ci.cart_item_id, p.prod_name, p.prod_sale_price, ci.quantity
+        SELECT ci.cart_item_id, p.prod_name, p.prod_sale_price, ci.quantity, p.prod_image
         FROM cart_items ci
         JOIN cart c ON ci.cart_id = c.cart_id
         JOIN products p ON ci.prod_id = p.prod_id
@@ -102,8 +102,10 @@ if (!isset($conn) || $conn->connect_error) {
             </div>
         <?php else: ?>
             <?php foreach($cart_items as $item): ?>
-                <div class='cart-item'>
-                    <div class='cart-item-info'>
+                <div class='cart-item' style="display: flex; align-items: flex-start; gap: 16px;">
+                    <img src="../uploads/<?php echo htmlspecialchars($item['prod_image'] ?: 'default.jpg'); ?>" 
+                         style="width: 70px; height: 70px; object-fit: cover; border-radius: 12px; border: 1px solid var(--card-border);">
+                    <div class='cart-item-info' style="flex: 1;">
                         <strong><?php echo htmlspecialchars($item['prod_name']); ?></strong> <br> 
                         <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
                             <a href="?action=dec&item_id=<?php echo $item['cart_item_id']; ?>" style="margin-top:0; padding: 2px 10px; background: #e2e8f0; border-radius: 4px; color: #475569; font-weight: bold; text-decoration: none;">-</a>
