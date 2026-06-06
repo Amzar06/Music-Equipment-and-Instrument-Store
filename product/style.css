@@ -67,9 +67,9 @@ p {
 }
 
 .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.1);
-    border-color: rgba(0, 0, 0, 0.15);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12);
+    border-color: var(--accent);
 }
 
 .container {
@@ -233,51 +233,71 @@ th {
     font-size: 1.5rem;
     font-weight: 700;
 }
-/* Navigation Tabs */
+/* Premium Segmented Switcher */
 .nav-tabs {
-    display: flex;
-    gap: 20px; /* Increased gap */
+    display: inline-flex;
+    background: #f1f5f9;
+    padding: 6px;
+    border-radius: 16px;
     margin-bottom: 40px;
-    justify-content: center;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.05);
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
 .nav-link {
-    padding: 14px 28px;
+    padding: 12px 32px;
     border-radius: 12px;
     text-decoration: none;
     font-weight: 700;
-    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     margin-top: 0;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-/* Buy Button - Blue */
-.nav-link.buy {
-    background: #eff6ff;
-    color: #2563eb;
-    border: 2px solid #bfdbfe;
-}
-.nav-link.buy.active {
-    background: #2563eb;
-    color: white;
-    border-color: #2563eb;
-}
-
-/* Rent Button - Green */
-.nav-link.rent {
-    background: #ecfdf5;
-    color: #10b981;
-    border: 2px solid #a7f3d0;
-}
-.nav-link.rent.active {
-    background: #10b981;
-    color: white;
-    border-color: #10b981;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    border: none;
+    box-shadow: none;
 }
 
 .nav-link:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    text-decoration: none;
+    color: #1e293b;
+    transform: none;
+    box-shadow: none;
 }
+
+/* Buy Tab Active - Blue Glow */
+.nav-link.buy.active {
+    background: white;
+    color: #2563eb;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.nav-link.buy::before { content: "🛒"; font-size: 1.1rem; }
+
+/* Rent Tab Active - Green Glow */
+.nav-link.rent.active {
+    background: white;
+    color: #10b981;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.nav-link.rent::before { content: "📅"; font-size: 1.1rem; }
+
+/* Mobile Friendly */
+@media (max-width: 600px) {
+    .nav-tabs {
+        width: 100%;
+        display: flex;
+    }
+    .nav-link {
+        flex: 1;
+        justify-content: center;
+        padding: 10px 16px;
+    }
+}
+
 
