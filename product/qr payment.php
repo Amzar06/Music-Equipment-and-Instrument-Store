@@ -62,6 +62,8 @@ if (isset($_GET['amount'])) {
         <?php if (isset($_GET['type']) && $_GET['type'] === 'rent'): ?>
             <input type="hidden" name="type" value="rent">
             <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($_GET['product_id'] ?? 0); ?>">
+            <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($_GET['start_date'] ?? ''); ?>">
+            <input type="hidden" name="end_date" value="<?php echo htmlspecialchars($_GET['end_date'] ?? ''); ?>">
             <input type="hidden" name="days" value="<?php echo htmlspecialchars($_GET['days'] ?? 1); ?>">
             <input type="hidden" name="amount" value="<?php echo htmlspecialchars($_GET['amount'] ?? 0); ?>">
         <?php endif; ?>

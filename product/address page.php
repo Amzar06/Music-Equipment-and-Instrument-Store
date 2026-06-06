@@ -8,7 +8,18 @@ if (!isset($_SESSION['cust_id'])) {
 
 $type = $_GET['type'] ?? '';
 $product_id = $_GET['product_id'] ?? 0;
-$days = $_GET['days'] ?? 1;
+$start_date = $_GET['start_date'] ?? '';
+$end_date = $_GET['end_date'] ?? '';
+$days = 1; 
+
+if (!empty($start_date) && !empty($end_date)) {
+    $start = new DateTime($start_date);
+    $end = new DateTime($end_date);
+    $interval = $start->diff($end);
+    $days = $interval->days;
+    if ($days < 1) $days = 1; // Minimum 1 day
+}
+
 $total = 0;
 $rent_summary = "";
 
@@ -23,8 +34,9 @@ if ($type === 'rent') {
                 $price = $row['prod_rental_price'];
                 $total = $days * $price;
                 $rent_summary = "<h3 style='margin-bottom: 8px;'>Rental Summary</h3>";
-                $rent_summary .= "<p style='margin: 0; color: var(--text-secondary);'><strong>Duration:</strong> $days Day(s)</p>";
-                $rent_summary .= "<p style='margin: 0; margin-top: 4px; font-size: 1.1rem; color: var(--success);'><strong>Total Price:</strong> RM " . number_format($total, 2) . "</p>";
+                $rent_summary .= "<p style='margin: 0; color: var(--text-secondary);'><strong>Dates:</strong> $start_date to $end_date</p>";
+                $rent_summary .= "<p style='margin: 0; margin-top: 4px; color: var(--text-secondary);'><strong>Duration:</strong> $days Day(s)</p>";
+                $rent_summary .= "<p style='margin: 0; margin-top: 8px; font-size: 1.1rem; color: var(--success);'><strong>Total Price:</strong> RM " . number_format($total, 2) . "</p>";
             }
             $stmt->close();
         }
@@ -54,6 +66,8 @@ if ($type === 'rent') {
         <?php if ($type === 'rent'): ?>
             <input type="hidden" name="type" value="rent">
             <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($product_id); ?>">
+            <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($start_date); ?>">
+            <input type="hidden" name="end_date" value="<?php echo htmlspecialchars($end_date); ?>">
             <input type="hidden" name="days" value="<?php echo htmlspecialchars($days); ?>">
             <input type="hidden" name="amount" value="<?php echo htmlspecialchars($total); ?>">
         <?php endif; ?>

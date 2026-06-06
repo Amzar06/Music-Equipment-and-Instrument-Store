@@ -16,6 +16,8 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $is_rent = isset($_POST['type']) && $_POST['type'] === 'rent';
     $rent_product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
     $rent_days = isset($_POST['days']) ? intval($_POST['days']) : 1;
+    $start_date_rent = $_POST['start_date'] ?? date('Y-m-d');
+    $end_date_rent = $_POST['end_date'] ?? date('Y-m-d', strtotime("+$rent_days days"));
     
     if ($is_rent && $rent_product_id > 0) {
         $query = $conn->prepare("SELECT prod_rental_price, prod_id FROM products WHERE prod_id = ?");
@@ -82,8 +84,8 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($is_rent) {
                 // 2a. Process Rental
-                $start_date = date('Y-m-d');
-                $end_date = date('Y-m-d', strtotime("+$rent_days days"));
+                $start_date = $start_date_rent;
+                $end_date = $end_date_rent;
                 
                 $rent = $conn->prepare("INSERT INTO rentals (cust_id, address_id, start_date, end_date, status, total_amount) VALUES (?, ?, ?, ?, 'active', ?)");
                 if ($rent) {

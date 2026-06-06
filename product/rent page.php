@@ -69,6 +69,12 @@ if (isset($conn)) {
         </select>
     </div>
 
+    <!-- Rental Warning Message -->
+    <div style="background: #fffbeb; border: 1px solid #fef3c7; color: #92400e; padding: 16px; border-radius: 12px; margin-bottom: 32px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <span style="font-size: 1.5rem;">⚠️</span>
+        <p style="margin: 0; font-weight: 600; font-size: 0.95rem;">Important: Customers are permitted to rent only one instrument once per week. Please plan your schedule accordingly.</p>
+    </div>
+
     <div class="product-grid" id="productGrid">
     <?php if (empty($products)): ?>
         <div style="text-align: center; color: var(--text-secondary); grid-column: 1 / -1; padding: 48px;">
@@ -90,13 +96,20 @@ if (isset($conn)) {
 
                 <div class="product-actions mt-4">
                     <!-- RENT -->
-                    <form action="address page.php" method="GET">
+                    <form action="address page.php" method="GET" class="rent-form">
                         <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
                         <input type="hidden" name="type" value="rent">
                         <input type="hidden" name="price" value="<?php echo htmlspecialchars($product['prod_rental_price']); ?>">
-                        <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px;">
-                            <span style="font-size: 0.95rem; color: var(--text-secondary); white-space: nowrap;">Days:</span>
-                            <input type="number" name="days" min="1" required style="padding: 8px; flex: 1;">
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                            <div>
+                                <label style="display:block; font-size: 0.8rem; font-weight: 700; color: #64748b; margin-bottom: 4px;">Start Date</label>
+                                <input type="date" name="start_date" required min="<?php echo date('Y-m-d'); ?>" style="padding: 8px; font-size: 0.85rem;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size: 0.8rem; font-weight: 700; color: #64748b; margin-bottom: 4px;">End Date</label>
+                                <input type="date" name="end_date" required min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>" style="padding: 8px; font-size: 0.85rem;">
+                            </div>
                         </div>
                         <button type="submit" class="rent-btn" style="width: 100%;">Rent Now</button>
                     </form>
