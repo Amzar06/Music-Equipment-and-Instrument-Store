@@ -38,6 +38,7 @@ h2 {
     text-align: center;
     background: linear-gradient(to right, #60a5fa, #a78bfa);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -231,4 +232,33 @@ th {
     text-align: right;
     font-size: 1.5rem;
     font-weight: 700;
+}
+/* Navigation Tabs */
+.nav-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 32px;
+    justify-content: center;
+}
+
+.nav-link {
+    padding: 12px 24px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    background: #f1f5f9;
+    font-weight: 600;
+    transition: 0.3s ease;
+    margin-top: 0;
+}
+
+.nav-link:hover {
+    background: #e2e8f0;
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.nav-link.active {
+    background: var(--accent);
+    color: white;
 }

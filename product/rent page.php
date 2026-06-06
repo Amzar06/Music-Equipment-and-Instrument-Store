@@ -38,18 +38,20 @@ if (isset($conn)) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Products</title>
+    <title>Rent Instruments</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Smooth transition for filtering */
         .card { transition: opacity 0.3s ease; }
+        .nav-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+        .nav-link { padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--text-secondary); background: rgba(255,255,255,0.05); }
+        .nav-link.active { background: var(--accent); color: white; }
     </style>
 </head>
 <body>
 
 <div style="width: 100%; max-width: 1200px; margin: 0 auto;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h2 style="margin: 0;">Buy Instruments</h2>
+        <h2 style="margin: 0;">Rent Instruments</h2>
         <div>
             <a href="../customer/logout_page.php" style="margin: 0 12px 0 0; padding: 10px 20px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 8px; text-decoration: none;">Logout</a>
             <a href="cart page.php" style="margin: 0; padding: 10px 20px; background: rgba(255,255,255,0.1); border-radius: 8px; text-decoration: none;">View Cart</a>
@@ -57,8 +59,8 @@ if (isset($conn)) {
     </div>
 
     <div class="nav-tabs">
-        <a href="product page.php" class="nav-link active">Buy Instruments</a>
-        <a href="rent page.php" class="nav-link">Rent Instruments</a>
+        <a href="product page.php" class="nav-link">Buy Instruments</a>
+        <a href="rent page.php" class="nav-link active">Rent Instruments</a>
     </div>
 
     <!-- Category Sort Section -->
@@ -80,7 +82,6 @@ if (isset($conn)) {
     <?php else: ?>
         <?php foreach($products as $product): ?>
             <div class="card" data-category="<?php echo htmlspecialchars(strtolower($product['category_name'])); ?>">
-                <!-- Image Placeholder if real one doesn't exist -->
                 <?php if (!empty($product['prod_image'])): ?>
                     <div style="width: 100%; height: 180px; background-size: cover; background-position: center; background-image: url('../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>'); border-radius: 8px; margin-bottom: 16px;"></div>
                 <?php else: ?>
@@ -88,17 +89,21 @@ if (isset($conn)) {
                 <?php endif; ?>
                 
                 <h3><?php echo htmlspecialchars($product['prod_name']); ?></h3>
-                <!-- Product Details -->
                 <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.4;"><?php echo htmlspecialchars($product['prod_description']); ?></p>
                 
-                <p><strong>Price:</strong> RM <?php echo number_format($product['prod_sale_price'] ?? 0, 2); ?></p>
+                <p><strong>Rent:</strong> RM <?php echo number_format($product['prod_rental_price'] ?? 0, 2); ?> / day</p>
 
                 <div class="product-actions mt-4">
-                    <!-- BUY -->
-                    <form action="add_to_cart.php" method="POST">
-                        <input type="hidden" name="prod_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
-                        <button type="submit" style="width: 100%;">Add to Cart</button>
-                        <!-- Showing message from GET if added --><?php if (isset($_GET['added']) && $_GET['added'] == $product['prod_id']) echo "<span style='color: var(--success); font-size: 0.8em; display:block; margin-top:4px;'>Added!</span>"; ?>
+                    <!-- RENT -->
+                    <form action="address page.php" method="GET">
+                        <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
+                        <input type="hidden" name="type" value="rent">
+                        <input type="hidden" name="price" value="<?php echo htmlspecialchars($product['prod_rental_price']); ?>">
+                        <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px;">
+                            <span style="font-size: 0.95rem; color: var(--text-secondary); white-space: nowrap;">Days:</span>
+                            <input type="number" name="days" min="1" required style="padding: 8px; flex: 1;">
+                        </div>
+                        <button type="submit" class="rent-btn" style="width: 100%;">Rent Now</button>
                     </form>
                 </div>
             </div>
@@ -111,7 +116,6 @@ if (isset($conn)) {
 function filterCategory() {
     const selected = document.getElementById('categoryFilter').value;
     const cards = document.querySelectorAll('.card');
-    
     cards.forEach(card => {
         if (selected === 'all' || card.getAttribute('data-category') === selected) {
             card.style.display = ''; 
