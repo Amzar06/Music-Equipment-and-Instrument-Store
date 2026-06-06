@@ -48,8 +48,10 @@ if (isset($conn)) {
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h2 style="margin: 0;">Rent Instruments</h2>
         <div>
+            <a href="../customer/home_page.php" style="margin: 0 12px 0 0; padding: 10px 20px; background: rgba(37, 99, 235, 0.1); color: #2563eb; border-radius: 8px; text-decoration: none;">Homepage</a>
+            <a href="payment history.php" style="margin: 0 12px 0 0; padding: 10px 20px; background: rgba(16, 185, 129, 0.1); color: #10b981; border-radius: 8px; text-decoration: none;">Order History</a>
             <a href="../customer/logout_page.php" style="margin: 0 12px 0 0; padding: 10px 20px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 8px; text-decoration: none;">Logout</a>
-            <a href="cart page.php" style="margin: 0; padding: 10px 20px; background: rgba(255,255,255,0.1); border-radius: 8px; text-decoration: none;">View Cart</a>
+            <a href="cart page.php" style="margin: 0; padding: 10px 20px; background: rgba(0,0,0,0.05); border-radius: 8px; text-decoration: none; color: #475569;">View Cart</a>
         </div>
     </div>
 
@@ -105,7 +107,7 @@ if (isset($conn)) {
 
                 <div class="product-actions mt-4">
                     <!-- RENT -->
-                    <form action="address page.php" method="GET" class="rent-form">
+                    <form action="address page.php" method="GET" class="rent-form" onsubmit="return validateRental(this)">
                         <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
                         <input type="hidden" name="type" value="rent">
                         <input type="hidden" name="price" value="<?php echo htmlspecialchars($product['prod_rental_price']); ?>">
@@ -132,6 +134,17 @@ if (isset($conn)) {
 <!-- Flatpickr JS -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
+function validateRental(form) {
+    const start = form.querySelector('input[name="start_date"]').value;
+    const end = form.querySelector('input[name="end_date"]').value;
+    
+    if (!start || !end) {
+        alert("Please select a Rental Period (Start and End date) before renting!");
+        return false;
+    }
+    return true;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     flatpickr(".range-picker", {
         mode: "range",

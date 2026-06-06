@@ -26,7 +26,7 @@ $rent_summary = "";
 $existing_addresses = [];
 
 if (isset($conn)) {
-    // 1. Fetch registration address from customers table
+    // 1. Fetch registration address from customers table (PRIMARY)
     $stmt_cust = $conn->prepare("SELECT cust_name, cust_street, cust_city, cust_state, cust_postcode FROM customers WHERE cust_id = ?");
     $stmt_cust->bind_param("i", $cust_id);
     $stmt_cust->execute();
@@ -40,19 +40,38 @@ if (isset($conn)) {
                 'city' => $cust['cust_city'],
                 'state' => $cust['cust_state'],
                 'postcode' => $cust['cust_postcode'],
+                'label' => 'Primary Address (From Profile)',
                 'is_reg' => true
             ];
         }
     }
     $stmt_cust->close();
 
-    // 2. Fetch previously used addresses
+    // 2. Fetch TOP 3 previously used addresses (Excluding primary match)
     $stmt_addr = $conn->prepare("SELECT * FROM addresses WHERE cust_id = ? ORDER BY created_at DESC");
     $stmt_addr->bind_param("i", $cust_id);
     $stmt_addr->execute();
     $res_addr = $stmt_addr->get_result();
+    
+    $primary = !empty($existing_addresses) ? $existing_addresses[0] : null;
+
     while($row = $res_addr->fetch_assoc()) {
+        if (count($existing_addresses) >= 4) break; // 1 primary + 3 recent
+
+        // Deduplication check
+        if ($primary) {
+            $is_same = (
+                trim($row['full_name']) == trim($primary['full_name']) &&
+                trim($row['street']) == trim($primary['street']) &&
+                trim($row['city']) == trim($primary['city']) &&
+                trim($row['state']) == trim($primary['state']) &&
+                trim($row['postcode']) == trim($primary['postcode'])
+            );
+            if ($is_same) continue; // Skip if same as primary
+        }
+
         $row['is_reg'] = false;
+        $row['label'] = "Recent: " . $row['full_name']; // Show only reception name
         $existing_addresses[] = $row;
     }
     $stmt_addr->close();
@@ -119,7 +138,7 @@ if ($type === 'rent') {
                                 data-state="<?php echo htmlspecialchars($addr['state'] ?? ''); ?>"
                                 data-postcode="<?php echo htmlspecialchars($addr['postcode'] ?? ''); ?>"
                                 data-name="<?php echo htmlspecialchars($addr['full_name'] ?? ''); ?>">
-                            <?php echo htmlspecialchars($addr['full_name'] . " - " . ($addr['city'] ?: $addr['street'])); ?>
+                            <?php echo htmlspecialchars($addr['label']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
