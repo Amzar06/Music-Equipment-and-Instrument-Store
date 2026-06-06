@@ -113,7 +113,7 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 $start_date = $start_date_rent;
                 $end_date = $end_date_rent;
                 
-                $rent = $conn->prepare("INSERT INTO rentals (cust_id, address_id, start_date, end_date, status, total_amount) VALUES (?, ?, ?, ?, 'active', ?)");
+                $rent = $conn->prepare("INSERT INTO rentals (cust_id, address_id, start_date, end_date, status, total_amount) VALUES (?, ?, ?, ?, 'Pending', ?)");
                 if ($rent) {
                     $rent->bind_param("iissd", $cust_id, $addr_id, $start_date, $end_date, $total_price);
                     if ($rent->execute()) {
@@ -124,17 +124,20 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($ri) {
                             foreach ($cart_items as $item) {
                                 $ri->bind_param("iiidss", $rental_id, $item['prod_id'], $item['quantity'], $item['prod_sale_price'], $start_date, $end_date);
-                                $ri->execute();
+                                if (!$ri->execute()) {
+                                    $db_error = "Rental Item Insert Failed: " . $ri->error;
+                                }
                             }
                             $ri->close();
                         }
                     } else {
+                        $db_error = "Rental Insert Failed: " . $rent->error;
                         $rent->close();
                     }
                 }
             } else {
                 // 2b. Process Order 
-                $ord = $conn->prepare("INSERT INTO orders (cust_id, address_id, total_amount, status) VALUES (?, ?, ?, 'pending')");
+                $ord = $conn->prepare("INSERT INTO orders (cust_id, address_id, total_amount, status) VALUES (?, ?, ?, 'Pending')");
                 if ($ord) {
                     $ord->bind_param("iid", $cust_id, $addr_id, $total_price);
                     if ($ord->execute()) {
