@@ -10,6 +10,7 @@ $cust_id = $_SESSION['cust_id'];
 
 $total_price = 0.00;
 $db_error = null;
+$delivery_fee = 0.00;
 
 if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $cart_items = [];
@@ -63,7 +64,14 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
             
-    if (!empty($cart_items) && $total_price > 0) {
+    // Add delivery fee
+    $delivery_type = $_POST['delivery_type'] ?? 'delivery';
+    if ($delivery_type === 'delivery') {
+        $delivery_fee  = 5.00;
+        $total_price  += $delivery_fee;
+    }
+
+    if (!empty($cart_items)) {
         // Try to insert the new orders into older database schemas
         try {
             // 1. Process Address
@@ -77,22 +85,23 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $existing_address_id = $_POST['existing_address_id'] ?? 'new';
             
             $addr_id = null;
-            if ($existing_address_id !== 'new' && $existing_address_id !== 'reg') {
+
+            if ($delivery_type === 'self_collect') {
+                // Self collect — no address needed
+                $addr_id = null;
+            } elseif ($existing_address_id !== 'new' && $existing_address_id !== 'reg') {
                 $addr_id = intval($existing_address_id);
             } elseif ($existing_address_id === 'reg') {
-                // Fetch from registration
                 $stmt_cust = $conn->prepare("SELECT cust_name, cust_street, cust_city, cust_state, cust_postcode FROM customers WHERE cust_id = ?");
                 $stmt_cust->bind_param("i", $cust_id);
                 $stmt_cust->execute();
                 $cust_info = $stmt_cust->get_result()->fetch_assoc();
                 $stmt_cust->close();
-                
-                $reg_name = $cust_info['cust_name'] ?? 'Customer';
-                $reg_street = $cust_info['cust_street'] ?? '';
-                $reg_city = $cust_info['cust_city'] ?? '';
-                $reg_state = $cust_info['cust_state'] ?? '';
-                $reg_postcode = $cust_info['cust_postcode'] ?? '';
-                
+                $reg_name    = $cust_info['cust_name']     ?? 'Customer';
+                $reg_street  = $cust_info['cust_street']   ?? '';
+                $reg_city    = $cust_info['cust_city']     ?? '';
+                $reg_state   = $cust_info['cust_state']    ?? '';
+                $reg_postcode= $cust_info['cust_postcode'] ?? '';
                 $addr = $conn->prepare("INSERT INTO addresses (cust_id, full_name, street, city, state, postcode) VALUES (?, ?, ?, ?, ?, ?)");
                 $addr->bind_param("isssss", $cust_id, $reg_name, $reg_street, $reg_city, $reg_state, $reg_postcode);
                 $addr->execute();
