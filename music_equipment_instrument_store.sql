@@ -60,7 +60,8 @@ CREATE TABLE `cart` (
 CREATE TABLE `cart_items` (
   `cart_item_id` int(11) NOT NULL,
   `cart_id` int(11) NOT NULL,
-  `prod_id` int(11) NOT NULL
+  `prod_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------

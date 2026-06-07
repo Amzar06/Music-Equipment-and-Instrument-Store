@@ -38,18 +38,15 @@ if (isset($conn)) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Products</title>
+    <title>Rent Instruments</title>
     <link rel="stylesheet" href="style.css?v=2.0">
-    <style>
-        /* Smooth transition for filtering */
-        .card { transition: opacity 0.3s ease; }
-    </style>
+
 </head>
 <body>
 
 <div style="width: 100%; max-width: 1200px; margin: 0 auto;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h2 style="margin: 0;">Buy Instruments</h2>
+        <h2 style="margin: 0;">Rent Instruments</h2>
         <div>
             <a href="../customer/home_page.php" style="margin: 0 12px 0 0; padding: 10px 20px; background: rgba(37, 99, 235, 0.1); color: #2563eb; border-radius: 8px; text-decoration: none;">Homepage</a>
             <a href="payment history.php" style="margin: 0 12px 0 0; padding: 10px 20px; background: rgba(16, 185, 129, 0.1); color: #10b981; border-radius: 8px; text-decoration: none;">Order History</a>
@@ -59,8 +56,8 @@ if (isset($conn)) {
     </div>
 
     <div class="nav-tabs">
-        <a href="product page.php" class="nav-link buy active">Buy Instruments</a>
-        <a href="rent page.php" class="nav-link rent">Rent Instruments</a>
+        <a href="product page.php" class="nav-link buy">Buy Instruments</a>
+        <a href="rent page.php" class="nav-link rent active">Rent Instruments</a>
     </div>
 
     <!-- Category Sort Section -->
@@ -74,6 +71,21 @@ if (isset($conn)) {
         </select>
     </div>
 
+    <!-- Rental Warning Message -->
+    <div style="background: #fffbeb; border: 1px solid #fef3c7; color: #92400e; padding: 16px; border-radius: 12px; margin-bottom: 32px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <span style="font-size: 1.5rem;">⚠️</span>
+        <p style="margin: 0; font-weight: 600; font-size: 0.95rem;">Important: Customers are permitted to rent only one instrument once per week. Please plan your schedule accordingly.</p>
+    </div>
+
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        .flatpickr-calendar { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 12px; }
+        .flatpickr-day.selected { background: var(--accent) !important; border-color: var(--accent) !important; }
+    </style>
+
+
+
     <div class="product-grid" id="productGrid">
     <?php if (empty($products)): ?>
         <div style="text-align: center; color: var(--text-secondary); grid-column: 1 / -1; padding: 48px;">
@@ -82,7 +94,6 @@ if (isset($conn)) {
     <?php else: ?>
         <?php foreach($products as $product): ?>
             <div class="card" data-category="<?php echo htmlspecialchars(strtolower($product['category_name'])); ?>">
-                <!-- Image Placeholder if real one doesn't exist -->
                 <?php if (!empty($product['prod_image'])): ?>
                     <div style="width: 100%; height: 180px; background-size: cover; background-position: center; background-image: url('../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>'); border-radius: 8px; margin-bottom: 16px;"></div>
                 <?php else: ?>
@@ -90,17 +101,28 @@ if (isset($conn)) {
                 <?php endif; ?>
                 
                 <h3><?php echo htmlspecialchars($product['prod_name']); ?></h3>
-                <!-- Product Details -->
                 <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.4;"><?php echo htmlspecialchars($product['prod_description']); ?></p>
                 
-                <p><strong>Price:</strong> RM <?php echo number_format($product['prod_sale_price'] ?? 0, 2); ?></p>
+                <p><strong>Rent:</strong> RM <?php echo number_format($product['prod_rental_price'] ?? 0, 2); ?> / day</p>
 
                 <div class="product-actions mt-4">
-                    <!-- BUY -->
-                    <form action="add_to_cart.php" method="POST">
-                        <input type="hidden" name="prod_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
-                        <button type="submit" style="width: 100%;">Add to Cart</button>
-                        <!-- Showing message from GET if added --><?php if (isset($_GET['added']) && $_GET['added'] == $product['prod_id']) echo "<span style='color: var(--success); font-size: 0.8em; display:block; margin-top:4px;'>Added!</span>"; ?>
+                    <!-- RENT -->
+                    <form action="address page.php" method="GET" class="rent-form" onsubmit="return validateRental(this)">
+                        <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
+                        <input type="hidden" name="type" value="rent">
+                        <input type="hidden" name="price" value="<?php echo htmlspecialchars($product['prod_rental_price']); ?>">
+                        
+                        <!-- Hidden fields to store split dates for backend -->
+                        <input type="hidden" name="start_date" id="start_date_<?php echo $product['prod_id']; ?>">
+                        <input type="hidden" name="end_date" id="end_date_<?php echo $product['prod_id']; ?>">
+
+                        <div style="margin-bottom: 16px;">
+                            <label style="display:block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 6px;">Select Rental Period</label>
+                            <input type="text" class="range-picker" placeholder="Choose dates.." readonly 
+                                   data-prod-id="<?php echo $product['prod_id']; ?>"
+                                   style="padding: 12px; font-size: 0.95rem; background: white; cursor: pointer; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%;">
+                        </div>
+                        <button type="submit" class="rent-btn" style="width: 100%;">Rent Now</button>
                     </form>
                 </div>
             </div>
@@ -109,11 +131,41 @@ if (isset($conn)) {
     </div>
 </div>
 
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
+function validateRental(form) {
+    const start = form.querySelector('input[name="start_date"]').value;
+    const end = form.querySelector('input[name="end_date"]').value;
+    
+    if (!start || !end) {
+        alert("Please select a Rental Period (Start and End date) before renting!");
+        return false;
+    }
+    return true;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    flatpickr(".range-picker", {
+        mode: "range",
+        minDate: "today",
+        dateFormat: "Y-m-d",
+        onClose: function(selectedDates, dateStr, instance) {
+            if (selectedDates.length === 2) {
+                const prodId = instance.element.getAttribute('data-prod-id');
+                const start = instance.formatDate(selectedDates[0], "Y-m-d");
+                const end = instance.formatDate(selectedDates[1], "Y-m-d");
+                
+                document.getElementById('start_date_' + prodId).value = start;
+                document.getElementById('end_date_' + prodId).value = end;
+            }
+        }
+    });
+});
+
 function filterCategory() {
     const selected = document.getElementById('categoryFilter').value;
     const cards = document.querySelectorAll('.card');
-    
     cards.forEach(card => {
         if (selected === 'all' || card.getAttribute('data-category') === selected) {
             card.style.display = ''; 
