@@ -37,6 +37,7 @@ if (isset($conn)) {
             SELECT 'Order' as type, o.order_id as id, o.total_amount, o.status, o.order_date as date, a.city, a.state,
                    (SELECT p.prod_name FROM order_items oi JOIN products p ON oi.prod_id = p.prod_id WHERE oi.order_id = o.order_id LIMIT 1) as prod_name,
                    (SELECT p.prod_image FROM order_items oi JOIN products p ON oi.prod_id = p.prod_id WHERE oi.order_id = o.order_id LIMIT 1) as prod_image,
+                   (SELECT SUM(oi.order_qty) FROM order_items oi WHERE oi.order_id = o.order_id) as total_qty,
                    NULL as start_date, NULL as end_date
             FROM orders o
             LEFT JOIN addresses a ON o.address_id = a.address_id
@@ -47,6 +48,7 @@ if (isset($conn)) {
             SELECT 'Rental' as type, r.rental_id as id, r.total_amount, r.status, r.created_at as date, a.city, a.state,
                    (SELECT p.prod_name FROM rental_items ri JOIN products p ON ri.prod_id = p.prod_id WHERE ri.rental_id = r.rental_id LIMIT 1) as prod_name,
                    (SELECT p.prod_image FROM rental_items ri JOIN products p ON ri.prod_id = p.prod_id WHERE ri.rental_id = r.rental_id LIMIT 1) as prod_image,
+                   (SELECT SUM(ri.rental_qty) FROM rental_items ri WHERE ri.rental_id = r.rental_id) as total_qty,
                    r.start_date, r.end_date
             FROM rentals r
             LEFT JOIN addresses a ON r.address_id = a.address_id
@@ -98,6 +100,7 @@ if (isset($conn)) {
             <tr>
                 <th>Order Type & ID</th>
                 <th>Delivery Address</th>
+                <th>Qty</th>
                 <th>Total Price</th>
                 <th>Status</th>
             </tr>
@@ -105,7 +108,7 @@ if (isset($conn)) {
         <tbody>
             <?php if (empty($orders)): ?>
                 <tr>
-                    <td colspan="4" style="text-align: center; padding: 24px; color: var(--text-secondary);">Your database currently has no past transactions explicitly linked to you.</td>
+                    <td colspan="5" style="text-align: center; padding: 24px; color: var(--text-secondary);">Your database currently has no past transactions explicitly linked to you.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach($orders as $order): ?>
@@ -114,11 +117,11 @@ if (isset($conn)) {
                         <img src="../uploads/<?php echo htmlspecialchars($order['prod_image'] ?: 'default.jpg'); ?>" 
                              style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid var(--card-border);">
                         <div>
-                            <span style="font-size: 0.75rem; padding: 2px 6px; background: <?php echo $order['type'] === 'Rental' ? 'var(--secondary)' : 'var(--accent)'; ?>; color: white; border-radius: 4px;"><?php echo htmlspecialchars($order['type']); ?></span>
+                            <span style="font-size: 0.75rem; padding: 2px 6px; background: <?php echo $order['type'] === 'Rental' ? '#7c3aed' : 'var(--accent)'; ?>; color: white; border-radius: 4px;"><?php echo htmlspecialchars($order['type']); ?></span>
                             <div style="font-weight: 600; font-size: 0.9rem; margin-top: 4px;"><?php echo htmlspecialchars($order['prod_name'] ?: 'Multiple Items'); ?></div>
                             <div style="font-size: 0.8rem; color: var(--text-secondary);">ID: #<?php echo htmlspecialchars($order['id']); ?></div>
                             <?php if ($order['type'] === 'Rental' && $order['start_date']): ?>
-                                <div style="font-size: 0.75rem; color: var(--secondary); margin-top: 4px;">
+                                <div style="font-size: 0.75rem; color: #7c3aed; margin-top: 4px;">
                                     <strong>Rental Period:</strong><br>
                                     <?php echo date('d M Y', strtotime($order['start_date'])); ?> to <?php echo date('d M Y', strtotime($order['end_date'])); ?>
                                 </div>
@@ -132,13 +135,16 @@ if (isset($conn)) {
                             <span style="color: var(--text-secondary);">No Address</span>
                         <?php endif; ?>
                     </td>
+                    <td style="font-weight: 600; color: var(--text-primary);">
+                        <?php echo htmlspecialchars($order['total_qty'] ?? 1); ?>
+                    </td>
                     <td style="font-weight: 600; color: var(--success);">RM <?php echo number_format($order['total_amount'] ?? 0, 2); ?></td>
                     <td>
                         <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
                             <span style="font-weight: 600; color: <?php 
                                 $status = strtolower($order['status'] ?? '');
                                 if (in_array($status, ['completed', 'delivered', 'returned', 'shipped'])) echo 'var(--success)';
-                                elseif (in_array($status, ['pending', 'processing', 'active'])) echo 'var(--secondary)';
+                                elseif (in_array($status, ['pending', 'processing', 'active'])) echo '#6366f1';
                                 elseif (in_array($status, ['declined', 'cancelled'])) echo '#ef4444';
                                 else echo 'var(--text-secondary)';
                             ?>;"><?php echo htmlspecialchars(ucfirst($order['status'] ?? 'Pending')); ?></span>

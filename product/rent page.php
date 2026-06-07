@@ -33,6 +33,26 @@ if (isset($conn)) {
         }
     }
 }
+
+// Check if user is on rental cooldown (1 week limit)
+$can_rent = true;
+$next_rentable_date = null;
+if (isset($conn)) {
+    $stmt = $conn->prepare("SELECT created_at FROM rentals WHERE cust_id = ? AND status != 'Cancelled' ORDER BY created_at DESC LIMIT 1");
+    $stmt->bind_param("i", $cust_id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if ($last = $res->fetch_assoc()) {
+        $last_date = strtotime($last['created_at']);
+        $one_week_ago = strtotime("-1 week");
+        
+        if ($last_date > $one_week_ago) {
+            $can_rent = false;
+            $next_rentable_date = date('d M Y', strtotime("+1 week", $last_date));
+        }
+    }
+    $stmt->close();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -72,10 +92,23 @@ if (isset($conn)) {
     </div>
 
     <!-- Rental Warning Message -->
-    <div style="background: #fffbeb; border: 1px solid #fef3c7; color: #92400e; padding: 16px; border-radius: 12px; margin-bottom: 32px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-        <span style="font-size: 1.5rem;">⚠️</span>
-        <p style="margin: 0; font-weight: 600; font-size: 0.95rem;">Important: Customers are permitted to rent only one instrument once per week. Please plan your schedule accordingly.</p>
-    </div>
+    <?php if (!$can_rent): ?>
+        <div style="background: #fee2e2; border: 1.5px solid #ef4444; color: #991b1b; padding: 20px; border-radius: 14px; margin-bottom: 32px; display: flex; align-items: flex-start; gap: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            <span style="font-size: 1.8rem;">⏳</span>
+            <div>
+                <p style="margin: 0; font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Rental Cooldown Active</p>
+                <p style="margin: 0; font-size: 0.95rem; opacity: 0.9;">You have recently rented an instrument. To ensure fair access for all customers, you can only rent <b>one instrument per week</b>.</p>
+                <p style="margin-top: 10px; font-weight: 700; font-size: 0.9rem; background: rgba(239, 68, 68, 0.1); display: inline-block; padding: 4px 10px; border-radius: 6px;">
+                    🔓 You can rent again starting: <?php echo $next_rentable_date; ?>
+                </p>
+            </div>
+        </div>
+    <?php else: ?>
+        <div style="background: #f0fdf4; border: 1.5px solid #10b981; color: #166534; padding: 18px; border-radius: 14px; margin-bottom: 32px; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+            <span style="font-size: 1.5rem;">✅</span>
+            <p style="margin: 0; font-weight: 600; font-size: 0.95rem;">You are eligible to rent! Note: Customers are permitted to rent only one instrument per week.</p>
+        </div>
+    <?php endif; ?>
 
     <!-- Flatpickr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -118,11 +151,12 @@ if (isset($conn)) {
 
                         <div style="margin-bottom: 16px;">
                             <label style="display:block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 6px;">Select Rental Period</label>
-                            <input type="text" class="range-picker" placeholder="Choose dates.." readonly 
+                            <input type="text" class="range-picker" placeholder="<?php echo $can_rent ? 'Choose dates..' : 'Rental restricted'; ?>" readonly 
                                    data-prod-id="<?php echo $product['prod_id']; ?>"
-                                   style="padding: 12px; font-size: 0.95rem; background: white; cursor: pointer; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%;">
+                                   <?php echo !$can_rent ? 'disabled' : ''; ?>
+                                   style="padding: 12px; font-size: 0.95rem; background: <?php echo $can_rent ? 'white' : '#f1f5f9'; ?>; cursor: <?php echo $can_rent ? 'pointer' : 'not-allowed'; ?>; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%;">
                         </div>
-                        <button type="submit" class="rent-btn" style="width: 100%;">Rent Now</button>
+                        <button type="submit" class="rent-btn" <?php echo !$can_rent ? 'disabled style="background:#94a3b8; cursor:not-allowed;"' : ''; ?> style="width: 100%;"><?php echo $can_rent ? 'Rent Now' : 'Restriction Active'; ?></button>
                     </form>
                 </div>
             </div>
