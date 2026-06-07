@@ -4,7 +4,7 @@ require_once('../database.php');
 
 // If already logged in, send them straight to the dashboard/orders
 if (isset($_SESSION['staff_id'])) {
-    header("Location: admin_orders.php"); 
+    header("Location: admin_dashboard.php"); 
     exit();
 }
 
@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($password == $staff['staff_password']) { 
             $_SESSION['staff_id'] = $staff['staff_id'];
             $_SESSION['staff_name'] = $staff['staff_name']; 
-            header("Location: admin_orders.php");
+            header("Location: admin_dashboard.php");
             exit();
         } else {
             $error = "Invalid password.";
@@ -95,6 +95,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         .form-control:focus {
             border-color: #111827;
         }
+
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
+        }
+
         .password-container {
             position: relative;
             display: block;
@@ -150,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
 
     <div class="login-card">
-        <h2>Staff Portal</h2>
+        <h2>Admin Portal</h2>
         
         <?php if (!empty($error)): ?>
             <div class="error-message">
@@ -177,7 +183,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
             </div>
 
-            <button type="submit" class="login-btn">Secure Login</button>
+            <button type="submit" class="login-btn">Login</button>
+            <div style="text-align: center; margin-top: 15px;">
+            <a href="admin_forgot_password.php" style="color: #6b7280; font-size: 0.85rem; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#111827'" onmouseout="this.style.color='#6b7280'">Forgot Password?</a>
+           </div>
         </form>
     </div>
 
