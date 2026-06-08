@@ -26,12 +26,12 @@ $display_city = $city; $display_state = $state; $display_postcode = $postcode;
 
 if ($is_delivery && $existing_addr_id !== 'new' && isset($conn)) {
     if ($existing_addr_id === 'reg') {
-        $s = $conn->prepare("SELECT cust_name, cust_street, cust_city, cust_state, cust_postcode FROM customers WHERE cust_id = ?");
+        $s = $conn->prepare("SELECT cust_name, cust_address FROM customers WHERE cust_id = ?");
         $s->bind_param("i", $cust_id); $s->execute();
         $r = $s->get_result()->fetch_assoc(); $s->close();
         if ($r) {
-            $display_name=$r['cust_name']; $display_street=$r['cust_street'];
-            $display_city=$r['cust_city']; $display_state=$r['cust_state']; $display_postcode=$r['cust_postcode'];
+            $display_name=$r['cust_name']; $display_street=$r['cust_address'];
+            $display_city=''; $display_state=''; $display_postcode='';
         }
     } else {
         $s = $conn->prepare("SELECT full_name, street, city, state, postcode FROM addresses WHERE address_id = ?");
