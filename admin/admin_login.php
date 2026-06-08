@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($password == $staff['staff_password']) { 
             $_SESSION['staff_id'] = $staff['staff_id'];
             $_SESSION['staff_name'] = $staff['staff_name']; 
+            $_SESSION['staff_role'] = $staff['staff_role'];
             header("Location: admin_dashboard.php");
             exit();
         } else {
