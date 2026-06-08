@@ -8,8 +8,8 @@ if (!isset($_SESSION['staff_id'])) {
 // ==========================================
 // SUPERADMIN SECURITY LOCK
 // ==========================================
-if ($_SESSION['staff_role'] !== 'Admin') {
-    $_SESSION['flash_message'] = "Access Denied: Only Superadmins can manage staff accounts.";
+if (!isset($_SESSION['staff_role']) || $_SESSION['staff_role'] !== 'Administrator') {
+    $_SESSION['flash_message'] = "Access Denied: Only Administrators can manage staff accounts.";
     $_SESSION['flash_type'] = "error";
     header("Location: admin_dashboard.php");
     exit();
@@ -99,8 +99,7 @@ if (!empty($search)) {
 if ($sort == 'name_desc') {
     $order_clause = "ORDER BY staff_name DESC";
 } elseif ($sort == 'role_admin') {
-    // REMOVED MANAGER FROM SORTING
-    $order_clause = "ORDER BY FIELD(staff_role, 'Admin', 'Staff'), staff_name ASC";
+    $order_clause = "ORDER BY FIELD(staff_role, 'Administrator', 'Staff'), staff_name ASC";
 } else {
     $order_clause = "ORDER BY staff_name ASC"; 
 }
@@ -152,7 +151,7 @@ require_once('admin_header.php');
                 <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Account Role *</label>
                 <select name="staff_role" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: white; outline: none; box-sizing: border-box;">
                     <option value="Staff">Staff</option>
-                    <option value="Admin">Admin (Superadmin)</option>
+                    <option value="Administrator">Administrator (Superadmin)</option>
                 </select>
             </div>
 
@@ -209,8 +208,8 @@ require_once('admin_header.php');
                             </td>
                             <td style="padding: 16px 8px;">
                                 <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start;">
-                                    <span style="background: <?php echo ($row['staff_role'] == 'Admin') ? '#ede9fe' : '#f3f4f6'; ?>; 
-                                                 color: <?php echo ($row['staff_role'] == 'Admin') ? '#5b21b6' : '#4b5563'; ?>; 
+                                    <span style="background: <?php echo ($row['staff_role'] == 'Administrator') ? '#ede9fe' : '#f3f4f6'; ?>; 
+                                                 color: <?php echo ($row['staff_role'] == 'Administrator') ? '#5b21b6' : '#4b5563'; ?>; 
                                                  padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
                                         <?php echo htmlspecialchars($row['staff_role']); ?>
                                     </span>
