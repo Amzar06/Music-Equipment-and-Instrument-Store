@@ -245,25 +245,27 @@ require_once('admin_header.php');
     <div class="table-container" style="margin-top: 0;">
         <h3 style="margin-bottom: 20px; font-weight: 700; color: var(--text-main);">Current Stock</h3>
         
-        <div style="background: #f9fafb; border: 1px solid #e5e7eb; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: flex-end;">
-            <form action="admin_products.php" method="GET" style="display: flex; gap: 12px; align-items: center;">
-                <?php if(!empty($search)): ?>
-                    <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
-                    <span style="font-size: 0.85rem; color: #4b5563;">Showing results for: <strong>"<?php echo htmlspecialchars($search); ?>"</strong></span>
-                <?php endif; ?>
-                
-                <select name="sort" style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; background: white; outline: none; font-size: 0.9rem;" onchange="this.form.submit()">
-                    <option value="newest" disabled selected>Sort by...</option>
-                    <option value="name_asc" <?php echo ($sort == 'name_asc') ? 'selected' : ''; ?>>Name (A-Z)</option>
-                    <option value="price_high" <?php echo ($sort == 'price_high') ? 'selected' : ''; ?>>Highest Sale Price</option>
-                    <option value="price_low" <?php echo ($sort == 'price_low') ? 'selected' : ''; ?>>Lowest Sale Price</option>
-                </select>
-                
-                <?php if(!empty($search) || ($sort !== 'newest' && isset($_GET['sort']))): ?>
-                    <a href="admin_products.php" style="color: #ef4444; text-decoration: none; font-size: 0.85rem; font-weight: 600;">Clear Filters</a>
-                <?php endif; ?>
-            </form>
-        </div>
+        <!-- REPLACEMENT SORT BAR FOR admin_products.php -->
+<div style="background: #f9fafb; border: 1px solid #e5e7eb; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: flex-end;">
+    <form action="admin_products.php" method="GET" style="display: flex; gap: 12px; align-items: center;">
+        <?php if(!empty($search)): ?>
+            <!-- This hidden input catches the search from the header so sorting doesn't wipe out your search query -->
+            <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
+            <span style="font-size: 0.85rem; color: #4b5563;">Showing results for: <strong>"<?php echo htmlspecialchars($search); ?>"</strong></span>
+        <?php endif; ?>
+        
+        <select name="sort" style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; background: white; outline: none; font-size: 0.9rem;" onchange="this.form.submit()">
+            <option value="newest" disabled selected>Sort by...</option>
+            <option value="name_asc" <?php echo ($sort == 'name_asc') ? 'selected' : ''; ?>>Name (A-Z)</option>
+            <option value="price_high" <?php echo ($sort == 'price_high') ? 'selected' : ''; ?>>Highest Sale Price</option>
+            <option value="price_low" <?php echo ($sort == 'price_low') ? 'selected' : ''; ?>>Lowest Sale Price</option>
+        </select>
+        
+        <?php if(!empty($search) || (isset($_GET['sort']) && $_GET['sort'] !== 'newest')): ?>
+            <a href="admin_products.php" style="color: #ef4444; text-decoration: none; font-size: 0.85rem; font-weight: 600;">Clear Filters</a>
+        <?php endif; ?>
+    </form>
+</div>
 
         <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse;">
