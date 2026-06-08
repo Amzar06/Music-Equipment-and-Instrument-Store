@@ -118,18 +118,14 @@ $categories_result = mysqli_query($conn, "SELECT * FROM categories ORDER BY cate
 $has_sale = ($product['prod_sale_price'] > 0 || $product['prod_sale_qty'] > 0);
 $has_rent = ($product['prod_rental_price'] > 0 || $product['prod_rental_qty'] > 0);
 
+// NEW: TELL THE HEADER TO HIDE THE SEARCH BAR ON THIS PAGE
+$hide_search = true;
+
 require_once('admin_header.php');
 ?>
 
-<div style="max-width: 800px; margin: 0 auto;">
+<div style="max-width: 800px; margin: 0 auto; margin-top: 20px;">
     
-    <a href="admin_products.php" style="display: inline-flex; align-items: center; gap: 6px; color: #4b5563; text-decoration: none; font-size: 0.9rem; font-weight: 600; margin-bottom: 20px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Back to Inventory
-    </a>
-
     <?php if (!empty($message)): ?>
         <div style="padding: 14px; border-radius: 8px; margin-bottom: 24px; font-weight: 500; <?php echo ($message_type == 'success') ? 'background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0;' : 'background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;'; ?>">
             <?php echo $message; ?>
@@ -160,11 +156,13 @@ require_once('admin_header.php');
                 </div>
             </div>
 
+            <!-- Availability & Pricing Toggles -->
             <div class="form-group" style="margin-bottom: 20px; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb;">
                 <label style="display: block; font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; color: #111827;">Availability, Price & Stock *</label>
 
                 <div style="display: flex; flex-direction: column; gap: 20px;">
                     
+                    <!-- SALE SECTION -->
                     <div>
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 600; color: #374151; margin-bottom: 10px;">
                             <input type="checkbox" id="for_sale" name="for_sale" value="1" onchange="toggleStock('sale')" <?php echo $has_sale ? 'checked' : ''; ?> style="width: 18px; height: 18px;"> 
@@ -186,6 +184,7 @@ require_once('admin_header.php');
 
                     <div style="height: 1px; background: #e5e7eb; width: 100%;"></div>
 
+                    <!-- RENT SECTION -->
                     <div>
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 600; color: #374151; margin-bottom: 10px;">
                             <input type="checkbox" id="for_rent" name="for_rent" value="1" onchange="toggleStock('rent')" <?php echo $has_rent ? 'checked' : ''; ?> style="width: 18px; height: 18px;"> 
@@ -213,6 +212,7 @@ require_once('admin_header.php');
                 <textarea name="prod_description" rows="4" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-family: inherit; outline: none; resize: vertical; box-sizing: border-box;"><?php echo htmlspecialchars($product['prod_description']); ?></textarea>
             </div>
 
+            <!-- Image Upload with Current Preview -->
             <div class="form-group" style="margin-bottom: 30px; display: flex; align-items: center; gap: 20px; background: #f9fafb; padding: 16px; border-radius: 8px; border: 1px solid #e5e7eb;">
                 <div>
                     <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0; margin-bottom: 4px; font-weight: 600; text-transform: uppercase;">Current Image</p>
@@ -239,7 +239,6 @@ require_once('admin_header.php');
 </div>
 
 <script>
-    // Exact same UI logic from the Add form to ensure disabled inputs aren't submitted
     function toggleStock(type) {
         const checkbox = document.getElementById('for_' + type);
         const container = document.getElementById('stock_' + type + '_container');
