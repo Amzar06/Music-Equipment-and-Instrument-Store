@@ -27,11 +27,21 @@
 </aside>
 
 <div class="main-content">
-    <header>
+    <header style="display: flex; justify-content: space-between; align-items: center;">
         <div class="welcome-msg">
             <h1><?php echo $page_title; ?></h1>
             <p style="color: #6b7280;"><?php echo date('l, d F Y'); ?></p>
         </div>
+
+        <form action="" method="GET" style="display: flex; align-items: center; background: white; border: 1px solid #d1d5db; border-radius: 20px; padding: 4px 16px; width: 100%; max-width: 400px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin: 0 20px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input type="text" name="search" placeholder="Search..." 
+                   value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>" 
+                   style="border: none; outline: none; padding: 8px 12px; width: 100%; font-size: 0.9rem; background: transparent;">
+            <button type="submit" style="display: none;">Search</button>
+        </form>
         <div class="admin-profile">
             <span class="status-pill completed" style="text-transform: uppercase; letter-spacing: 1px;">
                 <?php echo $_SESSION['staff_role'] ?? 'Admin'; ?>
