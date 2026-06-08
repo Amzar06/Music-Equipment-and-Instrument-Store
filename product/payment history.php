@@ -34,7 +34,7 @@ if (isset($conn)) {
     try {
         // Fetch both rentals and purchases grouped by date with product info
         $query = $conn->prepare("
-            SELECT 'Order' as type, o.order_id as id, o.total_amount, o.status, o.order_date as date, a.city, a.state,
+             SELECT 'Order' as type, o.order_id as id, o.total_amount, o.status, o.order_date as date, a.street, a.city, a.state, a.postcode,
                    (SELECT p.prod_name FROM order_items oi JOIN products p ON oi.prod_id = p.prod_id WHERE oi.order_id = o.order_id LIMIT 1) as prod_name,
                    (SELECT p.prod_image FROM order_items oi JOIN products p ON oi.prod_id = p.prod_id WHERE oi.order_id = o.order_id LIMIT 1) as prod_image,
                    (SELECT SUM(oi.order_qty) FROM order_items oi WHERE oi.order_id = o.order_id) as total_qty,
@@ -44,8 +44,7 @@ if (isset($conn)) {
             WHERE o.cust_id = ?
             
             UNION ALL
-            
-            SELECT 'Rental' as type, r.rental_id as id, r.total_amount, r.status, r.created_at as date, a.city, a.state,
+                        SELECT 'Rental' as type, r.rental_id as id, r.total_amount, r.status, r.created_at as date, a.street, a.city, a.state, a.postcode,
                    (SELECT p.prod_name FROM rental_items ri JOIN products p ON ri.prod_id = p.prod_id WHERE ri.rental_id = r.rental_id LIMIT 1) as prod_name,
                    (SELECT p.prod_image FROM rental_items ri JOIN products p ON ri.prod_id = p.prod_id WHERE ri.rental_id = r.rental_id LIMIT 1) as prod_image,
                    (SELECT SUM(ri.rental_qty) FROM rental_items ri WHERE ri.rental_id = r.rental_id) as total_qty,
@@ -128,11 +127,15 @@ if (isset($conn)) {
                             <?php endif; ?>
                         </div>
                     </td>
-                    <td>
-                        <?php if ($order['city']): ?>
-                            <?php echo htmlspecialchars($order['city']); ?><br><?php echo htmlspecialchars($order['state']); ?>
+                     <td>
+                        <?php if ($order['street']): ?>
+                            <div style="font-size: 0.85rem; line-height: 1.4;">
+                                <?php echo htmlspecialchars($order['street']); ?><br>
+                                <?php echo htmlspecialchars($order['postcode']); ?> <?php echo htmlspecialchars($order['city']); ?><br>
+                                <?php echo htmlspecialchars($order['state']); ?>
+                            </div>
                         <?php else: ?>
-                            <span style="color: var(--text-secondary);">No Address</span>
+                            <span style="font-size: 0.75rem; padding: 2px 8px; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; border-radius: 20px; font-weight: 600;">🏪 Self Collect</span>
                         <?php endif; ?>
                     </td>
                     <td style="font-weight: 600; color: var(--text-primary);">

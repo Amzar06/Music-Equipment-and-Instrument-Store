@@ -32,6 +32,7 @@ CREATE TABLE `addresses` (
   `cust_id` int(11) NOT NULL,
   `full_name` varchar(255) DEFAULT NULL,
   `phone_number` varchar(20) DEFAULT NULL,
+  `street` text DEFAULT NULL,
   `city` varchar(100) DEFAULT NULL,
   `state` varchar(100) DEFAULT NULL,
   `postcode` varchar(10) DEFAULT NULL,
@@ -97,6 +98,10 @@ CREATE TABLE `customers` (
   `cust_password` varchar(255) NOT NULL,
   `cust_phone_number` varchar(20) DEFAULT NULL,
   `cust_address` text DEFAULT NULL,
+  `cust_street` varchar(255) DEFAULT NULL,
+  `cust_city` varchar(100) DEFAULT NULL,
+  `cust_state` varchar(100) DEFAULT NULL,
+  `cust_postcode` varchar(10) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
