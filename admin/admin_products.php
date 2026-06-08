@@ -27,7 +27,6 @@ if (isset($_SESSION['flash_message'])) {
 if (isset($_GET['delete_id'])) {
     $delete_id = intval($_GET['delete_id']);
     
-    // Soft delete to preserve rental/sales history
     $delete_query = "UPDATE products SET status = 'Discontinued' WHERE prod_id = $delete_id";
     
     if (mysqli_query($conn, $delete_query)) {
@@ -124,7 +123,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
 // ==========================================
 $categories_result = mysqli_query($conn, "SELECT * FROM categories ORDER BY category_name ASC");
 
-// Catch Search & Sort Inputs
 $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, trim($_GET['search'])) : '';
 $sort = isset($_GET['sort']) ? $_GET['sort'] : 'newest';
 
@@ -144,12 +142,6 @@ if ($sort == 'name_asc') {
 } else {
     $order_clause = "ORDER BY p.prod_id DESC"; // Default: Newest first
 }
-
-$products_query = "SELECT p.*, c.category_name 
-                   FROM products p 
-                   JOIN categories c ON p.category_id = c.category_id 
-                   $where_clause 
-                   $order_clause";
 
 $products_query = "SELECT p.*, c.category_name 
                    FROM products p 
@@ -261,13 +253,13 @@ require_once('admin_header.php');
                 <?php endif; ?>
                 
                 <select name="sort" style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; background: white; outline: none; font-size: 0.9rem;" onchange="this.form.submit()">
-    <option value="newest" <?php echo ($sort == 'newest') ? 'selected' : ''; ?>>Sort: Newest First</option>
-    <option value="name_asc" <?php echo ($sort == 'name_asc') ? 'selected' : ''; ?>>Sort: Name (A-Z)</option>
-    <option value="price_high" <?php echo ($sort == 'price_high') ? 'selected' : ''; ?>>Sort: Highest Sale Price</option>
-    <option value="price_low" <?php echo ($sort == 'price_low') ? 'selected' : ''; ?>>Sort: Lowest Sale Price</option>
-</select>
+                    <option value="newest" disabled selected>Sort by...</option>
+                    <option value="name_asc" <?php echo ($sort == 'name_asc') ? 'selected' : ''; ?>>Name (A-Z)</option>
+                    <option value="price_high" <?php echo ($sort == 'price_high') ? 'selected' : ''; ?>>Highest Sale Price</option>
+                    <option value="price_low" <?php echo ($sort == 'price_low') ? 'selected' : ''; ?>>Lowest Sale Price</option>
+                </select>
                 
-                <?php if(!empty($search) || $sort != 'name_asc'): ?>
+                <?php if(!empty($search) || ($sort !== 'newest' && isset($_GET['sort']))): ?>
                     <a href="admin_products.php" style="color: #ef4444; text-decoration: none; font-size: 0.85rem; font-weight: 600;">Clear Filters</a>
                 <?php endif; ?>
             </form>
