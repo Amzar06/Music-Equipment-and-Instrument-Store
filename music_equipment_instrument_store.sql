@@ -116,7 +116,7 @@ INSERT INTO `customers` (`cust_id`, `cust_name`, `cust_email`, `cust_password`, 
 CREATE TABLE `orders` (
   `order_id` int(11) NOT NULL,
   `cust_id` int(11) NOT NULL,
-  `address_id` int(11) NOT NULL,
+  `address_id` int(11) DEFAULT NULL,
   `staff_id` int(11) DEFAULT NULL,
   `total_amount` decimal(10,2) DEFAULT NULL,
   `status` enum('Pending','Processing','Shipped','Delivered','Cancelled') DEFAULT 'Pending',
@@ -190,7 +190,7 @@ INSERT INTO `products` (`prod_id`, `category_id`, `staff_id`, `prod_name`, `prod
 CREATE TABLE `rentals` (
   `rental_id` int(11) NOT NULL,
   `cust_id` int(11) NOT NULL,
-  `address_id` int(11) NOT NULL,
+  `address_id` int(11) DEFAULT NULL,
   `staff_id` int(11) DEFAULT NULL,
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
