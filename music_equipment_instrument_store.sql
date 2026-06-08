@@ -32,6 +32,7 @@ CREATE TABLE `addresses` (
   `cust_id` int(11) NOT NULL,
   `full_name` varchar(255) DEFAULT NULL,
   `phone_number` varchar(20) DEFAULT NULL,
+  `street` text DEFAULT NULL,
   `city` varchar(100) DEFAULT NULL,
   `state` varchar(100) DEFAULT NULL,
   `postcode` varchar(10) DEFAULT NULL,
