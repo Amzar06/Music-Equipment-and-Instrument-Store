@@ -167,6 +167,19 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
             }
+
+            // 3. Record Payment in DB
+            $payment_method = $_POST['payment_method'] ?? 'card';
+            $payment_status = ($payment_method === 'card') ? 'Completed' : 'Pending';
+            
+            $pay_stmt = $conn->prepare("INSERT INTO payments (cust_id, order_id, rental_id, amount, payment_method, payment_status) VALUES (?, ?, ?, ?, ?, ?)");
+            if ($pay_stmt) {
+                $oid = isset($order_id) ? $order_id : null;
+                $rid = isset($rental_id) ? $rental_id : null;
+                $pay_stmt->bind_param("iiidss", $cust_id, $oid, $rid, $total_price, $payment_method, $payment_status);
+                $pay_stmt->execute();
+                $pay_stmt->close();
+            }
         } catch (mysqli_sql_exception $e) {
             $db_error = "Database Error generating order or rental: " . $e->getMessage();
         }

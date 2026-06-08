@@ -172,14 +172,62 @@ $grand_total = $subtotal + $delivery_fee;
     </div>
     <?php endif; ?>
 
-    <!-- QR Code -->
-    <div style="background: white; padding: 24px; border-radius: 12px; display: inline-block; margin-bottom: 24px; border: 1px solid #e2e8f0;">
-        <img src="qr_placeholder.png" alt="Scan to Pay" style="width: 180px; height: 180px; object-fit: contain;">
-        <p style="color: #333; font-size: 14px; margin-top: 10px; font-weight: 500;">DuitNow / Touch 'n Go</p>
+<?php
+$payment_method = $_GET['payment_method'] ?? 'card';
+?>
+
+    <!-- Payment View Section -->
+    <div style="margin-top: 8px;">
+        <?php if ($payment_method === 'card'): ?>
+            <!-- Card Form Mockup -->
+            <div style="text-align: left; background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div style="font-weight: 700; color: #1e293b; font-size: 1.1rem;">💳 Card Information</div>
+                    <div style="display: flex; gap: 4px;">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/48px-Visa_Inc._logo.svg.png" style="height: 15px;">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/48px-Mastercard-logo.svg.png" style="height: 15px;">
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">Cardholder Name</label>
+                    <input type="text" placeholder="John Doe" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;">
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">Card Number</label>
+                    <div style="position: relative;">
+                        <input type="text" placeholder="0000 0000 0000 0000" maxlength="19" style="width: 100%; padding: 12px; padding-right: 45px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;">
+                        <span style="position: absolute; right: 12px; top: 12px; color: #94a3b8;">🔒</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 16px;">
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">Expiry Date</label>
+                        <input type="text" placeholder="MM/YY" maxlength="5" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">CVV</label>
+                        <input type="password" placeholder="***" maxlength="3" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;">
+                    </div>
+                </div>
+            </div>
+        <?php else: ?>
+            <!-- QR Code Section -->
+            <div style="background: white; padding: 24px; border-radius: 12px; display: inline-block; margin-bottom: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                <div style="margin-bottom: 16px; font-weight: 700; color: #1e293b;">
+                    <?php echo $payment_method === 'tng' ? '📱 Touch \'n Go eWallet' : '🏦 DuitNow QR'; ?>
+                </div>
+                <img src="qr_placeholder.png" alt="Scan to Pay" style="width: 180px; height: 180px; object-fit: contain; padding: 10px; border: 1px solid #f1f5f9; border-radius: 8px;">
+                <p style="color: #64748b; font-size: 0.85rem; margin-top: 14px; line-height: 1.5;">Scan the QR code above using your<br>banking or e-wallet app to pay.</p>
+            </div>
+        <?php endif; ?>
     </div>
 
     <form action="payment page.php" method="POST" enctype="multipart/form-data">
         <!-- Carry through all order details -->
+        <input type="hidden" name="payment_method"  value="<?php echo htmlspecialchars($payment_method); ?>">
         <?php if ($is_rent): ?>
             <input type="hidden" name="type"         value="rent">
             <input type="hidden" name="product_id"   value="<?php echo htmlspecialchars($product_id); ?>">
@@ -194,17 +242,15 @@ $grand_total = $subtotal + $delivery_fee;
         <input type="hidden" name="postcode"         value="<?php echo htmlspecialchars($display_postcode); ?>">
         <input type="hidden" name="state"            value="<?php echo htmlspecialchars($display_state); ?>">
         <input type="hidden" name="existing_address_id" value="<?php echo htmlspecialchars($existing_addr_id); ?>">
+        <input type="hidden" name="grand_total"      value="<?php echo htmlspecialchars($grand_total); ?>">
 
-        <!-- Receipt Upload -->
-        <div style="text-align: left; margin-bottom: 20px; background:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:10px;">
-            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">📎 Upload Payment Receipt *</label>
-            <input type="file" name="receipt" accept="image/*,application/pdf" required
-                   style="padding: 10px; width: 100%; box-sizing: border-box; background: white; border: 1px solid #e2e8f0; border-radius: 8px; color: #374151;">
-        </div>
+        <!-- Note: Receipt upload removed per user request -->
 
         <div style="display: flex; gap: 16px; margin-top: 8px;">
-            <a href="address page.php" style="flex: 1; text-align: center; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 0; display: inline-block;">Back</a>
-            <button type="submit" style="flex: 1; margin: 0;">Confirm & Submit Receipt</button>
+            <a href="address page.php?<?php echo $_SERVER['QUERY_STRING']; ?>" style="flex: 1; text-align: center; padding: 14px; background: #f1f5f9; color: #475569; border-radius: 10px; text-decoration: none; font-weight: 600;">Back</a>
+            <button type="submit" style="flex: 1; margin: 0; padding: 14px; background: var(--success); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: background 0.2s;">
+                <?php echo $payment_method === 'card' ? 'Pay Now RM ' : 'I Have Paid RM '; echo number_format($grand_total, 2); ?>
+            </button>
         </div>
     </form>
 </div>

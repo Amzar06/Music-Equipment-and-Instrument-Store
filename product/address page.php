@@ -231,6 +231,34 @@ if ($type === 'rent' && isset($conn)) {
             </div>
         </div>
 
+        <!-- Payment Method Section -->
+        <div style="margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 24px;">Payment Method</div>
+        <div class="payment-methods" style="display: grid; gap: 12px; margin-bottom: 24px;">
+            <label class="pay-option" style="display: flex; align-items: center; padding: 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.2s; position: relative;">
+                <input type="radio" name="payment_method" value="card" checked style="margin-right: 12px; width: 18px; height: 18px;">
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 0.95rem;">💳 Credit / Debit Card</div>
+                    <div style="font-size: 0.8rem; color: #64748b;">Visa, Mastercard, AMEX</div>
+                </div>
+            </label>
+
+            <label class="pay-option" style="display: flex; align-items: center; padding: 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.2s; position: relative;">
+                <input type="radio" name="payment_method" value="tng" style="margin-right: 12px; width: 18px; height: 18px;">
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 0.95rem;">📱 Touch 'n Go eWallet</div>
+                    <div style="font-size: 0.8rem; color: #64748b;">Instant payment via TNG App</div>
+                </div>
+            </label>
+
+            <label class="pay-option" style="display: flex; align-items: center; padding: 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.2s; position: relative;">
+                <input type="radio" name="payment_method" value="duitnow" style="margin-right: 12px; width: 18px; height: 18px;">
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 0.95rem;">🏦 DuitNow QR</div>
+                    <div style="font-size: 0.8rem; color: #64748b;">Scan and pay from any bank app</div>
+                </div>
+            </label>
+        </div>
+
         <div style="display: flex; gap: 16px; margin-top: 16px;">
             <a href="<?php echo $type === 'rent' ? 'rent page.php' : 'product page.php'; ?>" style="flex: 1; text-align: center; padding: 12px; border-radius: 8px; margin: 0; background: #f1f5f9; color: #475569;">Back</a>
             <button type="submit" style="flex: 1; margin-top: 0;">Continue to Payment</button>
