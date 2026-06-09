@@ -32,6 +32,7 @@ CREATE TABLE `addresses` (
   `cust_id` int(11) NOT NULL,
   `full_name` varchar(255) DEFAULT NULL,
   `phone_number` varchar(20) DEFAULT NULL,
+  `street` text DEFAULT NULL,
   `city` varchar(100) DEFAULT NULL,
   `state` varchar(100) DEFAULT NULL,
   `postcode` varchar(10) DEFAULT NULL,
@@ -60,7 +61,8 @@ CREATE TABLE `cart` (
 CREATE TABLE `cart_items` (
   `cart_item_id` int(11) NOT NULL,
   `cart_id` int(11) NOT NULL,
-  `prod_id` int(11) NOT NULL
+  `prod_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -96,6 +98,10 @@ CREATE TABLE `customers` (
   `cust_password` varchar(255) NOT NULL,
   `cust_phone_number` varchar(20) DEFAULT NULL,
   `cust_address` text DEFAULT NULL,
+  `cust_street` varchar(255) DEFAULT NULL,
+  `cust_city` varchar(100) DEFAULT NULL,
+  `cust_state` varchar(100) DEFAULT NULL,
+  `cust_postcode` varchar(10) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -115,7 +121,7 @@ INSERT INTO `customers` (`cust_id`, `cust_name`, `cust_email`, `cust_password`, 
 CREATE TABLE `orders` (
   `order_id` int(11) NOT NULL,
   `cust_id` int(11) NOT NULL,
-  `address_id` int(11) NOT NULL,
+  `address_id` int(11) DEFAULT NULL,
   `staff_id` int(11) DEFAULT NULL,
   `total_amount` decimal(10,2) DEFAULT NULL,
   `status` enum('Pending','Processing','Shipped','Delivered','Cancelled') DEFAULT 'Pending',
@@ -189,7 +195,7 @@ INSERT INTO `products` (`prod_id`, `category_id`, `staff_id`, `prod_name`, `prod
 CREATE TABLE `rentals` (
   `rental_id` int(11) NOT NULL,
   `cust_id` int(11) NOT NULL,
-  `address_id` int(11) NOT NULL,
+  `address_id` int(11) DEFAULT NULL,
   `staff_id` int(11) DEFAULT NULL,
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,

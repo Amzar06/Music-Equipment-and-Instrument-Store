@@ -9,6 +9,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
+    $phone = $_POST['phone'] ?? '';
+    $street = $_POST['street'] ?? '';
+    $city = $_POST['city'] ?? '';
+    $state = $_POST['state'] ?? '';
+    $postcode = $_POST['postcode'] ?? '';
 
     if ($password !== $confirm_password) {
         $error = "Passwords do not match.";
@@ -21,9 +26,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->get_result()->num_rows > 0) {
                 $error = "Email already registered.";
             } else {
-                $insert = $conn->prepare("INSERT INTO customers (cust_name, cust_email, cust_password) VALUES (?, ?, ?)");
+                $insert = $conn->prepare("INSERT INTO customers (cust_name, cust_email, cust_password, cust_phone_number, cust_street, cust_city, cust_state, cust_postcode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                 if ($insert) {
-                    $insert->bind_param("sss", $name, $email, $password);
+                    $insert->bind_param("ssssssss", $name, $email, $password, $phone, $street, $city, $state, $postcode);
                     if ($insert->execute()) {
                         $success = "Registration successful! You can now login.";
                     } else {
@@ -67,6 +72,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
           <label>Email Address</label>
           <input type="email" name="email" placeholder="Enter your email" required>
+
+          <label>Phone Number</label>
+          <input type="text" name="phone" placeholder="Enter your phone number" required>
+
+          <label>Street Address</label>
+          <input type="text" name="street" placeholder="No, Building, Street" required>
+
+          <div style="display: flex; gap: 10px;">
+              <div style="flex: 1;">
+                  <label>City</label>
+                  <input type="text" name="city" placeholder="City" required>
+              </div>
+              <div style="flex: 1;">
+                  <label>Postcode</label>
+                  <input type="text" name="postcode" placeholder="Postcode" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+              </div>
+          </div>
+
+          <label>State</label>
+          <input type="text" name="state" placeholder="State" required>
 
           <label>Password</label>
           <input type="password" name="password" placeholder="Enter your password" required>

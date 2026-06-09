@@ -10,12 +10,15 @@ $cust_id = $_SESSION['cust_id'];
 
 $total_price = 0.00;
 $db_error = null;
+$delivery_fee = 0.00;
 
 if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $cart_items = [];
     $is_rent = isset($_POST['type']) && $_POST['type'] === 'rent';
     $rent_product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
     $rent_days = isset($_POST['days']) ? intval($_POST['days']) : 1;
+    $start_date_rent = $_POST['start_date'] ?? date('Y-m-d');
+    $end_date_rent = $_POST['end_date'] ?? date('Y-m-d', strtotime("+$rent_days days"));
     
     if ($is_rent && $rent_product_id > 0) {
         $query = $conn->prepare("SELECT prod_rental_price, prod_id FROM products WHERE prod_id = ?");
@@ -61,31 +64,65 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
             
-    if (!empty($cart_items) && $total_price > 0) {
+    // Add delivery fee
+    $delivery_type = $_POST['delivery_type'] ?? 'delivery';
+    if ($delivery_type === 'delivery') {
+        $delivery_fee  = 5.00;
+        $total_price  += $delivery_fee;
+    }
+
+    if (!empty($cart_items)) {
         // Try to insert the new orders into older database schemas
         try {
             // 1. Process Address
             $street = $_POST['street'] ?? '';
             $city = $_POST['city'] ?? '';
+            $full_name = $_POST['full_name'] ?? '';
+            $street = $_POST['street'] ?? '';
+            $city = $_POST['city'] ?? '';
             $postcode = $_POST['postcode'] ?? '';
             $state = $_POST['state'] ?? '';
-            $combined_city = trim($street . ', ' . $city, ', ');
+            $existing_address_id = $_POST['existing_address_id'] ?? 'new';
             
             $addr_id = null;
-            $addr = $conn->prepare("INSERT INTO addresses (cust_id, city, state, postcode) VALUES (?, ?, ?, ?)");
-            if ($addr) {
-                $addr->bind_param("isss", $cust_id, $combined_city, $state, $postcode);
+
+            if ($delivery_type === 'self_collect') {
+                // Self collect — no address needed
+                $addr_id = null;
+            } elseif ($existing_address_id !== 'new' && $existing_address_id !== 'reg') {
+                $addr_id = intval($existing_address_id);
+            } elseif ($existing_address_id === 'reg') {
+                $stmt_cust = $conn->prepare("SELECT cust_name, cust_address FROM customers WHERE cust_id = ?");
+                $stmt_cust->bind_param("i", $cust_id);
+                $stmt_cust->execute();
+                $cust_info = $stmt_cust->get_result()->fetch_assoc();
+                $stmt_cust->close();
+                $reg_name    = $cust_info['cust_name']    ?? 'Customer';
+                $reg_street  = $cust_info['cust_address'] ?? '';
+                $reg_city    = '';
+                $reg_state   = '';
+                $reg_postcode= '';
+                $addr = $conn->prepare("INSERT INTO addresses (cust_id, full_name, street, city, state, postcode) VALUES (?, ?, ?, ?, ?, ?)");
+                $addr->bind_param("isssss", $cust_id, $reg_name, $reg_street, $reg_city, $reg_state, $reg_postcode);
                 $addr->execute();
                 $addr_id = $conn->insert_id;
                 $addr->close();
+            } else {
+                $addr = $conn->prepare("INSERT INTO addresses (cust_id, full_name, street, city, state, postcode) VALUES (?, ?, ?, ?, ?, ?)");
+                if ($addr) {
+                    $addr->bind_param("isssss", $cust_id, $full_name, $street, $city, $state, $postcode);
+                    $addr->execute();
+                    $addr_id = $conn->insert_id;
+                    $addr->close();
+                }
             }
 
             if ($is_rent) {
                 // 2a. Process Rental
-                $start_date = date('Y-m-d');
-                $end_date = date('Y-m-d', strtotime("+$rent_days days"));
+                $start_date = $start_date_rent;
+                $end_date = $end_date_rent;
                 
-                $rent = $conn->prepare("INSERT INTO rentals (cust_id, address_id, start_date, end_date, status, total_amount) VALUES (?, ?, ?, ?, 'active', ?)");
+                $rent = $conn->prepare("INSERT INTO rentals (cust_id, address_id, start_date, end_date, status, total_amount) VALUES (?, ?, ?, ?, 'Pending', ?)");
                 if ($rent) {
                     $rent->bind_param("iissd", $cust_id, $addr_id, $start_date, $end_date, $total_price);
                     if ($rent->execute()) {
@@ -96,17 +133,20 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($ri) {
                             foreach ($cart_items as $item) {
                                 $ri->bind_param("iiidss", $rental_id, $item['prod_id'], $item['quantity'], $item['prod_sale_price'], $start_date, $end_date);
-                                $ri->execute();
+                                if (!$ri->execute()) {
+                                    $db_error = "Rental Item Insert Failed: " . $ri->error;
+                                }
                             }
                             $ri->close();
                         }
                     } else {
+                        $db_error = "Rental Insert Failed: " . $rent->error;
                         $rent->close();
                     }
                 }
             } else {
                 // 2b. Process Order 
-                $ord = $conn->prepare("INSERT INTO orders (cust_id, address_id, total_amount, status) VALUES (?, ?, ?, 'pending')");
+                $ord = $conn->prepare("INSERT INTO orders (cust_id, address_id, total_amount, status) VALUES (?, ?, ?, 'Pending')");
                 if ($ord) {
                     $ord->bind_param("iid", $cust_id, $addr_id, $total_price);
                     if ($ord->execute()) {
@@ -126,6 +166,19 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         $ord->close();
                     }
                 }
+            }
+
+            // 3. Record Payment in DB
+            $payment_method = $_POST['payment_method'] ?? 'card';
+            $payment_status = ($payment_method === 'card') ? 'Completed' : 'Pending';
+            
+            $pay_stmt = $conn->prepare("INSERT INTO payments (cust_id, order_id, rental_id, amount, payment_method, payment_status) VALUES (?, ?, ?, ?, ?, ?)");
+            if ($pay_stmt) {
+                $oid = isset($order_id) ? $order_id : null;
+                $rid = isset($rental_id) ? $rental_id : null;
+                $pay_stmt->bind_param("iiidss", $cust_id, $oid, $rid, $total_price, $payment_method, $payment_status);
+                $pay_stmt->execute();
+                $pay_stmt->close();
             }
         } catch (mysqli_sql_exception $e) {
             $db_error = "Database Error generating order or rental: " . $e->getMessage();

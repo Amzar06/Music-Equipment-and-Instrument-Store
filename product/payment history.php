@@ -8,21 +8,51 @@ if (!isset($_SESSION['cust_id'])) {
 }
 $cust_id = $_SESSION['cust_id'];
 
+// Handle Cancellation
+if (isset($_GET['action']) && $_GET['action'] === 'cancel' && isset($_GET['id']) && isset($_GET['type'])) {
+    $cancel_id = intval($_GET['id']);
+    $cancel_type = $_GET['type'];
+    
+    if ($cancel_type === 'Order') {
+        $stmt = $conn->prepare("UPDATE orders SET status = 'Cancelled' WHERE order_id = ? AND cust_id = ? AND status = 'Pending'");
+    } else {
+        $stmt = $conn->prepare("UPDATE rentals SET status = 'Cancelled' WHERE rental_id = ? AND cust_id = ? AND status = 'Pending'");
+    }
+    
+    if ($stmt) {
+        $stmt->bind_param("ii", $cancel_id, $cust_id);
+        $stmt->execute();
+        $stmt->close();
+    }
+    header("Location: payment history.php");
+    exit();
+}
+
 $orders = [];
 $db_error = null;
 if (isset($conn)) {
     try {
-        // Fetch both rentals and purchases grouped by date
+        // Fetch both rentals and purchases grouped by date with product info
         $query = $conn->prepare("
-            SELECT 'Order' as type, o.order_id as id, o.total_amount, o.status, o.order_date as date, a.city, a.state 
+             SELECT 'Order' as type, o.order_id as id, o.total_amount, o.status, o.order_date as date, a.street, a.city, a.state, a.postcode,
+                   (SELECT p.prod_name FROM order_items oi JOIN products p ON oi.prod_id = p.prod_id WHERE oi.order_id = o.order_id LIMIT 1) as prod_name,
+                   (SELECT p.prod_image FROM order_items oi JOIN products p ON oi.prod_id = p.prod_id WHERE oi.order_id = o.order_id LIMIT 1) as prod_image,
+                   (SELECT SUM(oi.order_qty) FROM order_items oi WHERE oi.order_id = o.order_id) as total_qty,
+                   NULL as start_date, NULL as end_date
             FROM orders o
             LEFT JOIN addresses a ON o.address_id = a.address_id
             WHERE o.cust_id = ?
+            
             UNION ALL
-            SELECT 'Rental' as type, r.rental_id as id, r.total_amount, r.status, r.created_at as date, a.city, a.state
+                        SELECT 'Rental' as type, r.rental_id as id, r.total_amount, r.status, r.created_at as date, a.street, a.city, a.state, a.postcode,
+                   (SELECT p.prod_name FROM rental_items ri JOIN products p ON ri.prod_id = p.prod_id WHERE ri.rental_id = r.rental_id LIMIT 1) as prod_name,
+                   (SELECT p.prod_image FROM rental_items ri JOIN products p ON ri.prod_id = p.prod_id WHERE ri.rental_id = r.rental_id LIMIT 1) as prod_image,
+                   (SELECT SUM(ri.rental_qty) FROM rental_items ri WHERE ri.rental_id = r.rental_id) as total_qty,
+                   r.start_date, r.end_date
             FROM rentals r
             LEFT JOIN addresses a ON r.address_id = a.address_id
             WHERE r.cust_id = ?
+            
             ORDER BY date DESC
         ");
         if ($query) {
@@ -69,6 +99,7 @@ if (isset($conn)) {
             <tr>
                 <th>Order Type & ID</th>
                 <th>Delivery Address</th>
+                <th>Qty</th>
                 <th>Total Price</th>
                 <th>Status</th>
             </tr>
@@ -76,31 +107,59 @@ if (isset($conn)) {
         <tbody>
             <?php if (empty($orders)): ?>
                 <tr>
-                    <td colspan="4" style="text-align: center; padding: 24px; color: var(--text-secondary);">Your database currently has no past transactions explicitly linked to you.</td>
+                    <td colspan="5" style="text-align: center; padding: 24px; color: var(--text-secondary);">Your database currently has no past transactions explicitly linked to you.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach($orders as $order): ?>
                 <tr>
-                    <td>
-                        <span style="font-size: 0.8rem; padding: 2px 6px; background: <?php echo $order['type'] === 'Rental' ? 'var(--secondary)' : 'var(--accent)'; ?>; color: white; border-radius: 4px; margin-right: 8px;"><?php echo htmlspecialchars($order['type']); ?></span>
-                        #<?php echo htmlspecialchars($order['id']); ?>
+                    <td style="display: flex; align-items: center; gap: 12px;">
+                        <img src="../uploads/<?php echo htmlspecialchars($order['prod_image'] ?: 'default.jpg'); ?>" 
+                             style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid var(--card-border);">
+                        <div>
+                            <span style="font-size: 0.75rem; padding: 2px 6px; background: <?php echo $order['type'] === 'Rental' ? '#7c3aed' : 'var(--accent)'; ?>; color: white; border-radius: 4px;"><?php echo htmlspecialchars($order['type']); ?></span>
+                            <div style="font-weight: 600; font-size: 0.9rem; margin-top: 4px;"><?php echo htmlspecialchars($order['prod_name'] ?: 'Multiple Items'); ?></div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);">ID: #<?php echo htmlspecialchars($order['id']); ?></div>
+                            <?php if ($order['type'] === 'Rental' && $order['start_date']): ?>
+                                <div style="font-size: 0.75rem; color: #7c3aed; margin-top: 4px;">
+                                    <strong>Rental Period:</strong><br>
+                                    <?php echo date('d M Y', strtotime($order['start_date'])); ?> to <?php echo date('d M Y', strtotime($order['end_date'])); ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </td>
-                    <td>
-                        <?php if ($order['city']): ?>
-                            <?php echo htmlspecialchars($order['city']); ?><br><?php echo htmlspecialchars($order['state']); ?>
+                     <td>
+                        <?php if ($order['street']): ?>
+                            <div style="font-size: 0.85rem; line-height: 1.4;">
+                                <?php echo htmlspecialchars($order['street']); ?><br>
+                                <?php echo htmlspecialchars($order['postcode']); ?> <?php echo htmlspecialchars($order['city']); ?><br>
+                                <?php echo htmlspecialchars($order['state']); ?>
+                            </div>
                         <?php else: ?>
-                            <span style="color: var(--text-secondary);">No Address</span>
+                            <span style="font-size: 0.75rem; padding: 2px 8px; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; border-radius: 20px; font-weight: 600;">🏪 Self Collect</span>
                         <?php endif; ?>
+                    </td>
+                    <td style="font-weight: 600; color: var(--text-primary);">
+                        <?php echo htmlspecialchars($order['total_qty'] ?? 1); ?>
                     </td>
                     <td style="font-weight: 600; color: var(--success);">RM <?php echo number_format($order['total_amount'] ?? 0, 2); ?></td>
                     <td>
-                        <span style="font-weight: 600; color: <?php 
-                            $status = strtolower($order['status'] ?? '');
-                            if (in_array($status, ['completed', 'delivered', 'returned', 'shipped'])) echo 'var(--success)';
-                            elseif (in_array($status, ['pending', 'processing', 'active'])) echo 'var(--secondary)';
-                            elseif (in_array($status, ['declined', 'cancelled'])) echo '#ef4444';
-                            else echo 'var(--text-secondary)';
-                        ?>;"><?php echo htmlspecialchars(ucfirst($order['status'] ?? 'Pending')); ?></span>
+                        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
+                            <span style="font-weight: 600; color: <?php 
+                                $status = strtolower($order['status'] ?? '');
+                                if (in_array($status, ['completed', 'delivered', 'returned', 'shipped'])) echo 'var(--success)';
+                                elseif (in_array($status, ['pending', 'processing', 'active'])) echo '#6366f1';
+                                elseif (in_array($status, ['declined', 'cancelled'])) echo '#ef4444';
+                                else echo 'var(--text-secondary)';
+                            ?>;"><?php echo htmlspecialchars(ucfirst($order['status'] ?? 'Pending')); ?></span>
+
+                            <?php if (strtolower($order['status']) === 'pending'): ?>
+                                <a href="?action=cancel&id=<?php echo $order['id']; ?>&type=<?php echo $order['type']; ?>" 
+                                   onclick="return confirm('Are you sure you want to cancel this order?')"
+                                   style="font-size: 0.75rem; color: #ef4444; text-decoration: none; border: 1px solid #ef4444; padding: 2px 6px; border-radius: 4px; margin-top: 4px;">
+                                   Cancel Product
+                                </a>
+                            <?php endif; ?>
+                        </div>
                     </td>
                 </tr>
                 <?php endforeach; ?>
