@@ -224,6 +224,9 @@ th {
 .cart-item-price {
     font-weight: 600;
     color: var(--success);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
 }
 .cart-total {
     margin-top: 24px;
@@ -315,6 +318,43 @@ th {
     border-color: var(--accent) !important;
     background-color: #eff6ff !important;
     box-shadow: 0 0 0 1px var(--accent);
+}
+
+/* Remove Button styling */
+.btn-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: #ef4444; /* Distinct Red */
+    color: white;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    margin-top: 14px; /* Increased Gap */
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);
+}
+
+.btn-remove:hover {
+    background: #dc2626;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px -2px rgba(239, 68, 68, 0.3);
+    text-decoration: none;
+}
+
+.btn-remove:active {
+    transform: scale(0.96);
+}
+
+.btn-remove::before {
+    content: "✕";
+    font-size: 0.9rem;
+    font-weight: 700;
 }
 
 

@@ -115,8 +115,7 @@ if (!isset($conn) || $conn->connect_error) {
                     </div>
                     <div class='cart-item-price'>
                         RM <?php echo number_format(($item['prod_sale_price'] ?? 0) * ($item['quantity'] ?? 1), 2); ?>
-                        <br>
-                        <a href="?remove_id=<?php echo $item['cart_item_id']; ?>" style="color: #fca5a5; font-size: 0.85em; text-decoration: none;">Cancel</a>
+                        <a href="?remove_id=<?php echo $item['cart_item_id']; ?>" class="btn-remove">Remove</a>
                     </div>
                 </div>
             <?php endforeach; ?>

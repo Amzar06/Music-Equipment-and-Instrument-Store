@@ -205,7 +205,7 @@ if (isset($conn)) {
                         <input type="hidden" name="end_date" id="end_date_<?php echo $product['prod_id']; ?>">
 
                         <div style="margin-bottom: 16px;">
-                            <label style="display:block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 6px;">Select Rental Period</label>
+                            <label style="display:block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 6px;">Select Rental Period <span style="color: #ef4444;">*</span></label>
                             <input type="text" class="range-picker" placeholder="<?php echo $can_rent ? 'Choose dates..' : 'Rental restricted'; ?>" readonly 
                                    data-prod-id="<?php echo $product['prod_id']; ?>"
                                    <?php echo !$can_rent ? 'disabled' : ''; ?>
@@ -250,26 +250,44 @@ function toggleExpand(card) {
     }
 }
 
-function validateRental() {
-    // Hidden fields are updated by Flatpickr, actual form uses them
-    return true; 
+let fpInstances = {};
+
+function validateRental(form) {
+    const prodId = form.querySelector('input[name="product_id"]').value;
+    const start = document.getElementById('start_date_' + prodId).value;
+    const end = document.getElementById('end_date_' + prodId).value;
+    
+    if (!start || !end) {
+        alert("Please select your rental period first!");
+        // Auto-open the picker for the user
+        if (fpInstances[prodId]) {
+            fpInstances[prodId].open();
+            // Scroll to the picker if not in view
+            fpInstances[prodId].element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return false;
+    }
+    return true;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    flatpickr(".range-picker", {
-        mode: "range",
-        minDate: "today",
-        dateFormat: "Y-m-d",
-        onClose: function(selectedDates, dateStr, instance) {
-            if (selectedDates.length === 2) {
-                const prodId = instance.element.getAttribute('data-prod-id');
-                const start = instance.formatDate(selectedDates[0], "Y-m-d");
-                const end = instance.formatDate(selectedDates[1], "Y-m-d");
-                
-                document.getElementById('start_date_' + prodId).value = start;
-                document.getElementById('end_date_' + prodId).value = end;
+    const pickers = document.querySelectorAll(".range-picker");
+    pickers.forEach(el => {
+        const prodId = el.getAttribute('data-prod-id');
+        fpInstances[prodId] = flatpickr(el, {
+            mode: "range",
+            minDate: "today",
+            dateFormat: "Y-m-d",
+            onClose: function(selectedDates, dateStr, instance) {
+                if (selectedDates.length === 2) {
+                    const start = instance.formatDate(selectedDates[0], "Y-m-d");
+                    const end = instance.formatDate(selectedDates[1], "Y-m-d");
+                    
+                    document.getElementById('start_date_' + prodId).value = start;
+                    document.getElementById('end_date_' + prodId).value = end;
+                }
             }
-        }
+        });
     });
 });
 
