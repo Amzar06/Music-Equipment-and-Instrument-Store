@@ -27,8 +27,14 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 40px 20px;
+    padding: 20px;
     border-top: 10px solid var(--success);
+}
+
+@media (min-width: 768px) {
+    body {
+        padding: 40px 20px;
+    }
 }
 
 h2 {
@@ -61,9 +67,15 @@ p {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-radius: 16px;
-    padding: 32px;
+    padding: 20px;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+@media (min-width: 768px) {
+    .card, .container {
+        padding: 32px;
+    }
 }
 
 .card:hover {
@@ -161,11 +173,18 @@ a:hover {
 /* Grids for products */
 .product-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 24px;
+    grid-template-columns: 1fr;
+    gap: 20px;
     width: 100%;
     max-width: 1200px;
     margin-top: 24px;
+}
+
+@media (min-width: 640px) {
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+    }
 }
 
 .product-actions {
@@ -210,16 +229,25 @@ th {
 }
 .cart-item {
     display: flex;
-    justify-content: space-between;
-    padding: 20px;
+    flex-direction: column;
+    padding: 16px;
     background: #ffffff;
     border: 1px solid var(--card-border);
     border-radius: 16px;
-    align-items: center;
-    gap: 20px;
+    align-items: stretch;
+    gap: 12px;
     margin-bottom: 8px;
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
     transition: all 0.3s ease;
+}
+
+@media (min-width: 640px) {
+    .cart-item {
+        flex-direction: row;
+        padding: 20px;
+        align-items: center;
+        gap: 20px;
+    }
 }
 
 .cart-item:hover {
@@ -238,8 +266,17 @@ th {
     font-weight: 600;
     color: var(--success);
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+@media (min-width: 640px) {
+    .cart-item-price {
+        flex-direction: column;
+        align-items: flex-end;
+        justify-content: flex-start;
+    }
 }
 .cart-total {
     margin-top: 24px;

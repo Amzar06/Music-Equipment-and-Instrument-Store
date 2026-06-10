@@ -60,7 +60,7 @@ if (!isset($conn) || $conn->connect_error) {
     $db_error = "Database connection failed";
 } else {
     $query = $conn->prepare("
-        SELECT ci.cart_item_id, p.prod_name, p.prod_sale_price, ci.quantity, p.prod_image
+        SELECT ci.cart_item_id, p.prod_name, p.prod_sale_price, ci.quantity, p.prod_image, p.prod_qty
         FROM cart_items ci
         JOIN cart c ON ci.cart_id = c.cart_id
         JOIN products p ON ci.prod_id = p.prod_id

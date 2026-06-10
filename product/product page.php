@@ -62,6 +62,11 @@ if (isset($conn)) {
             box-shadow: 0 0 40px rgba(0,0,0,0.5);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
     </style>
 </head>
 <body>
@@ -96,6 +101,12 @@ if (isset($conn)) {
                 <option value="<?php echo htmlspecialchars(strtolower($cat['category_name'])); ?>"><?php echo htmlspecialchars($cat['category_name']); ?></option>
             <?php endforeach; ?>
         </select>
+
+        <?php if (isset($_GET['error']) && $_GET['error'] === 'out_of_stock'): ?>
+            <div style="margin-left: auto; background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 10px 20px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; animation: shake 0.5s;">
+                ⚠️ <?php echo htmlspecialchars($_GET['name'] ?? 'Item'); ?> is out of stock!
+            </div>
+        <?php endif; ?>
     </div>
 
     <div class="product-grid" id="productGrid">

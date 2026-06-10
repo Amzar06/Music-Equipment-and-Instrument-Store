@@ -9,8 +9,13 @@
 </head>
 <body>
 
-<aside class="sidebar">
-    <h2>Music Store</h2>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<aside class="sidebar" id="adminSidebar">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">Music Store</h2>
+        <button class="mobile-toggle" onclick="toggleSidebar()" style="margin: 0; padding: 4px 8px; font-size: 1.2rem;">✕</button>
+    </div>
     <ul class="nav-links">
         <li><a href="admin_dashboard.php" class="<?php echo ($active == 'dashboard') ? 'active' : ''; ?>">Dashboard</a></li>
         <li><a href="admin_products.php" class="<?php echo ($active == 'products') ? 'active' : ''; ?>">Inventory</a></li>
@@ -34,6 +39,7 @@
 </aside>
 
 <div class="main-content">
+    <button class="mobile-toggle" onclick="toggleSidebar()">☰ Menu</button>
     <header style="display: flex; justify-content: space-between; align-items: center;">
         <div class="welcome-msg">
             <h1><?php echo $page_title; ?></h1>
