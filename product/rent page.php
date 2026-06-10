@@ -34,24 +34,36 @@ if (isset($conn)) {
     }
 }
 
-// Check if user is on rental cooldown (1 week limit)
+// Check if user is on rental limit (3 instruments per week)
 $can_rent = true;
+$rentals_this_week = 0;
+$limit = 3;
 $next_rentable_date = null;
+
 if (isset($conn)) {
-    $stmt = $conn->prepare("SELECT created_at FROM rentals WHERE cust_id = ? AND status != 'Cancelled' ORDER BY created_at DESC LIMIT 1");
-    $stmt->bind_param("i", $cust_id);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    if ($last = $res->fetch_assoc()) {
-        $last_date = strtotime($last['created_at']);
-        $one_week_ago = strtotime("-1 week");
-        
-        if ($last_date > $one_week_ago) {
-            $can_rent = false;
-            $next_rentable_date = date('d M Y', strtotime("+1 week", $last_date));
+    // Count non-cancelled rentals in the last 7 days
+    $one_week_ago_sql = date('Y-m-d H:i:s', strtotime("-1 week"));
+    $stmt = $conn->prepare("SELECT COUNT(*) as rental_count, MIN(created_at) as oldest_rental FROM rentals WHERE cust_id = ? AND status != 'Cancelled' AND created_at >= ?");
+    if ($stmt) {
+        $stmt->bind_param("is", $cust_id, $one_week_ago_sql);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if ($row = $res->fetch_assoc()) {
+            $rentals_this_week = $row['rental_count'];
+            if ($rentals_this_week >= $limit) {
+                $can_rent = false;
+                // Next rentable date is 1 week after the OLDEST rental that falls within the current rolling week
+                $stmt_oldest = $conn->prepare("SELECT created_at FROM rentals WHERE cust_id = ? AND status != 'Cancelled' AND created_at >= ? ORDER BY created_at ASC LIMIT 1");
+                $stmt_oldest->bind_param("is", $cust_id, $one_week_ago_sql);
+                $stmt_oldest->execute();
+                if ($oldest = $stmt_oldest->get_result()->fetch_assoc()) {
+                    $next_rentable_date = date('d M Y', strtotime("+1 week", strtotime($oldest['created_at'])));
+                }
+                $stmt_oldest->close();
+            }
         }
+        $stmt->close();
     }
-    $stmt->close();
 }
 ?>
 <!DOCTYPE html>
@@ -125,17 +137,22 @@ if (isset($conn)) {
         <div style="background: #fee2e2; border: 1.5px solid #ef4444; color: #991b1b; padding: 20px; border-radius: 14px; margin-bottom: 32px; display: flex; align-items: flex-start; gap: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
             <span style="font-size: 1.8rem;">⏳</span>
             <div>
-                <p style="margin: 0; font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Rental Cooldown Active</p>
-                <p style="margin: 0; font-size: 0.95rem; opacity: 0.9;">You have recently rented an instrument. To ensure fair access for all customers, you can only rent <b>one instrument per week</b>.</p>
+                <p style="margin: 0; font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Rental Limit Reached (3 per week)</p>
+                <p style="margin: 0; font-size: 0.95rem; opacity: 0.9;">You have reached the maximum of <b>3 instruments per week</b>. Please return your current rentals or wait for your quota to reset to ensure fair access for all customers.</p>
+                <?php if ($next_rentable_date): ?>
                 <p style="margin-top: 10px; font-weight: 700; font-size: 0.9rem; background: rgba(239, 68, 68, 0.1); display: inline-block; padding: 4px 10px; border-radius: 6px;">
                     🔓 You can rent again starting: <?php echo $next_rentable_date; ?>
                 </p>
+                <?php endif; ?>
             </div>
         </div>
     <?php else: ?>
         <div style="background: #f0fdf4; border: 1.5px solid #10b981; color: #166534; padding: 18px; border-radius: 14px; margin-bottom: 32px; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
             <span style="font-size: 1.5rem;">✅</span>
-            <p style="margin: 0; font-weight: 600; font-size: 0.95rem;">You are eligible to rent! Note: Customers are permitted to rent only one instrument per week.</p>
+            <div>
+                <p style="margin: 0; font-weight: 600; font-size: 0.95rem;">You are eligible to rent! Current quota: <b><?php echo $rentals_this_week; ?> / 3</b> instruments used this week.</p>
+                <p style="margin: 0; font-size: 0.85rem; opacity: 0.8;">Customers are permitted to rent up to 3 instruments per rolling week.</p>
+            </div>
         </div>
     <?php endif; ?>
 
