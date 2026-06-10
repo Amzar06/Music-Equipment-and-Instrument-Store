@@ -14,7 +14,17 @@ if (isset($_GET['action']) && isset($_GET['item_id'])) {
     
     if (isset($conn) && !$conn->connect_error) {
         if ($action === 'inc') {
-            $conn->query("UPDATE cart_items SET quantity = quantity + 1 WHERE cart_item_id = $item_id");
+            // Check stock before incrementing
+            $stock_chk = $conn->prepare("SELECT ci.quantity, p.prod_qty FROM cart_items ci JOIN products p ON ci.prod_id = p.prod_id WHERE ci.cart_item_id = ?");
+            if ($stock_chk) {
+                $stock_chk->bind_param("i", $item_id);
+                $stock_chk->execute();
+                $s_res = $stock_chk->get_result()->fetch_assoc();
+                if ($s_res && $s_res['quantity'] < $s_res['prod_qty']) {
+                    $conn->query("UPDATE cart_items SET quantity = quantity + 1 WHERE cart_item_id = $item_id");
+                }
+                $stock_chk->close();
+            }
         } elseif ($action === 'dec') {
             // Only decrement if current quantity is > 1
             $conn->query("UPDATE cart_items SET quantity = IF(quantity > 1, quantity - 1, 1) WHERE cart_item_id = $item_id");
@@ -81,7 +91,7 @@ if (!isset($conn) || $conn->connect_error) {
 <head>
     <meta charset="UTF-8">
     <title>Your Cart</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
 </head>
 <body>
 
@@ -102,7 +112,7 @@ if (!isset($conn) || $conn->connect_error) {
             </div>
         <?php else: ?>
             <?php foreach($cart_items as $item): ?>
-                <div class='cart-item' style="display: flex; align-items: flex-start; gap: 16px;">
+                <div class='cart-item'>
                     <img src="../uploads/<?php echo htmlspecialchars($item['prod_image'] ?: 'default.jpg'); ?>" 
                          style="width: 70px; height: 70px; object-fit: cover; border-radius: 12px; border: 1px solid var(--card-border);">
                     <div class='cart-item-info' style="flex: 1;">
@@ -110,11 +120,15 @@ if (!isset($conn) || $conn->connect_error) {
                         <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
                             <a href="?action=dec&item_id=<?php echo $item['cart_item_id']; ?>" style="margin-top:0; padding: 2px 10px; background: #e2e8f0; border-radius: 4px; color: #475569; font-weight: bold; text-decoration: none;">-</a>
                             <span style='font-size:1rem; font-weight: 600;'>Qty: <?php echo $item['quantity']; ?></span>
-                            <a href="?action=inc&item_id=<?php echo $item['cart_item_id']; ?>" style="margin-top:0; padding: 2px 10px; background: #e2e8f0; border-radius: 4px; color: #475569; font-weight: bold; text-decoration: none;">+</a>
+                            <?php if ($item['quantity'] < $item['prod_qty']): ?>
+                                <a href="?action=inc&item_id=<?php echo $item['cart_item_id']; ?>" style="margin-top:0; padding: 2px 10px; background: #e2e8f0; border-radius: 4px; color: #475569; font-weight: bold; text-decoration: none;">+</a>
+                            <?php else: ?>
+                                <span style="margin-top:0; padding: 2px 10px; background: #f1f5f9; border-radius: 4px; color: #cbd5e1; font-weight: bold; cursor: not-allowed;" title="Max stock reached">+</span>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class='cart-item-price'>
-                        RM <?php echo number_format(($item['prod_sale_price'] ?? 0) * ($item['quantity'] ?? 1), 2); ?>
+                        <span>RM <?php echo number_format(($item['prod_sale_price'] ?? 0) * ($item['quantity'] ?? 1), 2); ?></span>
                         <a href="?remove_id=<?php echo $item['cart_item_id']; ?>" class="btn-remove">Remove</a>
                     </div>
                 </div>

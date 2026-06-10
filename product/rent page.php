@@ -194,25 +194,32 @@ if (isset($conn)) {
                 </div>
 
                 <div class="product-actions mt-4" onclick="event.stopPropagation()">
-                    <!-- RENT -->
-                    <form action="address page.php" method="GET" class="rent-form" onsubmit="return validateRental(this)">
-                        <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
-                        <input type="hidden" name="type" value="rent">
-                        <input type="hidden" name="price" value="<?php echo htmlspecialchars($product['prod_rental_price']); ?>">
-                        
-                        <!-- Hidden fields to store split dates for backend -->
-                        <input type="hidden" name="start_date" id="start_date_<?php echo $product['prod_id']; ?>">
-                        <input type="hidden" name="end_date" id="end_date_<?php echo $product['prod_id']; ?>">
-
-                        <div style="margin-bottom: 16px;">
-                            <label style="display:block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 6px;">Select Rental Period <span style="color: #ef4444;">*</span></label>
-                            <input type="text" class="range-picker" placeholder="<?php echo $can_rent ? 'Choose dates..' : 'Rental restricted'; ?>" readonly 
-                                   data-prod-id="<?php echo $product['prod_id']; ?>"
-                                   <?php echo !$can_rent ? 'disabled' : ''; ?>
-                                   style="padding: 12px; font-size: 0.95rem; background: <?php echo $can_rent ? 'white' : '#f1f5f9'; ?>; cursor: <?php echo $can_rent ? 'pointer' : 'not-allowed'; ?>; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%;">
-                        </div>
-                        <button type="submit" class="rent-btn" <?php echo !$can_rent ? 'disabled style="background:#94a3b8; cursor:not-allowed;"' : ''; ?> style="width: 100%;"><?php echo $can_rent ? 'Rent Now' : 'Restriction Active'; ?></button>
-                    </form>
+                        <!-- RENT -->
+                        <?php 
+                            $is_out_of_stock = ($product['prod_qty'] <= 0);
+                            $rent_btn_disabled = !$can_rent || $is_out_of_stock;
+                            $btn_text = 'Rent Now';
+                            if ($is_out_of_stock) $btn_text = 'Out of Stock';
+                            elseif (!$can_rent) $btn_text = 'Restriction Active';
+                        ?>
+                        <form action="address page.php" method="GET" class="rent-form" onsubmit="return validateRental(this)">
+                            <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
+                            <input type="hidden" name="type" value="rent">
+                            <input type="hidden" name="price" value="<?php echo htmlspecialchars($product['prod_rental_price']); ?>">
+                            
+                            <!-- Hidden fields to store split dates for backend -->
+                            <input type="hidden" name="start_date" id="start_date_<?php echo $product['prod_id']; ?>">
+                            <input type="hidden" name="end_date" id="end_date_<?php echo $product['prod_id']; ?>">
+    
+                            <div style="margin-bottom: 16px;">
+                                <label style="display:block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 6px;">Select Rental Period <span style="color: #ef4444;">*</span></label>
+                                <input type="text" class="range-picker" placeholder="<?php echo !$rent_btn_disabled ? 'Choose dates..' : $btn_text; ?>" readonly 
+                                       data-prod-id="<?php echo $product['prod_id']; ?>"
+                                       <?php echo $rent_btn_disabled ? 'disabled' : ''; ?>
+                                       style="padding: 12px; font-size: 0.95rem; background: <?php echo !$rent_btn_disabled ? 'white' : '#f1f5f9'; ?>; cursor: <?php echo !$rent_btn_disabled ? 'pointer' : 'not-allowed'; ?>; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%;">
+                            </div>
+                            <button type="submit" class="rent-btn" <?php echo $rent_btn_disabled ? 'disabled style="background:#94a3b8; cursor:not-allowed;"' : ''; ?> style="width: 100%;"><?php echo $btn_text; ?></button>
+                        </form>
                 </div>
             </div>
         <?php endforeach; ?>

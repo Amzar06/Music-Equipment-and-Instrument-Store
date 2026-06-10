@@ -44,6 +44,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prod_id'])) {
     }
     $cart_query->close();
     
+    // Get current stock levels
+    $stock_query = $conn->prepare("SELECT prod_qty, prod_name FROM products WHERE prod_id = ?");
+    $stock_query->bind_param("i", $prod_id);
+    $stock_query->execute();
+    $stock_res = $stock_query->get_result()->fetch_assoc();
+    $available_stock = $stock_res['prod_qty'] ?? 0;
+    $prod_name = $stock_res['prod_name'] ?? 'Product';
+    $stock_query->close();
+
     // Check if item already exists in cart_items
     $check_item = $conn->prepare("SELECT cart_item_id, quantity FROM cart_items WHERE cart_id = ? AND prod_id = ?");
     $check_item->bind_param("ii", $cart_id, $prod_id);
@@ -51,14 +60,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prod_id'])) {
     $item_result = $check_item->get_result();
 
     if ($item_result->num_rows > 0) {
-        // Increment quantity
         $item = $item_result->fetch_assoc();
         $new_qty = $item['quantity'] + 1;
+        
+        if ($new_qty > $available_stock) {
+            header("Location: product page.php?error=out_of_stock&name=" . urlencode($prod_name));
+            exit;
+        }
+
         $update_item = $conn->prepare("UPDATE cart_items SET quantity = ? WHERE cart_item_id = ?");
         $update_item->bind_param("ii", $new_qty, $item['cart_item_id']);
         $update_item->execute();
         $update_item->close();
     } else {
+        if ($available_stock < 1) {
+            header("Location: product page.php?error=out_of_stock&name=" . urlencode($prod_name));
+            exit;
+        }
         // Insert new item into cart_items
         $insert_item = $conn->prepare("INSERT INTO cart_items (cart_id, prod_id, quantity) VALUES (?, ?, 1)");
         if (!$insert_item) {
