@@ -14,7 +14,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cust_name = $_POST['cust_name'] ?? '';
     $cust_email = $_POST['cust_email'] ?? '';
     $cust_phone_number = $_POST['cust_phone_number'] ?? '';
-    $cust_address = $_POST['cust_address'] ?? '';
+    $cust_street = $_POST['cust_street'] ?? '';
+    $cust_city = $_POST['cust_city'] ?? '';
+    $cust_state = $_POST['cust_state'] ?? '';
+    $cust_postcode = $_POST['cust_postcode'] ?? '';
     
     if (isset($conn)) {
         // Prevent duplicate emails
@@ -25,9 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($check->get_result()->num_rows > 0) {
                 $error = "Email is already taken by another account.";
             } else {
-                $update = $conn->prepare("UPDATE customers SET cust_name = ?, cust_email = ?, cust_phone_number = ?, cust_address = ? WHERE cust_id = ?");
+                $update = $conn->prepare("UPDATE customers SET cust_name = ?, cust_email = ?, cust_phone_number = ?, cust_street = ?, cust_city = ?, cust_state = ?, cust_postcode = ? WHERE cust_id = ?");
                 if ($update) {
-                    $update->bind_param("ssssi", $cust_name, $cust_email, $cust_phone_number, $cust_address, $cust_id);
+                    $update->bind_param("sssssssi", $cust_name, $cust_email, $cust_phone_number, $cust_street, $cust_city, $cust_state, $cust_postcode, $cust_id);
                     if ($update->execute()) {
                         $success = "Profile updated successfully!";
                     } else {
@@ -42,9 +45,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch current info
-$user_data = ['cust_name' => '', 'cust_email' => '', 'cust_phone_number' => '', 'cust_address' => ''];
+$user_data = ['cust_name' => '', 'cust_email' => '', 'cust_phone_number' => '', 'cust_street' => '', 'cust_city' => '', 'cust_state' => '', 'cust_postcode' => ''];
 if (isset($conn)) {
-    $stmt = $conn->prepare("SELECT cust_name, cust_email, cust_phone_number, cust_address FROM customers WHERE cust_id = ?");
+    $stmt = $conn->prepare("SELECT cust_name, cust_email, cust_phone_number, cust_street, cust_city, cust_state, cust_postcode FROM customers WHERE cust_id = ?");
     if ($stmt) {
         $stmt->bind_param("i", $cust_id);
         $stmt->execute();
@@ -54,7 +57,10 @@ if (isset($conn)) {
                 'cust_name' => $row['cust_name'] ?? '',
                 'cust_email' => $row['cust_email'] ?? '',
                 'cust_phone_number' => $row['cust_phone_number'] ?? '',
-                'cust_address' => $row['cust_address'] ?? ''
+                'cust_street' => $row['cust_street'] ?? '',
+                'cust_city' => $row['cust_city'] ?? '',
+                'cust_state' => $row['cust_state'] ?? '',
+                'cust_postcode' => $row['cust_postcode'] ?? ''
             ];
         }
         $stmt->close();
@@ -95,8 +101,22 @@ if (isset($conn)) {
           <label>Phone Number</label>
           <input type="text" name="cust_phone_number" value="<?php echo htmlspecialchars($user_data['cust_phone_number']); ?>">
           
-          <label>Address</label>
-          <input type="text" name="cust_address" value="<?php echo htmlspecialchars($user_data['cust_address']); ?>">
+          <label>Street Address</label>
+          <input type="text" name="cust_street" value="<?php echo htmlspecialchars($user_data['cust_street']); ?>">
+
+          <div style="display: flex; gap: 10px;">
+              <div style="flex: 1;">
+                  <label>City</label>
+                  <input type="text" name="cust_city" value="<?php echo htmlspecialchars($user_data['cust_city']); ?>">
+              </div>
+              <div style="flex: 1;">
+                  <label>Postcode</label>
+                  <input type="text" name="cust_postcode" value="<?php echo htmlspecialchars($user_data['cust_postcode']); ?>">
+              </div>
+          </div>
+
+          <label>State</label>
+          <input type="text" name="cust_state" value="<?php echo htmlspecialchars($user_data['cust_state']); ?>">
 
           <div style="display: flex; gap: 16px; margin-top: 24px;">
               <a href="user_profile_page.php" style="flex:1; text-decoration:none;"><button type="button" style="width:100%; background: rgba(255,255,255,0.1);">Back</button></a>

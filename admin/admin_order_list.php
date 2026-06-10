@@ -101,7 +101,7 @@ require_once('admin_header.php');
                                         <h4 style="margin: 0 0 12px 0; color: #111827; font-size: 0.95rem; border-bottom: 1px solid #d1d5db; padding-bottom: 8px;">Customer & Shipping</h4>
                                         <div style="font-size: 0.85rem; color: #4b5563; line-height: 1.6;">
                                             <strong>Email:</strong> <?php echo htmlspecialchars($row['cust_email']); ?><br>
-                                            <strong>Account Phone:</strong> <?php echo !empty($row['cust_phone']) ? htmlspecialchars($row['cust_phone']) : 'N/A'; ?><br>
+                                            <strong>Account Phone:</strong> <?php echo !empty($row['cust_phone_number']) ? htmlspecialchars($row['cust_phone_number']) : 'N/A'; ?><br>
                                             
                                             <div style="margin-top: 14px; background: #f9fafb; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb;">
                                                 <strong style="color: #111827; display: block; margin-bottom: 4px;">Delivery Address:</strong>
@@ -131,7 +131,7 @@ require_once('admin_header.php');
                                                 if($items_query && mysqli_num_rows($items_query) > 0) {
                                                     echo '<ul style="margin: 0; padding-left: 16px; line-height: 1.6;">';
                                                     while($item = mysqli_fetch_assoc($items_query)) {
-                                                        echo '<li><strong>' . $item['quantity'] . 'x</strong> ' . htmlspecialchars($item['prod_name']) . ' <span style="color:#9ca3af;">(RM ' . number_format($item['price'], 2) . ' each)</span></li>';
+                                                        echo '<li><strong>' . $item['order_qty'] . 'x</strong> ' . htmlspecialchars($item['prod_name']) . ' <span style="color:#9ca3af;">(RM ' . number_format($item['unit_price'], 2) . ' each)</span></li>';
                                                     }
                                                     echo '</ul>';
                                                 } else {

@@ -12,14 +12,17 @@ $user_data = [
     'cust_name' => 'N/A',
     'cust_email' => 'N/A',
     'cust_phone_number' => 'N/A',
-    'cust_address' => 'N/A'
+    'cust_street' => 'N/A',
+    'cust_city' => 'N/A',
+    'cust_state' => 'N/A',
+    'cust_postcode' => 'N/A'
 ];
 
 $orders = []; // Array to store order history
 
 if (isset($conn)) {
     // 1. Fetch Customer Information
-    $stmt = $conn->prepare("SELECT cust_name, cust_email, cust_phone_number, cust_address FROM customers WHERE cust_id = ?");
+    $stmt = $conn->prepare("SELECT cust_name, cust_email, cust_phone_number, cust_street, cust_city, cust_state, cust_postcode FROM customers WHERE cust_id = ?");
     if ($stmt) {
         $stmt->bind_param("i", $cust_id);
         $stmt->execute();
@@ -28,13 +31,16 @@ if (isset($conn)) {
             $user_data['cust_name'] = $row['cust_name'] ?? 'N/A';
             $user_data['cust_email'] = $row['cust_email'] ?? 'N/A';
             $user_data['cust_phone_number'] = $row['cust_phone_number'] ?? 'N/A';
-            $user_data['cust_address'] = $row['cust_address'] ?? 'N/A';
+            $user_data['cust_street'] = $row['cust_street'] ?? '';
+            $user_data['cust_city'] = $row['cust_city'] ?? '';
+            $user_data['cust_state'] = $row['cust_state'] ?? '';
+            $user_data['cust_postcode'] = $row['cust_postcode'] ?? '';
         }
         $stmt->close();
     }
 
     // 2. Fetch Customer Order History (Adjust column names to match your database)
-    $order_stmt = $conn->prepare("SELECT order_id, order_date, total_amount, order_status FROM orders WHERE cust_id = ? ORDER BY order_date DESC");
+    $order_stmt = $conn->prepare("SELECT order_id, order_date, total_amount, status FROM orders WHERE cust_id = ? ORDER BY order_date DESC");
     if ($order_stmt) {
         $order_stmt->bind_param("i", $cust_id);
         $order_stmt->execute();
@@ -100,7 +106,16 @@ if (isset($conn)) {
         <input type="text" value="<?php echo htmlspecialchars($user_data['cust_phone_number']); ?>" readonly>
         
         <label>Address</label>
-        <input type="text" value="<?php echo htmlspecialchars($user_data['cust_address']); ?>" readonly>
+        <textarea style="width: 100%; background: rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; padding: 10px; font-size: 0.9rem;" readonly><?php 
+          if($user_data['cust_street']) {
+            echo htmlspecialchars($user_data['cust_street']) . "\n" . 
+                 htmlspecialchars($user_data['cust_postcode']) . " " . 
+                 htmlspecialchars($user_data['cust_city']) . "\n" . 
+                 htmlspecialchars($user_data['cust_state']);
+          } else {
+            echo "N/A";
+          }
+        ?></textarea>
 
         <div style="display: flex; gap: 16px; margin-top: 24px;">
             <a href="home_page.php" style="flex:1; text-decoration:none;"><button style="width:100%; background: rgba(255,255,255,0.1);">Back</button></a>
@@ -134,8 +149,8 @@ if (isset($conn)) {
                             <td><?php echo htmlspecialchars(date('d M Y', strtotime($order['order_date']))); ?></td>
                             <td>RM <?php echo htmlspecialchars(number_format($order['total_amount'], 2)); ?></td>
                             <td>
-                                <span class="status-badge <?php echo htmlspecialchars(strtolower($order['order_status'])); ?>">
-                                    <?php echo htmlspecialchars($order['order_status']); ?>
+                                <span class="status-badge <?php echo htmlspecialchars(strtolower($order['status'])); ?>">
+                                    <?php echo htmlspecialchars($order['status']); ?>
                                 </span>
                             </td>
                         </tr>
