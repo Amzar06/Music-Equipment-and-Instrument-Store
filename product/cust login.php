@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 
-<div class="container login-container">
+<div class="page-container login-container">
     <h2>Welcome Back</h2>
     <p class="text-center mb-4">Log in to your account</p>
 

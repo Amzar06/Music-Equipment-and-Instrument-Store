@@ -80,97 +80,161 @@ if (isset($conn)) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Order History</title>
-    <link rel="stylesheet" href="style.css">
+    <title>My Order History</title>
+    <link rel="stylesheet" href="style.css?v=4.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f8fafc; color: #1e293b; }
+        .history-card { 
+            background: white; 
+            border-radius: 16px; 
+            padding: 32px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .type-badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: white;
+            font-weight: 700;
+        }
+        table { border-collapse: separate; border-spacing: 0 10px; width: 100%; }
+        th { background: #f8fafc; border: none; padding: 15px; font-weight: 700; color: #64748b; font-size: 0.85rem; text-transform: uppercase; }
+        td { background: white; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; padding: 20px 15px; }
+        td:first-child { border-left: 1px solid #f1f5f9; border-radius: 12px 0 0 12px; }
+        td:last-child { border-right: 1px solid #f1f5f9; border-radius: 0 12px 12px 0; }
+    </style>
 </head>
 <body>
 
-<div class="container" style="max-width: 800px;">
-    <h2>Order History</h2>
-    
-    <?php if ($db_error): ?>
-        <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-            <strong>Error:</strong> <?php echo htmlspecialchars($db_error); ?>
+<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #0d3b8e; padding: 12px 0;">
+    <div class="container-fluid px-5">
+        <a class="navbar-brand" href="../customer/home_page.php" style="font-weight: 500;">Musical Instrument Store</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navLogged">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navLogged">
+            <ul class="navbar-nav ms-auto" style="gap: 15px;">
+                <li class="nav-item"><a class="nav-link" href="../customer/home_page.php">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="product page.php">Products</a></li>
+                <li class="nav-item"><a class="nav-link active" href="payment history.php">My Orders</a></li>
+                <li class="nav-item"><a class="nav-link" href="../customer/user_profile_page.php">Profile</a></li>
+                <li class="nav-item"><a class="nav-link" href="../customer/logout_page.php">Logout</a></li>
+            </ul>
         </div>
-    <?php endif; ?>
-    
-    <table>
-        <thead>
-            <tr>
-                <th>Order Type & ID</th>
-                <th>Delivery Address</th>
-                <th>Qty</th>
-                <th>Total Price</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (empty($orders)): ?>
-                <tr>
-                    <td colspan="5" style="text-align: center; padding: 24px; color: var(--text-secondary);">Your database currently has no past transactions explicitly linked to you.</td>
-                </tr>
-            <?php else: ?>
-                <?php foreach($orders as $order): ?>
-                <tr>
-                    <td style="display: flex; align-items: center; gap: 12px;">
-                        <img src="../uploads/<?php echo htmlspecialchars($order['prod_image'] ?: 'default.jpg'); ?>" 
-                             style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid var(--card-border);">
-                        <div>
-                            <span style="font-size: 0.75rem; padding: 2px 6px; background: <?php echo $order['type'] === 'Rental' ? '#7c3aed' : 'var(--accent)'; ?>; color: white; border-radius: 4px;"><?php echo htmlspecialchars($order['type']); ?></span>
-                            <div style="font-weight: 600; font-size: 0.9rem; margin-top: 4px;"><?php echo htmlspecialchars($order['prod_name'] ?: 'Multiple Items'); ?></div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary);">ID: #<?php echo htmlspecialchars($order['id']); ?></div>
-                            <?php if ($order['type'] === 'Rental' && $order['start_date']): ?>
-                                <div style="font-size: 0.75rem; color: #7c3aed; margin-top: 4px;">
-                                    <strong>Rental Period:</strong><br>
-                                    <?php echo date('d M Y', strtotime($order['start_date'])); ?> to <?php echo date('d M Y', strtotime($order['end_date'])); ?>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    </td>
-                     <td>
-                        <?php if ($order['street']): ?>
-                            <div style="font-size: 0.85rem; line-height: 1.4;">
-                                <?php echo htmlspecialchars($order['street']); ?><br>
-                                <?php echo htmlspecialchars($order['postcode']); ?> <?php echo htmlspecialchars($order['city']); ?><br>
-                                <?php echo htmlspecialchars($order['state']); ?>
-                            </div>
-                        <?php else: ?>
-                            <span style="font-size: 0.75rem; padding: 2px 8px; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; border-radius: 20px; font-weight: 600;">🏪 Self Collect</span>
-                        <?php endif; ?>
-                    </td>
-                    <td style="font-weight: 600; color: var(--text-primary);">
-                        <?php echo htmlspecialchars($order['total_qty'] ?? 1); ?>
-                    </td>
-                    <td style="font-weight: 600; color: var(--success);">RM <?php echo number_format($order['total_amount'] ?? 0, 2); ?></td>
-                    <td>
-                        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
-                            <span style="font-weight: 600; color: <?php 
-                                $status = strtolower($order['status'] ?? '');
-                                if (in_array($status, ['completed', 'delivered', 'returned', 'shipped'])) echo 'var(--success)';
-                                elseif (in_array($status, ['pending', 'processing', 'active'])) echo '#6366f1';
-                                elseif (in_array($status, ['declined', 'cancelled'])) echo '#ef4444';
-                                else echo 'var(--text-secondary)';
-                            ?>;"><?php echo htmlspecialchars(ucfirst($order['status'] ?? 'Pending')); ?></span>
+    </div>
+</nav>
 
-                            <?php if (strtolower($order['status']) === 'pending'): ?>
-                                <a href="?action=cancel&id=<?php echo $order['id']; ?>&type=<?php echo $order['type']; ?>" 
-                                   onclick="return confirm('Are you sure you want to cancel this order?')"
-                                   style="font-size: 0.75rem; color: #ef4444; text-decoration: none; border: 1px solid #ef4444; padding: 2px 6px; border-radius: 4px; margin-top: 4px;">
-                                   Cancel Product
-                                </a>
-                            <?php endif; ?>
-                        </div>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </tbody>
-    </table>
-
-    <div style="display: flex; gap: 16px; justify-content: center; margin-top: 32px;">
-        <a href="product page.php" style="padding: 12px 24px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 0;">Continue Shopping</a>
+<div style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=1600&q=80') center/cover; padding: 40px 0; margin-bottom: 40px; border-bottom: 4px solid #10b981;">
+    <div style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+        <h2 style="margin: 0; font-size: 2.2rem; font-weight: 800; color: white;">Order History</h2>
+        <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">Track your purchases and rentals</p>
     </div>
 </div>
+
+<div class="container pb-5">
+    <div class="history-card">
+        <?php if ($db_error): ?>
+            <div class="alert alert-danger">
+                <strong>Error:</strong> <?php echo htmlspecialchars($db_error); ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Instrument Details</th>
+                        <th>Address / Method</th>
+                        <th>Qty</th>
+                        <th>Total Price</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($orders)): ?>
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 60px; color: #94a3b8;">
+                                <div style="font-size: 3rem; margin-bottom: 10px;">📋</div>
+                                <h5>No transactions found</h5>
+                                <p>You haven't made any purchases or rentals yet.</p>
+                                <a href="product page.php" class="btn btn-outline-primary mt-3">Start Shopping</a>
+                            </td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach($orders as $order): ?>
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 15px;">
+                                    <img src="../uploads/<?php echo htmlspecialchars($order['prod_image'] ?: 'default.jpg'); ?>" 
+                                         style="width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 1px solid #e2e8f0;">
+                                    <div>
+                                        <span class="type-badge" style="background: <?php echo $order['type'] === 'Rental' ? '#7c3aed' : '#2563eb'; ?>;"><?php echo htmlspecialchars($order['type']); ?></span>
+                                        <div style="font-weight: 700; color: #1e293b; margin-top: 2px;"><?php echo htmlspecialchars($order['prod_name'] ?: 'Multiple Items'); ?></div>
+                                        <div style="font-size: 0.75rem; color: #94a3b8;">#<?php echo htmlspecialchars($order['id']); ?> • <?php echo date('d M Y', strtotime($order['date'])); ?></div>
+                                        
+                                        <?php if ($order['type'] === 'Rental' && $order['start_date']): ?>
+                                            <div style="font-size: 0.75rem; color: #7c3aed; font-weight: 600; margin-top: 4px; background: rgba(124, 58, 237, 0.05); padding: 2px 8px; border-radius: 4px; display: inline-block;">
+                                                📅 <?php echo date('d M', strtotime($order['start_date'])); ?> - <?php echo date('d M', strtotime($order['end_date'])); ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <?php if ($order['street']): ?>
+                                    <div style="font-size: 0.85rem; color: #64748b; line-height: 1.4;">
+                                        <span style="font-weight:600; color:#1e293b; display:block;">🚚 Delivery</span>
+                                        <?php echo htmlspecialchars($order['street']); ?>, <?php echo htmlspecialchars($order['city']); ?>
+                                    </div>
+                                <?php else: ?>
+                                    <span style="font-size: 0.8rem; padding: 4px 10px; background: #f0fdf4; color: #16a34a; border-radius: 20px; font-weight: 700; border: 1px solid #bbf7d0;">🏪 Self Collect</span>
+                                <?php endif; ?>
+                            </td>
+                            <td style="font-weight: 700; color: #1e293b;"><?php echo htmlspecialchars($order['total_qty'] ?? 1); ?></td>
+                            <td style="font-weight: 800; color: #10b981; font-size: 1.1rem;">RM <?php echo number_format($order['total_amount'] ?? 0, 2); ?></td>
+                            <td>
+                                <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
+                                    <span class="status-badge" style="background: <?php 
+                                        $status = strtolower($order['status'] ?? '');
+                                        if (in_array($status, ['completed', 'delivered', 'returned', 'shipped'])) echo '#dcfce7; color: #166534;';
+                                        elseif (in_array($status, ['pending', 'processing', 'active'])) echo '#e0e7ff; color: #3730a3;';
+                                        elseif (in_array($status, ['declined', 'cancelled'])) echo '#fee2e2; color: #991b1b;';
+                                        else echo '#f1f5f9; color: #475569;';
+                                    ?>"><?php echo htmlspecialchars(ucfirst($order['status'] ?? 'Pending')); ?></span>
+
+                                    <?php if (strtolower($order['status']) === 'pending'): ?>
+                                        <a href="?action=cancel&id=<?php echo $order['id']; ?>&type=<?php echo $order['type']; ?>" 
+                                           onclick="return confirm('Are you sure you want to cancel?')"
+                                           style="font-size: 0.7rem; color: #ef4444; font-weight: 700; text-decoration: none; border-bottom: 1px dashed #ef4444; margin-left: 5px;">
+                                           Cancel Item
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="product page.php" class="btn btn-outline-secondary px-4 py-2" style="border-radius: 10px; font-weight: 600;">← Back to Shop</a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

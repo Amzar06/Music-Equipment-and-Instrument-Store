@@ -77,7 +77,7 @@ $grand_total = $subtotal + $delivery_fee;
 <head>
     <meta charset="UTF-8">
     <title>Payment Summary</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=3.0">
     <style>
         .bill-card { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 24px; margin-bottom: 24px; }
         .bill-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 0.95rem; }
@@ -90,7 +90,27 @@ $grand_total = $subtotal + $delivery_fee;
         .delivery-badge { display:inline-block; padding:2px 10px; border-radius:20px; font-size:0.78rem; font-weight:600; }
     </style>
 </head>
-<body>
+<!-- Bootstrap for Navbar -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #0d3b8e; padding: 12px 0;">
+    <div class="container-fluid px-5">
+        <a class="navbar-brand" href="../customer/home_page.php" style="font-weight: 500;">Musical Instrument Store</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navLogged">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navLogged">
+            <ul class="navbar-nav ms-auto" style="gap: 15px;">
+                <li class="nav-item"><a class="nav-link" href="../customer/home_page.php">Home</a></li>
+                <li class="nav-item"><a class="nav-link active" href="product page.php">Products</a></li>
+                <li class="nav-item"><a class="nav-link" href="payment history.php">My Orders</a></li>
+                <li class="nav-item"><a class="nav-link" href="../customer/user_profile_page.php">Profile</a></li>
+                <li class="nav-item"><a class="nav-link" href="../customer/logout_page.php">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<body style="padding-top: 20px;">
 
 <div class="container text-center" style="max-width: 520px;">
     <h2>Payment Summary</h2>

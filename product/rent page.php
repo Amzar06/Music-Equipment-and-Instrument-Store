@@ -71,7 +71,7 @@ if (isset($conn)) {
 <head>
     <meta charset="UTF-8">
     <title>Rent Instruments</title>
-    <link rel="stylesheet" href="style.css?v=2.0">
+    <link rel="stylesheet" href="style.css?v=4.0">
     <!-- Flatpickr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
@@ -98,23 +98,53 @@ if (isset($conn)) {
         }
     </style>
 </head>
+<!-- Add Bootstrap for Navbar -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    .navbar-custom { background-color: #0d3b8e; padding: 12px 0; }
+    .navbar-brand, .navbar-nav .nav-link { color: white !important; }
+    .nav-link:hover { opacity: 0.8; }
+    .container-nav { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
+</style>
+
 <body>
+
+<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #0d3b8e; padding: 12px 0;">
+    <div class="container-fluid px-5">
+        <a class="navbar-brand" href="../customer/home_page.php" style="font-weight: 500;">Musical Instrument Store</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navLogged">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navLogged">
+            <ul class="navbar-nav ms-auto" style="gap: 15px;">
+                <li class="nav-item"><a class="nav-link" href="../customer/home_page.php">Home</a></li>
+                <li class="nav-item"><a class="nav-link active" href="product page.php">Products</a></li>
+                <li class="nav-item"><a class="nav-link" href="payment history.php">My Orders</a></li>
+                <li class="nav-item"><a class="nav-link" href="../customer/user_profile_page.php">Profile</a></li>
+                <li class="nav-item"><a class="nav-link" href="../customer/logout_page.php">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
 
 <!-- Lightbox Modal -->
 <div id="lightbox" onclick="this.style.display='none'">
     <img id="lightboxImg" src="">
 </div>
 
-<div style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-        <h2 style="margin: 0; font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #1e293b, #334155); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Rent Instruments</h2>
-        <div style="display: flex; gap: 12px; align-items: center;">
-            <a href="../customer/home_page.php" style="padding: 10px 18px; background: rgba(37, 99, 235, 0.08); color: #2563eb; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Homepage</a>
-            <a href="payment history.php" style="padding: 10px 18px; background: rgba(16, 185, 129, 0.08); color: #10b981; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Order History</a>
-            <a href="cart page.php" style="padding: 10px 18px; background: rgba(100, 116, 139, 0.08); color: #475569; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">View Cart</a>
-            <a href="../customer/logout_page.php" style="padding: 10px 18px; background: rgba(239, 68, 68, 0.08); color: #ef4444; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 0.9rem; border: 1px solid rgba(239, 68, 68, 0.2);">Logout</a>
+<div style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=1600&q=80') center/cover; padding: 40px 0; margin-bottom: 40px; border-bottom: 4px solid #7c3aed;">
+    <div style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+        <div>
+            <h2 style="margin: 0; font-size: 2.2rem; font-weight: 800; color: white;">Rental Catalog</h2>
+            <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">Flexible rental plans for all instruments</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <a href="cart page.php" style="padding: 10px 20px; background: #2563eb; color: white; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(37,99,235,0.3);">🛒 View Cart</a>
         </div>
     </div>
+</div>
+
+<div style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px;">
 
     <div class="nav-tabs">
         <a href="product page.php" class="nav-link buy">Buy Instruments</a>

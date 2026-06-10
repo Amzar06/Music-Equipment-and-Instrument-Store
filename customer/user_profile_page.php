@@ -39,8 +39,8 @@ if (isset($conn)) {
         $stmt->close();
     }
 
-    // 2. Fetch Customer Order History (Adjust column names to match your database)
-    $order_stmt = $conn->prepare("SELECT order_id, order_date, total_amount, status FROM orders WHERE cust_id = ? ORDER BY order_date DESC");
+    // 2. Fetch Customer Order History
+    $order_stmt = $conn->prepare("SELECT order_id, order_date, total_amount, status FROM orders WHERE cust_id = ? ORDER BY order_date DESC LIMIT 5");
     if ($order_stmt) {
         $order_stmt->bind_param("i", $cust_id);
         $order_stmt->execute();
@@ -53,114 +53,202 @@ if (isset($conn)) {
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>User Profile & Orders</title>
-  <link rel="stylesheet" href="customer.css">
-  <style>
-    /* Quick local styles to support the new layout layout */
-    .profile-layout {
-      display: flex;
-      gap: 24px;
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 20px;
-      flex-wrap: wrap;
-    }
-    .order-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 16px;
-    }
-    .order-table th, .order-table td {
-      border: 1px solid rgba(255,255,255,0.1); /* Matches dark themes well */
-      padding: 10px;
-      text-align: left;
-    }
-    .order-table th {
-      background-color: rgba(255,255,255,0.05);
-    }
-    .no-orders {
-      padding: 16px;
-      text-align: center;
-      opacity: 0.6;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Musical Store</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="customer.css?v=3.0">
+    <style>
+        body { background-color: #f8fafc; color: #1e293b; }
+        .hero-section {
+            background: linear-gradient(135deg, #0d3b8e 0%, #2563eb 100%);
+            padding: 60px 0;
+            color: white;
+            margin-bottom: -50px;
+        }
+        .profile-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border: none;
+            padding: 30px;
+            height: 100%;
+        }
+        .avatar-circle {
+            width: 80px;
+            height: 80px;
+            background: #e2e8f0;
+            color: #0d3b8e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+        .info-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .info-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 20px;
+            display: block;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .status-pending { background: #fee2e2; color: #991b1b; }
+        .status-completed { background: #dcfce7; color: #166534; }
+        .btn-edit {
+            background: #0d3b8e;
+            color: white;
+            border-radius: 10px;
+            padding: 10px 24px;
+            font-weight: 600;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-edit:hover { background: #082c6c; color: white; transform: translateY(-2px); }
+        .order-table th {
+            border: none;
+            color: #64748b;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+        .order-table td {
+            vertical-align: middle;
+            padding: 16px 8px;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="profile-layout">
-      
-      <!-- Left Side: Profile Info Card -->
-      <div class="card" style="flex: 1; min-width: 300px;">
-        <h2>User Profile</h2>
-        <p style="margin-bottom: 24px;">Your account information</p>
 
-        <label>Full Name</label>
-        <input type="text" value="<?php echo htmlspecialchars($user_data['cust_name']); ?>" readonly>
-
-        <label>Email Address</label>
-        <input type="email" value="<?php echo htmlspecialchars($user_data['cust_email']); ?>" readonly>
-        
-        <label>Phone Number</label>
-        <input type="text" value="<?php echo htmlspecialchars($user_data['cust_phone_number']); ?>" readonly>
-        
-        <label>Address</label>
-        <textarea style="width: 100%; background: rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; padding: 10px; font-size: 0.9rem;" readonly><?php 
-          if($user_data['cust_street']) {
-            echo htmlspecialchars($user_data['cust_street']) . "\n" . 
-                 htmlspecialchars($user_data['cust_postcode']) . " " . 
-                 htmlspecialchars($user_data['cust_city']) . "\n" . 
-                 htmlspecialchars($user_data['cust_state']);
-          } else {
-            echo "N/A";
-          }
-        ?></textarea>
-
-        <div style="display: flex; gap: 16px; margin-top: 24px;">
-            <a href="home_page.php" style="flex:1; text-decoration:none;"><button style="width:100%; background: rgba(255,255,255,0.1);">Back</button></a>
-            <a href="edit_profile_page.php" style="flex:1; text-decoration:none;"><button style="width:100%;">Edit Profile</button></a>
+<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #0d3b8e; padding: 12px 0;">
+    <div class="container-fluid px-5">
+        <a class="navbar-brand" href="home_page.php" style="font-weight: 500;">Musical Instrument Store</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navLogged">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navLogged">
+            <ul class="navbar-nav ms-auto" style="gap: 15px;">
+                <li class="nav-item"><a class="nav-link" href="home_page.php">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="../product/product page.php">Products</a></li>
+                <li class="nav-item"><a class="nav-link" href="../product/payment history.php">My Orders</a></li>
+                <li class="nav-item"><a class="nav-link active" href="user_profile_page.php">Profile</a></li>
+                <li class="nav-item"><a class="nav-link" href="logout_page.php">Logout</a></li>
+            </ul>
         </div>
-      </div>
-
-      <!-- Right Side: Order History Card -->
-      <div class="card" style="flex: 1.5; min-width: 400px;">
-        <h2>Order History</h2>
-        <p style="margin-bottom: 24px;">Track your past and current orders</p>
-
-        <?php if (empty($orders)): ?>
-            <div class="no-orders">
-                <p>You haven't placed any orders yet.</p>
-            </div>
-        <?php else: ?>
-            <table class="order-table">
-                <thead>
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Date</th>
-                        <th>Total</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($orders as $order): ?>
-                        <tr>
-                            <td>#<?php echo htmlspecialchars($order['order_id']); ?></td>
-                            <td><?php echo htmlspecialchars(date('d M Y', strtotime($order['order_date']))); ?></td>
-                            <td>RM <?php echo htmlspecialchars(number_format($order['total_amount'], 2)); ?></td>
-                            <td>
-                                <span class="status-badge <?php echo htmlspecialchars(strtolower($order['status'])); ?>">
-                                    <?php echo htmlspecialchars($order['status']); ?>
-                                </span>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php endif; ?>
-      </div>
-
     </div>
-  </div>
+</nav>
+
+<div class="hero-section">
+    <div class="container">
+        <div class="d-flex align-items-center gap-4">
+            <div class="avatar-circle">
+                <?php echo strtoupper(substr($user_data['cust_name'], 0, 1)); ?>
+            </div>
+            <div>
+                <h1 style="margin: 0; font-weight: 800; font-size: 2.5rem;"><?php echo htmlspecialchars($user_data['cust_name']); ?></h1>
+                <p style="margin: 0; color: rgba(255,255,255,0.7); font-weight: 500;">Musical Enthusiast since 2026</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5" style="margin-top: 30px;">
+    <div class="row g-4">
+        <!-- Profile Info -->
+        <div class="col-lg-4">
+            <div class="profile-card">
+                <h3 style="font-weight: 800; margin-bottom: 24px;">Account Details</h3>
+                
+                <span class="info-label">Email Address</span>
+                <span class="info-value"><?php echo htmlspecialchars($user_data['cust_email']); ?></span>
+                
+                <span class="info-label">Phone Number</span>
+                <span class="info-value"><?php echo htmlspecialchars($user_data['cust_phone_number'] ?: 'Not Provided'); ?></span>
+                
+                <span class="info-label">Address</span>
+                <span class="info-value" style="line-height: 1.6;">
+                    <?php 
+                    if($user_data['cust_street']) {
+                        echo htmlspecialchars($user_data['cust_street']) . "<br>" . 
+                             htmlspecialchars($user_data['cust_postcode']) . " " . 
+                             htmlspecialchars($user_data['cust_city']) . "<br>" . 
+                             htmlspecialchars($user_data['cust_state']);
+                    } else {
+                        echo "Address not set";
+                    }
+                    ?>
+                </span>
+                
+                <div class="mt-4">
+                    <a href="edit_profile_page.php" class="btn btn-edit w-100">Edit Profile Information</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Records -->
+        <div class="col-lg-8">
+            <div class="profile-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 style="font-weight: 800; margin: 0;">Recent Orders</h3>
+                    <a href="../product/payment history.php" style="font-weight: 700; font-size: 0.9rem; text-decoration: none; color: #2563eb;">View All History →</a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table order-table">
+                        <thead>
+                            <tr>
+                                <th>Order</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($orders)): ?>
+                                <tr>
+                                    <td colspan="4" class="text-center py-5">
+                                        <p style="color: #94a3b8; font-weight: 500;">No recent orders found.</p>
+                                        <a href="../product/product page.php" class="btn btn-outline-primary btn-sm mt-2 rounded-pill px-4">Start Shopping</a>
+                                    </td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($orders as $order): ?>
+                                    <tr>
+                                        <td style="font-weight: 700;">#<?php echo htmlspecialchars($order['order_id']); ?></td>
+                                        <td style="color: #64748b;"><?php echo htmlspecialchars(date('d M Y', strtotime($order['order_date']))); ?></td>
+                                        <td style="font-weight: 700; color: #10b981;">RM <?php echo number_format($order['total_amount'], 2); ?></td>
+                                        <td>
+                                            <span class="status-badge <?php echo strtolower($order['status']) === 'completed' ? 'status-completed' : 'status-pending'; ?>">
+                                                <?php echo htmlspecialchars($order['status']); ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html>
+</html>
