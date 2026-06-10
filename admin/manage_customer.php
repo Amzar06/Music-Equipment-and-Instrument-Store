@@ -13,7 +13,7 @@ $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, trim($_GET['
 $where_clause = "WHERE status != 'Deleted'"; // Hide deleted customers from the main list
 
 if (!empty($search)) {
-    $where_clause .= " AND (cust_name LIKE '%$search%' OR cust_email LIKE '%$search%' OR cust_phone LIKE '%$search%')";
+    $where_clause .= " AND (cust_name LIKE '%$search%' OR cust_email LIKE '%$search%' OR cust_phone_number LIKE '%$search%')";
 }
 
 $customer_query = "SELECT * FROM customers $where_clause ORDER BY cust_name ASC";
@@ -54,7 +54,7 @@ require_once('admin_header.php');
                             </td>
                             <td style="padding: 16px 8px; font-size: 0.85rem; color: #4b5563;">
                                 <?php echo htmlspecialchars($row['cust_email']); ?><br>
-                                <?php echo !empty($row['cust_phone']) ? htmlspecialchars($row['cust_phone']) : '-'; ?>
+                                <?php echo !empty($row['cust_phone_number']) ? htmlspecialchars($row['cust_phone_number']) : '-'; ?>
                             </td>
                             <td style="padding: 16px 8px;">
                                 <span style="background: <?php echo $bg; ?>; color: <?php echo $txt; ?>; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">

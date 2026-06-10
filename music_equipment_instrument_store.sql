@@ -102,6 +102,7 @@ CREATE TABLE `customers` (
   `cust_city` varchar(100) DEFAULT NULL,
   `cust_state` varchar(100) DEFAULT NULL,
   `cust_postcode` varchar(10) DEFAULT NULL,
+  `status` enum('Active','Suspended','Blacklisted','Deleted') DEFAULT 'Active',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
