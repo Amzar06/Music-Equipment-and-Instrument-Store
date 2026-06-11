@@ -71,16 +71,26 @@ body {
 
 /* Main Content Area */
 .main-content {
-    margin-left: var(--sidebar-width); /* Pushes content past sidebar */
-    width: calc(100% - var(--sidebar-width));
-    padding: 40px;
+    margin-left: 0;
+    width: 100%;
+    padding: 20px;
+}
+
+@media (min-width: 1024px) {
+    .main-content {
+        margin-left: var(--sidebar-width);
+        width: calc(100% - var(--sidebar-width));
+        padding: 40px;
+    }
 }
 
 /* Header Section */
 header {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
+    gap: 20px;
     margin-bottom: 32px;
 }
 
