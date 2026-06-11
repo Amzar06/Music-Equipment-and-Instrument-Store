@@ -28,19 +28,19 @@ $existing_addresses = [];
 
 if (isset($conn)) {
     // 1. Fetch registration address
-    $stmt_cust = $conn->prepare("SELECT cust_name, cust_address FROM customers WHERE cust_id = ?");
+    $stmt_cust = $conn->prepare("SELECT cust_name, cust_street, cust_city, cust_state, cust_postcode FROM customers WHERE cust_id = ?");
     $stmt_cust->bind_param("i", $cust_id);
     $stmt_cust->execute();
     $res_cust = $stmt_cust->get_result();
     if ($cust = $res_cust->fetch_assoc()) {
-        if (!empty($cust['cust_address'])) {
+        if (!empty($cust['cust_street'])) {
             $existing_addresses[] = [
                 'address_id' => 'reg',
                 'full_name'  => $cust['cust_name'],
-                'street'     => $cust['cust_address'],
-                'city'       => '',
-                'state'      => '',
-                'postcode'   => '',
+                'street'     => $cust['cust_street'],
+                'city'       => $cust['cust_city'] ?? '',
+                'state'      => $cust['cust_state'] ?? '',
+                'postcode'   => $cust['cust_postcode'] ?? '',
                 'label'      => 'Primary Address (From Profile)',
                 'is_reg'     => true
             ];
@@ -93,7 +93,8 @@ if ($type === 'rent' && isset($conn)) {
 <head>
     <meta charset="UTF-8">
     <title>Checkout</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=5.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .delivery-toggle { display: flex; gap: 0; margin-bottom: 24px; border-radius: 10px; overflow: hidden; border: 1.5px solid #e2e8f0; }
         .delivery-toggle label {
@@ -117,18 +118,44 @@ if ($type === 'rent' && isset($conn)) {
 </head>
 <body>
 
-<div class="container">
-    <h2>Checkout</h2>
-    <p class="text-center mb-4" style="color: var(--text-secondary);">Choose how you'd like to receive your item</p>
+<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #0d3b8e; padding: 12px 0;">
+    <div class="container-fluid px-5">
+        <a class="navbar-brand" href="../customer/home_page.php" style="font-weight: 500;">Musical Instrument Store</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navLogged">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navLogged">
+            <ul class="navbar-nav ms-auto" style="gap: 15px;">
+                <li class="nav-item"><a class="nav-link" href="../customer/home_page.php">Home</a></li>
+                <li class="nav-item"><a class="nav-link active" href="product page.php">Products</a></li>
+                <li class="nav-item"><a class="nav-link" href="payment history.php">My Orders</a></li>
+                <li class="nav-item"><a class="nav-link" href="../customer/user_profile_page.php">Profile</a></li>
+                <li class="nav-item"><a class="nav-link" href="../customer/logout_page.php">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=1600&q=80') center/cover; padding: 40px 0; margin-bottom: 0; border-bottom: 4px solid #10b981;">
+    <div style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+        <h2 style="margin: 0; font-size: 2.2rem; font-weight: 800; color: white;">Checkout</h2>
+        <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">Secure your instrument selection</p>
+    </div>
+</div>
+
+<div class="container pb-5" style="max-width: 700px; margin: 0 auto;">
+    <div style="background: white; border-radius: 20px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #f1f5f9;">
+        <h3 style="font-weight: 800; color: #1e293b; margin-bottom: 8px;">Delivery Details</h3>
+        <p style="color: #64748b; margin-bottom: 32px;">Please confirm where you'd like to receive your item.</p>
 
     <?php if ($type === 'rent' && $subtotal > 0): ?>
-    <div style="margin-bottom: 20px; padding: 16px; background: #f8fafc; border: 1px solid var(--card-border); border-radius: 10px;">
-        <div style="font-weight: 700; margin-bottom: 4px;"><?php echo htmlspecialchars($prod_name_display); ?></div>
-        <div style="font-size: 0.88rem; color: var(--text-secondary);">
-            <?php echo htmlspecialchars($start_date); ?> → <?php echo htmlspecialchars($end_date); ?>
-            &nbsp;·&nbsp; <?php echo $days; ?> day(s) × RM <?php echo number_format($rent_price_per_day, 2); ?>/day
+    <div style="margin-bottom: 30px; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px;">
+        <div style="font-weight: 800; color: #1e293b; margin-bottom: 4px; font-size: 1.1rem;"><?php echo htmlspecialchars($prod_name_display); ?></div>
+        <div style="font-size: 0.9rem; color: #64748b; font-weight: 600;">
+            📅 <?php echo htmlspecialchars($start_date); ?> to <?php echo htmlspecialchars($end_date); ?>
+            &nbsp;·&nbsp; <?php echo $days; ?> day(s) × RM <?php echo number_format($rent_price_per_day, 2); ?>
         </div>
-        <div style="margin-top: 8px; font-weight: 600; color: var(--success);">Subtotal: RM <?php echo number_format($subtotal, 2); ?></div>
+        <div style="margin-top: 10px; font-weight: 800; color: #10b981; font-size: 1.25rem;">Subtotal: RM <?php echo number_format($subtotal, 2); ?></div>
     </div>
     <?php endif; ?>
 
@@ -326,5 +353,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
