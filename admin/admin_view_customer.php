@@ -75,7 +75,7 @@ require_once('admin_header.php');
             <h2 style="margin: 0 0 8px 0; color: #111827; font-size: 2rem;"><?php echo htmlspecialchars($customer['cust_name']); ?></h2>
             <div style="color: #6b7280; font-size: 0.95rem; display: flex; gap: 16px;">
                 <span>📧 <?php echo htmlspecialchars($customer['cust_email']); ?></span>
-                <span>📞 <?php echo !empty($customer['cust_phone']) ? htmlspecialchars($customer['cust_phone']) : 'No Phone Provided'; ?></span>
+                <span>📞 <?php echo !empty($customer['cust_phone_number']) ? htmlspecialchars($customer['cust_phone_number']) : 'No Phone Provided'; ?></span>
             </div>
         </div>
         <div style="text-align: right;">
