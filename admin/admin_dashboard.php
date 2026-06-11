@@ -67,7 +67,7 @@ require_once('admin_header.php');
     </div>
 </div>
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
     
     <div class="table-container" style="margin-top: 0;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
