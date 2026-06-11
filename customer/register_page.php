@@ -15,9 +15,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $state = $_POST['state'] ?? '';
     $postcode = $_POST['postcode'] ?? '';
 
+    // Backend Validation for Password Matching
     if ($password !== $confirm_password) {
         $error = "Passwords do not match.";
-    } elseif (isset($conn)) {
+    } 
+    // Backend Validation for Password Strength (At least 1 uppercase, 1 number, 1 symbol)
+    elseif (!preg_match('/[A-Z]/', $password) || !preg_match('/[0-9]/', $password) || !preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password)) {
+        $error = "Password must contain at least one uppercase letter, one number, and one special symbol.";
+    } 
+    elseif (isset($conn)) {
         // Using plain text to match cust login.php
         $stmt = $conn->prepare("SELECT cust_id FROM customers WHERE cust_email = ?");
         if ($stmt) {
@@ -45,8 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Register</title>
-  <link rel="stylesheet" href="customer.css">
+    <title>Register</title>
+    <link rel="stylesheet" href="customer.css">
 </head>
 <body>
 
@@ -90,14 +96,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </div>
           </div>
 
-          <label>State</label>
-          <input type="text" name="state" placeholder="State" required>
+          <label for="state">State</label>
+          <select name="state" id="state" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; background-color: #fff; box-sizing: border-box;">
+              <option value="" disabled selected>Select your state</option>
+              <option value="Johor">Johor</option>
+              <option value="Kedah">Kedah</option>
+              <option value="Kelantan">Kelantan</option>
+              <option value="Melaka">Melaka</option>
+              <option value="Negeri Sembilan">Negeri Sembilan</option>
+              <option value="Pahang">Pahang</option>
+              <option value="Penang">Penang</option>
+              <option value="Perak">Perak</option>
+              <option value="Perlis">Perlis</option>
+              <option value="Sabah">Sabah</option>
+              <option value="Sarawak">Sarawak</option>
+              <option value="Selangor">Selangor</option>
+              <option value="Terengganu">Terengganu</option>
+              <option value="W.P. Kuala Lumpur">W.P. Kuala Lumpur</option>
+              <option value="W.P. Labuan">W.P. Labuan</option>
+              <option value="W.P. Putrajaya">W.P. Putrajaya</option>
+          </select>
+
+          <?php if ($error && (strpos($error, 'Password') !== false || strpos($error, 'match') !== false)): ?>
+              <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.9em; text-align: center;">
+                  <?php echo htmlspecialchars($error); ?>
+              </div>
+          <?php endif; ?>
 
           <label>Password</label>
-          <input type="password" name="password" placeholder="Enter your password" required>
+          <input 
+              type="password" 
+              name="password" 
+              placeholder="Enter your password" 
+              required
+              pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?\x22:{}|<>]).{8,}"
+              title="Password must be at least 8 characters long and contain at least one uppercase letter, one number, and one special symbol."
+              style="margin-bottom: 15px;"
+          >
 
           <label>Confirm Password</label>
-          <input type="password" name="confirm_password" placeholder="Confirm your password" required>
+          <input 
+              type="password" 
+              name="confirm_password" 
+              placeholder="Confirm your password" 
+              required
+              style="margin-bottom: 15px;"
+          >
 
           <button type="submit" style="width: 100%; margin-top: 12px;">Register</button>
       </form>
