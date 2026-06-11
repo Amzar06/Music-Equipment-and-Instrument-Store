@@ -130,14 +130,16 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         $rent->close();
                         
                         $ri = $conn->prepare("INSERT INTO rental_items (rental_id, prod_id, rental_qty, rental_rate, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?)");
-                        if ($ri) {
+                        $upd_stock = $conn->prepare("UPDATE products SET prod_rental_qty = prod_rental_qty - ? WHERE prod_id = ?");
+                        if ($ri && $upd_stock) {
                             foreach ($cart_items as $item) {
                                 $ri->bind_param("iiidss", $rental_id, $item['prod_id'], $item['quantity'], $item['prod_sale_price'], $start_date, $end_date);
-                                if (!$ri->execute()) {
-                                    $db_error = "Rental Item Insert Failed: " . $ri->error;
-                                }
+                                $ri->execute();
+                                $upd_stock->bind_param("ii", $item['quantity'], $item['prod_id']);
+                                $upd_stock->execute();
                             }
                             $ri->close();
+                            $upd_stock->close();
                         }
                     } else {
                         $db_error = "Rental Insert Failed: " . $rent->error;
@@ -153,14 +155,18 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         $order_id = $conn->insert_id;
                         $ord->close();
                         
-                        // Do order items
+                        // Do order items and decrease stock
                         $oi = $conn->prepare("INSERT INTO order_items (order_id, prod_id, order_qty, unit_price) VALUES (?, ?, ?, ?)");
-                        if ($oi) {
+                        $upd_stock = $conn->prepare("UPDATE products SET prod_sale_qty = prod_sale_qty - ? WHERE prod_id = ?");
+                        if ($oi && $upd_stock) {
                             foreach ($cart_items as $item) {
                                 $oi->bind_param("iiid", $order_id, $item['prod_id'], $item['quantity'], $item['prod_sale_price']);
                                 $oi->execute();
+                                $upd_stock->bind_param("ii", $item['quantity'], $item['prod_id']);
+                                $upd_stock->execute();
                             }
                             $oi->close();
+                            $upd_stock->close();
                         }
                     } else {
                         $ord->close();
