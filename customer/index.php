@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (isset($_SESSION['cust_id'])) {
+    header("Location: home_page.php");
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,6 +51,7 @@
             justify-content: center;
         }
 
+<<<<<<< HEAD
         /* Dark tint overlay over banner images to keep text perfectly legible */
         .carousel-overlay {
             background: rgba(0, 0, 0, 0.55);
@@ -66,6 +74,14 @@
         .instrument-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+=======
+        .hero-content {
+            background: rgba(0,0,0,0.3);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 800px;
+            width: 90%;
+>>>>>>> ab0c76e433c1ca58c85ae02c41339e5e82d8bc42
         }
 
         .product-img {
@@ -73,17 +89,28 @@
             height: 240px;
             object-fit: cover;
         }
+
+        /* Customize Navbar colors to match primary theme */
+        .navbar-custom {
+            background-color: #0d3b8e !important;
+        }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #0d3b8e; padding: 12px 0;">
     <div class="container">
-        <a class="navbar-brand" href="#">Musical Instrument Store</a>
-
-        <div class="ms-auto">
-            <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php" class="btn btn-outline-light me-2">Login</a>
-            <a href="register_page.php" class="btn btn-light">Register</a>
+        <a class="navbar-brand" href="index.php" style="font-weight: 500;">Musical Instrument Store</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navGuest">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navGuest">
+            <ul class="navbar-nav ms-auto" style="gap: 15px;">
+                <li class="nav-item"><a class="nav-link" href="index.php">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="../product/product page.php">Products</a></li>
+                <li class="nav-item"><a class="nav-link" href="../product/cust login.php">Login</a></li>
+                <li class="nav-item"><a class="nav-link" href="register_page.php">Register</a></li>
+            </ul>
         </div>
     </div>
 </nav>
@@ -127,6 +154,12 @@
             </div>
         </div>
 
+<<<<<<< HEAD
+=======
+        <a href="../product/product page.php" class="btn btn-light px-4 py-2">
+            Shop Now
+        </a>
+>>>>>>> ab0c76e433c1ca58c85ae02c41339e5e82d8bc42
     </div>
     
     <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
@@ -146,6 +179,7 @@
     <div class="row g-4">
 
         <div class="col-md-4">
+<<<<<<< HEAD
             <div class="instrument-card p-3">
                 <img src="https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&w=600&q=80" class="product-img rounded" alt="Acoustic Guitar">
                 <h5 class="mt-3 fw-bold mb-1">Acoustic Guitar</h5>
@@ -170,6 +204,23 @@
                 <p class="text-muted small">Full 5-piece professional acoustic set including high-grade brass cymbals.</p>
                 <a href="product.php" class="btn btn-dark w-100">View Product</a>
             </div>
+=======
+            <img src="https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&w=600&q=80" class="product-img" alt="Acoustic Guitar">
+            <h5 class="mt-3">Acoustic Guitar</h5>
+            <a href="../product/product page.php" class="btn btn-dark">View</a>
+        </div>
+
+        <div class="col-md-4">
+            <img src="https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?auto=format&fit=crop&w=600&q=80" class="product-img" alt="Digital Piano">
+            <h5 class="mt-3">Digital Piano</h5>
+            <a href="../product/product page.php" class="btn btn-dark">View</a>
+        </div>
+
+        <div class="col-md-4">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQiLvcVnuRu_HM5vcZU2K6q89uJuTWaib2Ykt8xEz_7ySjfc5j6eGBALIQxmGdc" class="product-img" alt="Drum Set">
+            <h5 class="mt-3">Drum Set</h5>
+            <a href="../product/product page.php" class="btn btn-dark">View</a>
+>>>>>>> ab0c76e433c1ca58c85ae02c41339e5e82d8bc42
         </div>
 
     </div>
@@ -183,26 +234,50 @@
     <div class="row g-3">
 
         <div class="col-md-3">
+<<<<<<< HEAD
             <a href="product.php?category=guitar" class="btn btn-outline-dark w-100 py-3 fw-semibold fs-5">
                 🎸 Guitars
+=======
+            <a href="../product/product page.php?category=guitar"
+               class="btn btn-outline-dark category-btn">
+               Guitars
+>>>>>>> ab0c76e433c1ca58c85ae02c41339e5e82d8bc42
             </a>
         </div>
 
         <div class="col-md-3">
+<<<<<<< HEAD
             <a href="product.php?category=piano" class="btn btn-outline-dark w-100 py-3 fw-semibold fs-5">
                 🎹 Pianos
+=======
+            <a href="../product/product page.php?category=piano"
+               class="btn btn-outline-dark category-btn">
+               Pianos
+>>>>>>> ab0c76e433c1ca58c85ae02c41339e5e82d8bc42
             </a>
         </div>
 
         <div class="col-md-3">
+<<<<<<< HEAD
             <a href="product.php?category=drum" class="btn btn-outline-dark w-100 py-3 fw-semibold fs-5">
                 🥁 Drums
+=======
+            <a href="../product/product page.php?category=drum"
+               class="btn btn-outline-dark category-btn">
+               Drums
+>>>>>>> ab0c76e433c1ca58c85ae02c41339e5e82d8bc42
             </a>
         </div>
 
         <div class="col-md-3">
+<<<<<<< HEAD
             <a href="product.php?category=violin" class="btn btn-outline-dark w-100 py-3 fw-semibold fs-5">
                 🎻 Violins
+=======
+            <a href="../product/product page.php?category=violin"
+               class="btn btn-outline-dark category-btn">
+               Violins
+>>>>>>> ab0c76e433c1ca58c85ae02c41339e5e82d8bc42
             </a>
         </div>
 
