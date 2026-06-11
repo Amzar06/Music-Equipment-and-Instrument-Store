@@ -125,7 +125,7 @@ CREATE TABLE `orders` (
   `address_id` int(11) DEFAULT NULL,
   `staff_id` int(11) DEFAULT NULL,
   `total_amount` decimal(10,2) DEFAULT NULL,
-  `status` enum('Pending','Processing','Shipped','Delivered','Cancelled') DEFAULT 'Pending',
+  `status` enum('Pending','Processing','Shipped','Delivered','Cancelled','Refunded') DEFAULT 'Pending',
   `order_date` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -174,7 +174,8 @@ CREATE TABLE `products` (
   `prod_description` text DEFAULT NULL,
   `prod_sale_price` decimal(10,2) DEFAULT NULL,
   `prod_rental_price` decimal(10,2) DEFAULT NULL,
-  `prod_qty` int(11) NOT NULL,
+  `prod_sale_qty` int(11) NOT NULL DEFAULT 0,
+  `prod_rental_qty` int(11) NOT NULL DEFAULT 0,
   `prod_image` varchar(255) DEFAULT NULL,
   `status` enum('Available','Out of Stock','Discontinued') DEFAULT 'Available',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
@@ -184,8 +185,8 @@ CREATE TABLE `products` (
 -- Dumping data for table `products`
 --
 
-INSERT INTO `products` (`prod_id`, `category_id`, `staff_id`, `prod_name`, `prod_description`, `prod_sale_price`, `prod_rental_price`, `prod_qty`, `prod_image`, `status`, `created_at`) VALUES
-(1, 5, 1, 'Yamaha C40', 'Good Guitar, Great Guitar', 400.00, 0.00, 5, '1780462235_Guitar Jamz.jpeg', 'Available', '2026-06-03 04:50:35');
+INSERT INTO `products` (`prod_id`, `category_id`, `staff_id`, `prod_name`, `prod_description`, `prod_sale_price`, `prod_rental_price`, `prod_sale_qty`, `prod_rental_qty`, `prod_image`, `status`, `created_at`) VALUES
+(1, 5, 1, 'Yamaha C40', 'Good Guitar, Great Guitar', 400.00, 50.00, 5, 3, '1780462235_Guitar Jamz.jpeg', 'Available', '2026-06-03 04:50:35');
 
 -- --------------------------------------------------------
 
@@ -200,7 +201,7 @@ CREATE TABLE `rentals` (
   `staff_id` int(11) DEFAULT NULL,
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
-  `status` enum('Active','Returned','Overdue') DEFAULT 'Active',
+  `status` enum('Pending','Active','Returned','Overdue','Cancelled') DEFAULT 'Pending',
   `total_amount` decimal(10,2) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -233,7 +234,9 @@ CREATE TABLE `staff` (
   `staff_email` varchar(255) NOT NULL,
   `staff_password` varchar(255) NOT NULL,
   `staff_phone_number` varchar(20) DEFAULT NULL,
-  `staff_role` enum('Staff','Manager','Admin') NOT NULL,
+  `staff_address` text DEFAULT NULL,
+  `staff_role` enum('Staff','Administrator') NOT NULL DEFAULT 'Staff',
+  `status` enum('Active','Suspended','Inactive') NOT NULL DEFAULT 'Active',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -241,8 +244,8 @@ CREATE TABLE `staff` (
 -- Dumping data for table `staff`
 --
 
-INSERT INTO `staff` (`staff_id`, `staff_name`, `staff_email`, `staff_password`, `staff_phone_number`, `staff_role`, `created_at`) VALUES
-(1, 'Amzar', 'amzar06@gmail.com', 'amzar06', NULL, '', '2026-05-08 06:59:38');
+INSERT INTO `staff` (`staff_id`, `staff_name`, `staff_email`, `staff_password`, `staff_phone_number`, `staff_address`, `staff_role`, `status`, `created_at`) VALUES
+(1, 'Amzar', 'amzar06@gmail.com', 'amzar06', NULL, NULL, 'Administrator', 'Active', '2026-05-08 06:59:38');
 
 --
 -- Indexes for dumped tables

@@ -50,11 +50,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
     $prod_description = mysqli_real_escape_string($conn, $_POST['prod_description']);
     $staff_id         = intval($_SESSION['staff_id']); 
     
-    $prod_qty = 0;
-    if (isset($_POST['for_sale'])) {
-        $prod_qty = intval(preg_replace('/[^0-9]/', '', $_POST['prod_sale_qty'] ?? 0));
-    } elseif (isset($_POST['for_rent'])) {
-        $prod_qty = intval(preg_replace('/[^0-9]/', '', $_POST['prod_rental_qty'] ?? 0));
+    $product_type = 'none';
+    if (isset($_POST['for_sale']) && isset($_POST['for_rent'])) { $product_type = 'both'; }
+    elseif (isset($_POST['for_sale'])) { $product_type = 'sale'; }
+    elseif (isset($_POST['for_rent'])) { $product_type = 'rent'; }
+
+    $prod_sale_qty = 0;
+    $prod_rental_qty = 0;
+    if ($product_type === 'sale') {
+        $prod_sale_qty = intval(preg_replace('/[^0-9]/', '', $_POST['prod_sale_qty'] ?? 0));
+    } elseif ($product_type === 'rent') {
+        $prod_rental_qty = intval(preg_replace('/[^0-9]/', '', $_POST['prod_rental_qty'] ?? 0));
+    } elseif ($product_type === 'both') {
+        $prod_sale_qty   = intval(preg_replace('/[^0-9]/', '', $_POST['prod_sale_qty'] ?? 0));
+        $prod_rental_qty = intval(preg_replace('/[^0-9]/', '', $_POST['prod_rental_qty'] ?? 0));
     }
     
     $prod_sale_price   = isset($_POST['for_sale']) && isset($_POST['prod_sale_price']) ? floatval($_POST['prod_sale_price']) : 0;
@@ -82,13 +91,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
             $validation_error = "";
 
             if (isset($_POST['for_sale'])) {
-                if ($prod_sale_price < 0.01 || $prod_qty < 1) {
+                if ($prod_sale_price < 0.01 || $prod_sale_qty < 1) {
                     $is_valid = false;
                     $validation_error = "Sale price and quantity must be valid numbers greater than 0.";
                 }
             }
             if (isset($_POST['for_rent'])) {
-                if ($prod_rental_price < 0.01 || $prod_qty < 1) {
+                if ($prod_rental_price < 0.01 || $prod_rental_qty < 1) {
                     $is_valid = false;
                     $validation_error = "Rental price and quantity must be valid numbers greater than 0.";
                 }
@@ -101,8 +110,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
                 exit();
             }
 
-            $insert_query = "INSERT INTO products (prod_name, category_id, staff_id, prod_description, prod_sale_price, prod_rental_price, prod_qty, prod_image, status) 
-                             VALUES ('$prod_name', $category_id, $staff_id, '$prod_description', $prod_sale_price, $prod_rental_price, $prod_qty, '$image_name', 'Available')";
+            $insert_query = "INSERT INTO products (prod_name, category_id, staff_id, prod_description, prod_sale_price, prod_rental_price, prod_sale_qty, prod_rental_qty, prod_image, status) "
+                             . "VALUES ('$prod_name', $category_id, $staff_id, '$prod_description', $prod_sale_price, $prod_rental_price, $prod_sale_qty, $prod_rental_qty, '$image_name', 'Available')";
             
             if (mysqli_query($conn, $insert_query)) {
                 $_SESSION['flash_message'] = "New instrument added to inventory successfully!";
@@ -309,14 +318,14 @@ require_once('admin_header.php');
                             <td style="padding: 12px 8px;">
                                 <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 4px;">
                                     <?php if($row['prod_sale_price'] > 0): ?>
-                                        <span style="background: <?php echo ($row['prod_qty'] > 0) ? '#d1fae5' : '#fee2e2'; ?>; color: <?php echo ($row['prod_qty'] > 0) ? '#065f46' : '#991b1b'; ?>; padding: 2px 8px; border-radius: 12px; display: inline-block; width: fit-content;">
-                                            Sale Pool: <?php echo $row['prod_qty']; ?>
+                                        <span style="background: <?php echo ($row['prod_sale_qty'] > 0) ? '#d1fae5' : '#fee2e2'; ?>; color: <?php echo ($row['prod_sale_qty'] > 0) ? '#065f46' : '#991b1b'; ?>; padding: 2px 8px; border-radius: 12px; display: inline-block; width: fit-content;">
+                                            Sale Pool: <?php echo $row['prod_sale_qty']; ?>
                                         </span>
                                     <?php endif; ?>
                                     
                                     <?php if($row['prod_rental_price'] > 0): ?>
-                                        <span style="background: <?php echo ($row['prod_qty'] > 0) ? '#dbeafe' : '#fee2e2'; ?>; color: <?php echo ($row['prod_qty'] > 0) ? '#1e40af' : '#991b1b'; ?>; padding: 2px 8px; border-radius: 12px; display: inline-block; width: fit-content;">
-                                            Rent Pool: <?php echo $row['prod_qty']; ?>
+                                        <span style="background: <?php echo ($row['prod_rental_qty'] > 0) ? '#dbeafe' : '#fee2e2'; ?>; color: <?php echo ($row['prod_rental_qty'] > 0) ? '#1e40af' : '#991b1b'; ?>; padding: 2px 8px; border-radius: 12px; display: inline-block; width: fit-content;">
+                                            Rent Pool: <?php echo $row['prod_rental_qty']; ?>
                                         </span>
                                     <?php endif; ?>
                                 </div>

@@ -130,7 +130,7 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         $rent->close();
                         
                         $ri = $conn->prepare("INSERT INTO rental_items (rental_id, prod_id, rental_qty, rental_rate, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?)");
-                        $upd_stock = $conn->prepare("UPDATE products SET prod_qty = prod_qty - ? WHERE prod_id = ?");
+                        $upd_stock = $conn->prepare("UPDATE products SET prod_rental_qty = prod_rental_qty - ? WHERE prod_id = ?");
                         if ($ri && $upd_stock) {
                             foreach ($cart_items as $item) {
                                 $ri->bind_param("iiidss", $rental_id, $item['prod_id'], $item['quantity'], $item['prod_sale_price'], $start_date, $end_date);
@@ -157,7 +157,7 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         
                         // Do order items and decrease stock
                         $oi = $conn->prepare("INSERT INTO order_items (order_id, prod_id, order_qty, unit_price) VALUES (?, ?, ?, ?)");
-                        $upd_stock = $conn->prepare("UPDATE products SET prod_qty = prod_qty - ? WHERE prod_id = ?");
+                        $upd_stock = $conn->prepare("UPDATE products SET prod_sale_qty = prod_sale_qty - ? WHERE prod_id = ?");
                         if ($oi && $upd_stock) {
                             foreach ($cart_items as $item) {
                                 $oi->bind_param("iiid", $order_id, $item['prod_id'], $item['quantity'], $item['prod_sale_price']);

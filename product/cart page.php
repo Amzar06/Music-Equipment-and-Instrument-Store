@@ -15,12 +15,12 @@ if (isset($_GET['action']) && isset($_GET['item_id'])) {
     if (isset($conn) && !$conn->connect_error) {
         if ($action === 'inc') {
             // Check stock before incrementing
-            $stock_chk = $conn->prepare("SELECT ci.quantity, p.prod_qty FROM cart_items ci JOIN products p ON ci.prod_id = p.prod_id WHERE ci.cart_item_id = ?");
+            $stock_chk = $conn->prepare("SELECT ci.quantity, p.prod_sale_qty FROM cart_items ci JOIN products p ON ci.prod_id = p.prod_id WHERE ci.cart_item_id = ?");
             if ($stock_chk) {
                 $stock_chk->bind_param("i", $item_id);
                 $stock_chk->execute();
                 $s_res = $stock_chk->get_result()->fetch_assoc();
-                if ($s_res && $s_res['quantity'] < $s_res['prod_qty']) {
+                if ($s_res && $s_res['quantity'] < $s_res['prod_sale_qty']) {
                     $conn->query("UPDATE cart_items SET quantity = quantity + 1 WHERE cart_item_id = $item_id");
                 }
                 $stock_chk->close();
@@ -60,7 +60,7 @@ if (!isset($conn) || $conn->connect_error) {
     $db_error = "Database connection failed";
 } else {
     $query = $conn->prepare("
-        SELECT ci.cart_item_id, p.prod_name, p.prod_sale_price, ci.quantity, p.prod_image, p.prod_qty
+        SELECT ci.cart_item_id, p.prod_name, p.prod_sale_price, ci.quantity, p.prod_image, p.prod_sale_qty
         FROM cart_items ci
         JOIN cart c ON ci.cart_id = c.cart_id
         JOIN products p ON ci.prod_id = p.prod_id
@@ -176,7 +176,7 @@ if (!isset($conn) || $conn->connect_error) {
                                 <div style="display: flex; align-items: center; background: #f1f5f9; border-radius: 8px; padding: 5px;">
                                     <a href="?action=dec&item_id=<?php echo $item['cart_item_id']; ?>" style="padding: 0 12px; color: #475569; font-weight: 800; text-decoration: none; font-size: 1.2rem;">−</a>
                                     <span style='font-size:1rem; font-weight: 700; padding: 0 5px; color: #1e293b;'> <?php echo $item['quantity']; ?> </span>
-                                    <?php if ($item['quantity'] < $item['prod_qty']): ?>
+                                    <?php if ($item['quantity'] < $item['prod_sale_qty']): ?>
                                         <a href="?action=inc&item_id=<?php echo $item['cart_item_id']; ?>" style="padding: 0 12px; color: #475569; font-weight: 800; text-decoration: none; font-size: 1.2rem;">+</a>
                                     <?php else: ?>
                                         <span style="padding: 0 12px; color: #cbd5e1; font-weight: 800; cursor: not-allowed; font-size: 1.2rem;">+</span>

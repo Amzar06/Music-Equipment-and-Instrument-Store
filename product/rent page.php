@@ -218,7 +218,7 @@ if (isset($conn)) {
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8rem; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
                         <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Category</span> <?php echo htmlspecialchars($product['category_name']); ?></div>
-                        <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Stock</span> <?php echo htmlspecialchars($product['prod_qty']); ?> units</div>
+                        <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Stock</span> <?php echo htmlspecialchars($product['prod_rental_qty']); ?> units</div>
                         <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Status</span> <span style="color: <?php echo strtolower($product['status']) === 'available' ? '#10b981' : '#ef4444'; ?>; font-weight: 600;"><?php echo htmlspecialchars($product['status']); ?></span></div>
                     </div>
                 </div>
@@ -226,7 +226,7 @@ if (isset($conn)) {
                 <div class="product-actions mt-4" onclick="event.stopPropagation()">
                         <!-- RENT -->
                         <?php 
-                            $is_out_of_stock = ($product['prod_qty'] <= 0);
+                            $is_out_of_stock = ($product['prod_rental_qty'] <= 0);
                             $rent_btn_disabled = !$can_rent || $is_out_of_stock;
                             $btn_text = 'Rent Now';
                             if ($is_out_of_stock) $btn_text = 'Out of Stock';
