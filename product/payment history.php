@@ -81,7 +81,7 @@ if (isset($conn)) {
 <head>
     <meta charset="UTF-8">
     <title>My Order History</title>
-    <link rel="stylesheet" href="style.css?v=4.0">
+    <link rel="stylesheet" href="style.css?v=5.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background: #f8fafc; color: #1e293b; }
@@ -134,7 +134,7 @@ if (isset($conn)) {
     </div>
 </nav>
 
-<div style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=1600&q=80') center/cover; padding: 40px 0; margin-bottom: 40px; border-bottom: 4px solid #10b981;">
+<div style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=1600&q=80') center/cover; padding: 40px 0; margin-bottom: 0; border-bottom: 4px solid #10b981;">
     <div style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px;">
         <h2 style="margin: 0; font-size: 2.2rem; font-weight: 800; color: white;">Order History</h2>
         <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">Track your purchases and rentals</p>

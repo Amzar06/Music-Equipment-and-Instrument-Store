@@ -45,11 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prod_id'])) {
     $cart_query->close();
     
     // Get current stock levels
-    $stock_query = $conn->prepare("SELECT prod_qty, prod_name FROM products WHERE prod_id = ?");
+    $stock_query = $conn->prepare("SELECT prod_sale_qty, prod_name FROM products WHERE prod_id = ?");
     $stock_query->bind_param("i", $prod_id);
     $stock_query->execute();
     $stock_res = $stock_query->get_result()->fetch_assoc();
-    $available_stock = $stock_res['prod_qty'] ?? 0;
+    $available_stock = $stock_res['prod_sale_qty'] ?? 0;
     $prod_name = $stock_res['prod_name'] ?? 'Product';
     $stock_query->close();
 

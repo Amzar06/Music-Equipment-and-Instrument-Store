@@ -39,7 +39,8 @@ if (isset($conn)) {
 <head>
     <meta charset="UTF-8">
     <title>Buy Instruments</title>
-    <link rel="stylesheet" href="style.css?v=4.0">
+    <link rel="stylesheet" href="style.css?v=5.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         /* Smooth transition for filtering */
         .card { transition: all 0.3s ease; }
@@ -69,14 +70,6 @@ if (isset($conn)) {
         }
     </style>
 </head>
-<!-- Add Bootstrap for Navbar -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-    .navbar-custom { background-color: #0d3b8e; padding: 12px 0; }
-    .navbar-brand, .navbar-nav .nav-link { color: white !important; }
-    .nav-link:hover { opacity: 0.8; }
-    .container-nav { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
-</style>
 
 <body>
 
@@ -103,7 +96,7 @@ if (isset($conn)) {
     <img id="lightboxImg" src="">
 </div>
 
-<div style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=1600&q=80') center/cover; padding: 40px 0; margin-bottom: 40px; border-bottom: 4px solid #10b981;">
+<div style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=1600&q=80') center/cover; padding: 40px 0; margin-bottom: 0; border-bottom: 4px solid #10b981;">
     <div style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
         <div>
             <h2 style="margin: 0; font-size: 2.2rem; font-weight: 800; color: white;">Musical Instruments</h2>
@@ -171,7 +164,7 @@ if (isset($conn)) {
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.8rem; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
                         <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Category</span> <?php echo htmlspecialchars($product['category_name']); ?></div>
-                        <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Stock</span> <?php echo htmlspecialchars($product['prod_qty']); ?> units</div>
+                        <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Stock</span> <?php echo htmlspecialchars($product['prod_sale_qty']); ?> units</div>
                         <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Status</span> <span style="color: <?php echo strtolower($product['status']) === 'available' ? '#10b981' : '#ef4444'; ?>; font-weight: 700;"><?php echo htmlspecialchars($product['status']); ?></span></div>
                     </div>
                 </div>
@@ -229,5 +222,6 @@ function filterCategory() {
 }
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
