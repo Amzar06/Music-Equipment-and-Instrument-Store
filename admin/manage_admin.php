@@ -49,7 +49,7 @@ if (isset($_GET['delete_id'])) {
     exit();
 }
 
-// 2. HANDLE ADD STAFF
+// 2. HANDLE ADD STAFF (Password-less Setup)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_staff'])) {
     $staff_name    = mysqli_real_escape_string($conn, trim($_POST['staff_name']));
     $staff_email   = mysqli_real_escape_string($conn, trim($_POST['staff_email']));
@@ -57,9 +57,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_staff'])) {
     $staff_address = mysqli_real_escape_string($conn, trim($_POST['staff_address']));
     $staff_role    = mysqli_real_escape_string($conn, $_POST['staff_role']);
     
-    $staff_pass  = password_hash($_POST['staff_password'], PASSWORD_DEFAULT);
+    // Generate an impossible-to-guess random password hash.
+    // The user MUST use 'Forgot Password' to overwrite this and log in.
+    $random_string = bin2hex(random_bytes(16)); 
+    $staff_pass    = password_hash($random_string, PASSWORD_DEFAULT);
 
-    if (!empty($staff_name) && !empty($staff_email) && !empty($_POST['staff_password'])) {
+    if (!empty($staff_name) && !empty($staff_email)) {
         $check_query = "SELECT * FROM staff WHERE staff_email = '$staff_email'";
         $check_result = mysqli_query($conn, $check_query);
         
@@ -71,7 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_staff'])) {
                              VALUES ('$staff_name', '$staff_email', '$staff_phone', '$staff_address', '$staff_pass', '$staff_role', 'Active')";
             
             if (mysqli_query($conn, $insert_query)) {
-                $_SESSION['flash_message'] = "New staff member added successfully!";
+                // Success message instructing the admin
+                $_SESSION['flash_message'] = "Account created! Instruct " . htmlspecialchars($staff_name) . " to use 'Forgot Password' to set up their access.";
                 $_SESSION['flash_type'] = "success";
             } else {
                 $_SESSION['flash_message'] = "Database error: " . mysqli_error($conn);
@@ -140,11 +144,6 @@ require_once('admin_header.php');
             <div style="margin-bottom: 16px;">
                 <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Home Address</label>
                 <textarea name="staff_address" rows="3" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-family: inherit; outline: none; box-sizing: border-box; resize: vertical;"></textarea>
-            </div>
-
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Temporary Password *</label>
-                <input type="password" name="staff_password" required placeholder="••••••••" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; box-sizing: border-box;">
             </div>
 
             <div style="margin-bottom: 24px;">
