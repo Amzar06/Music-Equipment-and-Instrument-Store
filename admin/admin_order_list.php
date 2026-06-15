@@ -13,7 +13,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_order_status'])
     $order_id = intval($_POST['order_id']);
     $new_status = mysqli_real_escape_string($conn, $_POST['new_status']);
     
-    $update_query = "UPDATE orders SET status = '$new_status' WHERE order_id = $order_id";
+    if ($new_status === 'Delivered') {
+        $update_query = "UPDATE orders SET status = '$new_status', delivered_at = CURRENT_TIMESTAMP WHERE order_id = $order_id";
+    } else {
+        $update_query = "UPDATE orders SET status = '$new_status' WHERE order_id = $order_id";
+    }
+    
     if (mysqli_query($conn, $update_query)) {
         $_SESSION['flash_message'] = "Order #$order_id status updated to $new_status.";
         $_SESSION['flash_type'] = "success";

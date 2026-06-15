@@ -14,7 +14,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'cancel' && isset($_GET['id'])
     $cancel_type = $_GET['type'];
     
     if ($cancel_type === 'Order') {
-        $stmt = $conn->prepare("UPDATE orders SET status = 'Cancelled' WHERE order_id = ? AND cust_id = ? AND status = 'Pending'");
+        $stmt = $conn->prepare("UPDATE orders SET status = 'Cancelled' WHERE order_id = ? AND cust_id = ? AND status IN ('Pending', 'Processing')");
     } else {
         $stmt = $conn->prepare("UPDATE rentals SET status = 'Cancelled' WHERE rental_id = ? AND cust_id = ? AND status = 'Pending'");
     }
@@ -38,7 +38,7 @@ if (isset($conn)) {
                    (SELECT p.prod_name FROM order_items oi JOIN products p ON oi.prod_id = p.prod_id WHERE oi.order_id = o.order_id LIMIT 1) as prod_name,
                    (SELECT p.prod_image FROM order_items oi JOIN products p ON oi.prod_id = p.prod_id WHERE oi.order_id = o.order_id LIMIT 1) as prod_image,
                    (SELECT SUM(oi.order_qty) FROM order_items oi WHERE oi.order_id = o.order_id) as total_qty,
-                   NULL as start_date, NULL as end_date
+                   NULL as start_date, NULL as end_date, o.delivered_at
             FROM orders o
             LEFT JOIN addresses a ON o.address_id = a.address_id
             WHERE o.cust_id = ?
@@ -48,7 +48,7 @@ if (isset($conn)) {
                    (SELECT p.prod_name FROM rental_items ri JOIN products p ON ri.prod_id = p.prod_id WHERE ri.rental_id = r.rental_id LIMIT 1) as prod_name,
                    (SELECT p.prod_image FROM rental_items ri JOIN products p ON ri.prod_id = p.prod_id WHERE ri.rental_id = r.rental_id LIMIT 1) as prod_image,
                    (SELECT SUM(ri.rental_qty) FROM rental_items ri WHERE ri.rental_id = r.rental_id) as total_qty,
-                   r.start_date, r.end_date
+                   r.start_date, r.end_date, NULL as delivered_at
             FROM rentals r
             LEFT JOIN addresses a ON r.address_id = a.address_id
             WHERE r.cust_id = ?
@@ -143,6 +143,12 @@ if (isset($conn)) {
 
 <div class="container pb-5">
     <div class="history-card">
+        <?php if (isset($_GET['return_success'])): ?>
+            <div style="background: #d1fae5; border: 1px solid #a7f3d0; color: #065f46; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+                <strong>Success!</strong> Your return request has been submitted and is under review.
+            </div>
+        <?php endif; ?>
+
         <?php if ($db_error): ?>
             <div class="alert alert-danger">
                 <strong>Error:</strong> <?php echo htmlspecialchars($db_error); ?>
@@ -212,12 +218,37 @@ if (isset($conn)) {
                                         else echo '#f1f5f9; color: #475569;';
                                     ?>"><?php echo htmlspecialchars(ucfirst($order['status'] ?? 'Pending')); ?></span>
 
-                                    <?php if (strtolower($order['status']) === 'pending'): ?>
+                                    <?php 
+                                        $s = strtolower($order['status'] ?? '');
+                                        if (in_array($s, ['pending', 'processing'])): 
+                                    ?>
                                         <a href="?action=cancel&id=<?php echo $order['id']; ?>&type=<?php echo $order['type']; ?>" 
                                            onclick="return confirm('Are you sure you want to cancel?')"
-                                           style="font-size: 0.7rem; color: #ef4444; font-weight: 700; text-decoration: none; border-bottom: 1px dashed #ef4444; margin-left: 5px;">
+                                           style="font-size: 0.7rem; color: #ef4444; font-weight: 700; text-decoration: none; border: 1px solid #fee2e2; padding: 2px 8px; border-radius: 4px; background: #fff5f5; margin-top: 5px;">
                                            Cancel Item
                                         </a>
+                                    <?php elseif ($order['type'] === 'Rental' && in_array($s, ['active', 'overdue'])): ?>
+                                        <a href="return_rental.php?rental_id=<?php echo $order['id']; ?>" 
+                                           style="font-size: 0.7rem; color: #7c3aed; font-weight: 700; text-decoration: none; border: 1px solid #f5d0fe; padding: 2px 8px; border-radius: 4px; background: #fdf4ff; margin-top: 5px;">
+                                           Return Instrument
+                                        </a>
+                                    <?php elseif ($s === 'delivered' && $order['type'] === 'Order'): 
+                                        $delivered_at = !empty($order['delivered_at']) ? strtotime($order['delivered_at']) : null;
+                                        $can_return = false;
+                                        if ($delivered_at) {
+                                            $diff = time() - $delivered_at;
+                                            if ($diff <= (2 * 24 * 60 * 60)) { // 2 days
+                                                $can_return = true;
+                                            }
+                                        }
+                                        
+                                        if ($can_return):
+                                    ?>
+                                        <a href="return_product.php?order_id=<?php echo $order['id']; ?>" 
+                                           style="font-size: 0.7rem; color: #0891b2; font-weight: 700; text-decoration: none; border: 1px solid #cffafe; padding: 2px 8px; border-radius: 4px; background: #f0fdfa; margin-top: 5px;">
+                                           Return Item
+                                        </a>
+                                    <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
                             </td>
