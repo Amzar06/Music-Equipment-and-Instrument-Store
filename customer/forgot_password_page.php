@@ -226,7 +226,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </form>
 
             <div class="text-center mt-4">
-                <a href="cust login.php" class="back-to-login">
+                <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php" class="back-to-login">
                     <i class="fa-solid fa-arrow-left me-2" style="font-size: 0.8rem;"></i> Back to Login
                 </a>
             </div>
