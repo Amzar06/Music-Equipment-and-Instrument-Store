@@ -15,13 +15,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $state = $_POST['state'] ?? '';
     $postcode = $_POST['postcode'] ?? '';
 
-    // Backend Validation for Password Matching
+    // 1. Backend Validation for Password Matching
     if ($password !== $confirm_password) {
         $error = "Passwords do not match.";
     } 
-    // Backend Validation for Password Strength (At least 1 uppercase, 1 number, 1 symbol)
-    elseif (!preg_match('/[A-Z]/', $password) || !preg_match('/[0-9]/', $password) || !preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password)) {
-        $error = "Password must contain at least one uppercase letter, one number, and one special symbol.";
+    // 2. Strict Backend Validation for Password Strength (Cannot proceed unless conditions are met)
+    elseif (strlen($password) < 8 || !preg_match('/[0-9]/', $password) || !preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password)) {
+        $error = "Password must be a minimum of 8 characters and contain at least 1 number and 1 symbol.";
     } 
     elseif (isset($conn)) {
         // Using plain text to match cust login.php
@@ -129,10 +129,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               name="password" 
               placeholder="Enter your password" 
               required
-              pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?\x22:{}|<>]).{8,}"
-              title="Password must be at least 8 characters long and contain at least one uppercase letter, one number, and one special symbol."
-              style="margin-bottom: 15px;"
+              pattern="(?=.*[0-9])(?=.*[!@#$%^&*(),.?\x22:{}|<>]).{8,}"
+              title="Minimum 8 characters, 1 number, and 1 symbol."
+              style="margin-bottom: 4px;"
           >
+          <div style="font-size: 0.85em; color: #555; margin-bottom: 15px;">
+              Minimum 8 characters, 1 number, and 1 symbol.
+          </div>
 
           <label>Confirm Password</label>
           <input 
