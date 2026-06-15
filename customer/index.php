@@ -51,7 +51,6 @@ if (isset($_SESSION['cust_id'])) {
             justify-content: center;
         }
 
-<<<<<<< HEAD
         /* Dark tint overlay over banner images to keep text perfectly legible */
         .carousel-overlay {
             background: rgba(0, 0, 0, 0.55);
@@ -74,14 +73,6 @@ if (isset($_SESSION['cust_id'])) {
         .instrument-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
-=======
-        .hero-content {
-            background: rgba(0,0,0,0.3);
-            padding: 40px;
-            border-radius: 20px;
-            max-width: 800px;
-            width: 90%;
->>>>>>> ab0c76e433c1ca58c85ae02c41339e5e82d8bc42
         }
 
         .product-img {
@@ -124,7 +115,7 @@ if (isset($_SESSION['cust_id'])) {
                     <div>
                         <h1 class="display-4 fw-bold">Musical Instruments For Everyone</h1>
                         <p class="fs-5">Browse instruments without logging in</p>
-                        <a href="product.php" class="btn btn-primary btn-lg mt-2">Shop Now</a>
+                        <a href="../product/product page.php" class="btn btn-primary btn-lg mt-2">Shop Now</a>
                     </div>
                 </div>
             </div>
@@ -136,7 +127,7 @@ if (isset($_SESSION['cust_id'])) {
                     <div>
                         <h1 class="display-4 fw-bold">Premium Pianos</h1>
                         <p class="fs-5">Perfect for beginners and professionals.</p>
-                        <a href="product.php" class="btn btn-primary btn-lg mt-2">Explore</a>
+                        <a href="../product/product page.php" class="btn btn-primary btn-lg mt-2">Explore</a>
                     </div>
                 </div>
             </div>
@@ -148,18 +139,12 @@ if (isset($_SESSION['cust_id'])) {
                     <div>
                         <h1 class="display-4 fw-bold">Rent Before You Buy</h1>
                         <p class="fs-5">Affordable rental plans available.</p>
-                        <a href="product.php" class="btn btn-primary btn-lg mt-2">View Rentals</a>
+                        <a href="../product/rent page.php" class="btn btn-primary btn-lg mt-2">View Rentals</a>
                     </div>
                 </div>
             </div>
         </div>
 
-<<<<<<< HEAD
-=======
-        <a href="../product/product page.php" class="btn btn-light px-4 py-2">
-            Shop Now
-        </a>
->>>>>>> ab0c76e433c1ca58c85ae02c41339e5e82d8bc42
     </div>
     
     <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
@@ -179,12 +164,11 @@ if (isset($_SESSION['cust_id'])) {
     <div class="row g-4">
 
         <div class="col-md-4">
-<<<<<<< HEAD
             <div class="instrument-card p-3">
                 <img src="https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&w=600&q=80" class="product-img rounded" alt="Acoustic Guitar">
                 <h5 class="mt-3 fw-bold mb-1">Acoustic Guitar</h5>
                 <p class="text-muted small">Rich tones and clean premium wood craftsmanship.</p>
-                <a href="product.php" class="btn btn-dark w-100">View Product</a>
+                <a href="../product/product page.php" class="btn btn-dark w-100">View Product</a>
             </div>
         </div>
 
@@ -193,7 +177,7 @@ if (isset($_SESSION['cust_id'])) {
                 <img src="https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?auto=format&fit=crop&w=600&q=80" class="product-img rounded" alt="Digital Piano">
                 <h5 class="mt-3 fw-bold mb-1">Digital Piano</h5>
                 <p class="text-muted small">Full-weighted natural keys with integrated studio sound engines.</p>
-                <a href="product.php" class="btn btn-dark w-100">View Product</a>
+                <a href="../product/product page.php" class="btn btn-dark w-100">View Product</a>
             </div>
         </div>
 
@@ -202,25 +186,8 @@ if (isset($_SESSION['cust_id'])) {
                 <img src="https://images.unsplash.com/photo-1543443374-b6fe10a6ab7b?auto=format&fit=crop&w=600&q=80" class="product-img rounded" alt="Drum Set">
                 <h5 class="mt-3 fw-bold mb-1">Drum Set</h5>
                 <p class="text-muted small">Full 5-piece professional acoustic set including high-grade brass cymbals.</p>
-                <a href="product.php" class="btn btn-dark w-100">View Product</a>
+                <a href="../product/product page.php" class="btn btn-dark w-100">View Product</a>
             </div>
-=======
-            <img src="https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&w=600&q=80" class="product-img" alt="Acoustic Guitar">
-            <h5 class="mt-3">Acoustic Guitar</h5>
-            <a href="../product/product page.php" class="btn btn-dark">View</a>
-        </div>
-
-        <div class="col-md-4">
-            <img src="https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?auto=format&fit=crop&w=600&q=80" class="product-img" alt="Digital Piano">
-            <h5 class="mt-3">Digital Piano</h5>
-            <a href="../product/product page.php" class="btn btn-dark">View</a>
-        </div>
-
-        <div class="col-md-4">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQiLvcVnuRu_HM5vcZU2K6q89uJuTWaib2Ykt8xEz_7ySjfc5j6eGBALIQxmGdc" class="product-img" alt="Drum Set">
-            <h5 class="mt-3">Drum Set</h5>
-            <a href="../product/product page.php" class="btn btn-dark">View</a>
->>>>>>> ab0c76e433c1ca58c85ae02c41339e5e82d8bc42
         </div>
 
     </div>
@@ -234,50 +201,26 @@ if (isset($_SESSION['cust_id'])) {
     <div class="row g-3">
 
         <div class="col-md-3">
-<<<<<<< HEAD
-            <a href="product.php?category=guitar" class="btn btn-outline-dark w-100 py-3 fw-semibold fs-5">
+            <a href="../product/product page.php?category=guitar" class="btn btn-outline-dark w-100 py-3 fw-semibold fs-5">
                 🎸 Guitars
-=======
-            <a href="../product/product page.php?category=guitar"
-               class="btn btn-outline-dark category-btn">
-               Guitars
->>>>>>> ab0c76e433c1ca58c85ae02c41339e5e82d8bc42
             </a>
         </div>
 
         <div class="col-md-3">
-<<<<<<< HEAD
-            <a href="product.php?category=piano" class="btn btn-outline-dark w-100 py-3 fw-semibold fs-5">
+            <a href="../product/product page.php?category=piano" class="btn btn-outline-dark w-100 py-3 fw-semibold fs-5">
                 🎹 Pianos
-=======
-            <a href="../product/product page.php?category=piano"
-               class="btn btn-outline-dark category-btn">
-               Pianos
->>>>>>> ab0c76e433c1ca58c85ae02c41339e5e82d8bc42
             </a>
         </div>
 
         <div class="col-md-3">
-<<<<<<< HEAD
-            <a href="product.php?category=drum" class="btn btn-outline-dark w-100 py-3 fw-semibold fs-5">
+            <a href="../product/product page.php?category=drum" class="btn btn-outline-dark w-100 py-3 fw-semibold fs-5">
                 🥁 Drums
-=======
-            <a href="../product/product page.php?category=drum"
-               class="btn btn-outline-dark category-btn">
-               Drums
->>>>>>> ab0c76e433c1ca58c85ae02c41339e5e82d8bc42
             </a>
         </div>
 
         <div class="col-md-3">
-<<<<<<< HEAD
-            <a href="product.php?category=violin" class="btn btn-outline-dark w-100 py-3 fw-semibold fs-5">
+            <a href="../product/product page.php?category=violin" class="btn btn-outline-dark w-100 py-3 fw-semibold fs-5">
                 🎻 Violins
-=======
-            <a href="../product/product page.php?category=violin"
-               class="btn btn-outline-dark category-btn">
-               Violins
->>>>>>> ab0c76e433c1ca58c85ae02c41339e5e82d8bc42
             </a>
         </div>
 

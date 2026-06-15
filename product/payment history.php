@@ -266,13 +266,8 @@ if (isset($conn)) {
                                     ?>
                                         <a href="?action=cancel&id=<?php echo $order['id']; ?>&type=<?php echo $order['type']; ?>" 
                                            onclick="return confirm('Are you sure you want to cancel?')"
-<<<<<<< HEAD
-                                           style="font-size: 0.7rem; color: #ef4444; font-weight: 700; text-decoration: none; border: 1px solid #fee2e2; padding: 2px 8px; border-radius: 4px; background: #fff5f5; margin-top: 5px;">
-                                           Cancel Item
-=======
-                                           style="font-size: 0.7rem; color: #ef4444; font-weight: 700; text-decoration: none; border-bottom: 1px dashed #ef4444; margin-left: 5px;">
+                                            style="font-size: 0.7rem; color: #ef4444; font-weight: 700; text-decoration: none; border: 1px solid #fee2e2; padding: 2px 8px; border-radius: 4px; background: #fff5f5; margin-top: 5px;">
                                             Cancel Item
->>>>>>> e59ae58dc569070a7eee0c1fe7de29a54d5fa692
                                         </a>
                                     <?php elseif ($order['type'] === 'Rental' && in_array($s, ['active', 'overdue'])): ?>
                                         <a href="return_rental.php?rental_id=<?php echo $order['id']; ?>" 
