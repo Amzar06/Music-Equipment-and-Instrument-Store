@@ -240,9 +240,9 @@ if (isset($conn)) {
                         <?php echo htmlspecialchars($product['prod_description']); ?>
                     </p>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8rem; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
-                        <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Category</span> <?php echo htmlspecialchars($product['category_name']); ?></div>
-                        <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Stock</span> <?php echo htmlspecialchars($product['prod_rental_qty']); ?> units</div>
+                    <div style="font-size: 0.8rem; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                        <span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700; margin-bottom: 2px;">Instrument Category</span> 
+                        <span style="font-weight: 600; color: #1e293b;"><?php echo htmlspecialchars($product['category_name']); ?></span>
                     </div>
                 </div>
 
