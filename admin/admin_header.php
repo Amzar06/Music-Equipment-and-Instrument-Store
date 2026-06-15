@@ -19,14 +19,10 @@
         <li><a href="admin_rental_list.php" class="<?php echo ($active == 'rentals') ? 'active' : ''; ?>">Rentals</a></li>
         <li><a href="manage_customer.php" class="<?php echo ($active == 'customers') ? 'active' : ''; ?>">Customers</a></li>
         
-        <!-- SMART STAFF LINK WITH POPUP ALERT -->
         <?php if (isset($_SESSION['staff_role']) && $_SESSION['staff_role'] === 'Administrator'): ?>
             <li><a href="manage_admin.php" class="<?php echo ($active == 'staff') ? 'active' : ''; ?>">Staff</a></li>
-        <?php else: ?>
-            <li><a href="#" onclick="alert('Access Denied: Only Administrators can manage staff accounts.'); return false;">Staff</a></li>
+            <li><a href="admin_report.php" class="<?php echo ($active == 'reports') ? 'active' : ''; ?>">Reports</a></li>
         <?php endif; ?>
-        
-        <li><a href="admin_report.php" class="<?php echo ($active == 'reports') ? 'active' : ''; ?>">Reports</a></li>
     </ul>
     <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
         <a href="admin_logout.php" style="color: #ef4444; text-decoration: none; font-size: 0.9rem; font-weight: 600;">Logout</a>
@@ -34,41 +30,30 @@
 </aside>
 
 <div class="main-content">
-    <header style="display: flex; justify-content: space-between; align-items: center;">
+    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        
         <div class="welcome-msg">
-            <h1><?php echo $page_title; ?></h1>
-            <p style="color: #6b7280;"><?php echo date('l, d F Y'); ?></p>
+            <h1 style="margin: 0; font-size: 1.5rem; color: #111827;"><?php echo $page_title; ?></h1>
+            <p style="margin: 4px 0 0 0; color: #6b7280; font-size: 0.9rem;"><?php echo date('l, d F Y'); ?></p>
         </div>
 
-        <!-- CONDITIONAL GLOBAL SEARCH BAR -->
         <?php if (!isset($hide_search) || !$hide_search): ?>
             <div style="width: 100%; max-width: 400px; margin: 0 20px;">
-                <form action="" method="GET" style="display: flex; align-items: center; background: white; border: 1px solid #d1d5db; border-radius: 20px; padding: 4px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                    
-                    <?php if(isset($_GET['sort'])): ?>
-                        <input type="hidden" name="sort" value="<?php echo htmlspecialchars($_GET['sort']); ?>">
-                    <?php endif; ?>
-
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input type="text" name="search" placeholder="Search..." 
-                           value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>" 
-                           style="border: none; outline: none; padding: 8px 12px; width: 100%; font-size: 0.9rem; background: transparent;">
-                    <button type="submit" style="display: none;"></button>
-                </form>
-            </div>
+                </div>
         <?php else: ?>
-            <!-- Invisible placeholder so the header layout doesn't break when search is hidden -->
             <div style="width: 100%; max-width: 400px; margin: 0 20px;"></div>
         <?php endif; ?>
 
-        <div class="admin-profile">
-            <span class="status-pill completed" style="text-transform: uppercase; letter-spacing: 1px;">
-                <?php echo $_SESSION['staff_role'] ?? 'Admin'; ?>
+        <div class="admin-profile" style="display: flex; align-items: center; gap: 15px;">
+            <span class="status-pill completed" style="text-transform: uppercase; letter-spacing: 1px; padding: 6px 12px; font-size: 0.75rem;">
+                <?php echo htmlspecialchars($_SESSION['staff_role'] ?? 'Admin'); ?>
             </span>
-            <span style="margin-left: 10px; font-weight: 600; color: var(--text-main);">
-                <?php echo $_SESSION['staff_name'] ?? 'Staff'; ?>
-            </span>
+            
+            <a href="admin_profile.php" 
+               style="font-weight: 600; color: #111827; text-decoration: none; border-bottom: 2px solid transparent; transition: 0.2s;"
+               onmouseover="this.style.borderBottom='2px solid #4f46e5'" onmouseout="this.style.borderBottom='2px solid transparent'">
+               <?php echo htmlspecialchars($_SESSION['staff_name'] ?? 'Staff'); ?>
+            </a>
         </div>
+        
     </header>

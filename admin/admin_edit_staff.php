@@ -6,7 +6,7 @@ if (!isset($_SESSION['staff_id'])) {
 }
 
 // ==========================================
-// SUPERADMIN SECURITY LOCK
+// STRICT SUPERADMIN SECURITY LOCK
 // ==========================================
 if (!isset($_SESSION['staff_role']) || $_SESSION['staff_role'] !== 'Administrator') {
     $_SESSION['flash_message'] = "Access Denied: Only Administrators can edit staff accounts.";
@@ -40,7 +40,6 @@ if (mysqli_num_rows($staff_result) == 0) {
 }
 
 $staff = mysqli_fetch_assoc($staff_result);
-$is_current_user = ($staff['staff_id'] == $_SESSION['staff_id']);
 $message = ""; $message_type = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_staff'])) {
@@ -48,9 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_staff'])) {
     $staff_email   = mysqli_real_escape_string($conn, trim($_POST['staff_email']));
     $staff_phone   = mysqli_real_escape_string($conn, trim($_POST['staff_phone_number']));
     $staff_address = mysqli_real_escape_string($conn, trim($_POST['staff_address']));
-    
-    $staff_role    = $is_current_user ? $staff['staff_role'] : mysqli_real_escape_string($conn, $_POST['staff_role']);
-    $status        = $is_current_user ? $staff['status'] : mysqli_real_escape_string($conn, $_POST['status']);
+    $staff_role    = mysqli_real_escape_string($conn, $_POST['staff_role']);
+    $status        = mysqli_real_escape_string($conn, $_POST['status']);
 
     if (!empty($staff_name) && !empty($staff_email)) {
         $update_query = "UPDATE staff SET 
@@ -135,14 +133,14 @@ require_once('admin_header.php');
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">System Role</label>
-                    <select name="staff_role" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: <?php echo $is_current_user ? '#f3f4f6' : 'white'; ?>; outline: none; box-sizing: border-box;" <?php echo $is_current_user ? 'disabled' : ''; ?>>
+                    <select name="staff_role" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: white; outline: none; box-sizing: border-box;">
                         <option value="Staff" <?php echo ($staff['staff_role'] == 'Staff') ? 'selected' : ''; ?>>Staff</option>
                         <option value="Administrator" <?php echo ($staff['staff_role'] == 'Administrator') ? 'selected' : ''; ?>>Administrator (Superadmin)</option>
                     </select>
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Account Status</label>
-                    <select name="status" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: <?php echo $is_current_user ? '#f3f4f6' : 'white'; ?>; outline: none; box-sizing: border-box;" <?php echo $is_current_user ? 'disabled' : ''; ?>>
+                    <select name="status" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: white; outline: none; box-sizing: border-box;">
                         <option value="Active" <?php echo ($staff['status'] == 'Active') ? 'selected' : ''; ?>>Active</option>
                         <option value="Suspended" <?php echo ($staff['status'] == 'Suspended') ? 'selected' : ''; ?>>Suspended</option>
                         <option value="Inactive" <?php echo ($staff['status'] == 'Inactive') ? 'selected' : ''; ?>>Inactive (Revoked)</option>
