@@ -10,7 +10,10 @@ $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['name'] ?? '';
     $email = $_POST['email'] ?? '';
-    $phone = $_POST['phone'] ?? '';
+    
+    // Sanitize phone number by removing trailing or accidental whitespace
+    $phone = trim($_POST['phone'] ?? '');
+    
     $street = $_POST['street'] ?? '';
     $city = $_POST['city'] ?? '';
     $state = $_POST['state'] ?? '';
@@ -18,6 +21,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
+
+    // =========================================================================
+    // MALAYSIAN PHONE NUMBER PATTERN MAPPING
+    // =========================================================================
+    $my_phone_pattern = '/^\+60(1[0-9]|3|4|5|6|7|8|9)[0-9]{7,8}$/';
 
     if ($password !== $confirm_password) {
         $error = "Passwords do not match.";
@@ -29,6 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $password = '';
         $confirm_password = '';
     } 
+    // Backend Validation check for Malaysian +60 structure
+    elseif (!preg_match($my_phone_pattern, $phone)) {
+        $error = "Invalid phone number format! Must be a valid Malaysian standard format starting with +60 (e.g., +60123456789).";
+    }
     elseif (isset($conn)) {
         $stmt = $conn->prepare("SELECT cust_id FROM customers WHERE cust_email = ?");
         if ($stmt) {
@@ -85,6 +97,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .toggle-password:hover {
             color: #333;
         }
+        .phone-hint {
+            font-size: 0.82rem;
+            color: #666;
+            margin-top: -10px;
+            margin-bottom: 15px;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -113,7 +132,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <input type="email" name="email" placeholder="Enter your email" required value="<?php echo htmlspecialchars($email); ?>">
 
           <label>Phone Number</label>
-          <input type="text" name="phone" placeholder="Enter your phone number" required value="<?php echo htmlspecialchars($phone); ?>">
+          <input type="text" name="phone" 
+                 placeholder="e.g., +60123456789" 
+                 pattern="^\+60(1[0-9]|[3-9])[0-9]{7,8}$"
+                 title="Please enter a valid Malaysian phone number starting with +60 followed by 8 to 10 digits."
+                 required value="<?php echo htmlspecialchars($phone); ?>" style="margin-bottom: 4px;">
+          <span class="phone-hint"><i class="fa-solid fa-circle-info"></i> Format must include country code (e.g., <strong>+60171234567</strong>)</span>
 
           <label>Street Address</label>
           <input type="text" name="street" placeholder="No, Building, Street" required value="<?php echo htmlspecialchars($street); ?>">
