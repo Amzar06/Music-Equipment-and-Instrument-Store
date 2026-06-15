@@ -91,9 +91,10 @@ require_once('admin_header.php');
                                 <input type="hidden" name="rental_id" value="<?php echo $row['rental_id']; ?>">
                                 
                                 <select name="status" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border-color); font-size:13px; font-family:inherit; outline: none; background: white;">
-                                    <option value="Active"   <?php echo ($row['status'] == 'Active')   ? 'selected' : ''; ?>>Active</option>
-                                    <option value="Returned" <?php echo ($row['status'] == 'Returned') ? 'selected' : ''; ?>>Returned</option>
-                                    <option value="Overdue"  <?php echo ($row['status'] == 'Overdue')  ? 'selected' : ''; ?>>Overdue</option>
+                                    <option value="Active"     <?php echo ($row['status'] == 'Active')     ? 'selected' : ''; ?>>Active</option>
+                                    <option value="Processing" <?php echo ($row['status'] == 'Processing') ? 'selected' : ''; ?>>Processing (Return Pending)</option>
+                                    <option value="Returned"   <?php echo ($row['status'] == 'Returned')   ? 'selected' : ''; ?>>Returned</option>
+                                    <option value="Overdue"    <?php echo ($row['status'] == 'Overdue')    ? 'selected' : ''; ?>>Overdue</option>
                                 </select>
                                 
                                 <button type="submit" name="update_status" style="padding: 6px 12px; background: var(--accent-color); color: white; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s;">

@@ -83,6 +83,27 @@ if ($type === 'rent' && isset($conn)) {
             $rent_price_per_day = floatval($row['prod_rental_price']);
             $prod_name_display  = $row['prod_name'];
             $subtotal = $days * $rent_price_per_day;
+
+            // OVERLAP VALIDATION WITH 3-DAY BUFFER
+            $stmt_check = $conn->prepare("
+                SELECT r.start_date, r.end_date 
+                FROM rental_items ri 
+                JOIN rentals r ON ri.rental_id = r.rental_id 
+                WHERE ri.prod_id = ? 
+                AND r.status NOT IN ('Cancelled', 'Returned')
+                AND (
+                    (? BETWEEN r.start_date AND DATE_ADD(r.end_date, INTERVAL 2 DAY)) OR
+                    (? BETWEEN r.start_date AND DATE_ADD(r.end_date, INTERVAL 2 DAY)) OR
+                    (r.start_date BETWEEN ? AND ?)
+                )
+            ");
+            $stmt_check->bind_param("isssss", $product_id, $start_date, $end_date, $start_date, $end_date);
+            $stmt_check->execute();
+            if ($stmt_check->get_result()->num_rows > 0) {
+                header("Location: rent page.php?error=already_booked&name=" . urlencode($prod_name_display));
+                exit();
+            }
+            $stmt_check->close();
         }
         $stmt->close();
     }

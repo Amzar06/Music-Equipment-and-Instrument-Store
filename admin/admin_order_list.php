@@ -166,13 +166,35 @@ require_once('admin_header.php');
                                             <input type="hidden" name="order_id" value="<?php echo $order_id; ?>">
                                             <select name="new_status" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.85rem; outline: none;">
                                                 <option value="Pending" <?php echo ($status == 'Pending') ? 'selected' : ''; ?>>Pending (Awaiting Processing)</option>
-                                                <option value="Processing" <?php echo ($status == 'Processing') ? 'selected' : ''; ?>>Processing (Preparing Item)</option>
+                                                <option value="Processing" <?php echo ($status == 'Processing') ? 'selected' : ''; ?>>Processing (Preparing / Return Req)</option>
                                                 <option value="Shipped" <?php echo ($status == 'Shipped') ? 'selected' : ''; ?>>Shipped (Out for Delivery)</option>
                                                 <option value="Delivered" <?php echo ($status == 'Delivered') ? 'selected' : ''; ?>>Delivered (Completed)</option>
+                                                <option value="Refunded" <?php echo ($status == 'Refunded') ? 'selected' : ''; ?>>Refunded (Return Approved)</option>
                                                 <option value="Cancelled" <?php echo ($status == 'Cancelled') ? 'selected' : ''; ?>>Cancelled</option>
                                             </select>
                                             <button type="submit" name="update_order_status" style="background: #4f46e5; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">Save Status</button>
                                         </form>
+
+                                        <?php 
+                                        // Check for Return Request
+                                        $ret_query = mysqli_query($conn, "SELECT * FROM product_returns WHERE order_id = $order_id LIMIT 1");
+                                        if (mysqli_num_rows($ret_query) > 0): 
+                                            $ret_req = mysqli_fetch_assoc($ret_query);
+                                        ?>
+                                            <div style="margin-top: 20px; padding: 15px; background: #fff7ed; border: 1px solid #ffedd5; border-radius: 10px;">
+                                                <h5 style="color: #9a3412; font-size: 0.85rem; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                                                    <i class="fa-solid fa-rotate-left"></i> Return Request
+                                                </h5>
+                                                <p style="font-size: 0.8rem; margin-bottom: 8px;"><strong>Reason:</strong> <?php echo htmlspecialchars($ret_req['reason']); ?></p>
+                                                <p style="font-size: 0.8rem; margin-bottom: 10px; color: #4b5563;"><strong>Details:</strong> <?php echo nl2br(htmlspecialchars($ret_req['details'])); ?></p>
+                                                <?php if ($ret_req['photo']): ?>
+                                                    <a href="../uploads/returns/<?php echo htmlspecialchars($ret_req['photo']); ?>" target="_blank" style="display: inline-block;">
+                                                        <img src="../uploads/returns/<?php echo htmlspecialchars($ret_req['photo']); ?>" style="max-width: 100%; border-radius: 6px; border: 1px solid #fed7aa;">
+                                                    </a>
+                                                    <span style="display: block; font-size: 0.75rem; color: #9a3412; margin-top: 4px;">Click photo to enlarge</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
 
                                 </div>

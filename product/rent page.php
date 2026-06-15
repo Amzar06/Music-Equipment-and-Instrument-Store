@@ -8,6 +8,25 @@ if (!isset($_SESSION['cust_id'])) {
 }
 $cust_id = $_SESSION['cust_id'];
 
+// Fetch all active rental date ranges to disable them in the picker
+$booked_dates = [];
+if (isset($conn)) {
+    $res = $conn->query("
+        SELECT ri.prod_id, r.start_date, r.end_date 
+        FROM rental_items ri 
+        JOIN rentals r ON ri.rental_id = r.rental_id 
+        WHERE r.status NOT IN ('Cancelled', 'Returned')
+    ");
+    while($row = $res->fetch_assoc()) {
+        $pid = $row['prod_id'];
+        if (!isset($booked_dates[$pid])) $booked_dates[$pid] = [];
+        $booked_dates[$pid][] = [
+            'from' => $row['start_date'],
+            'to' => $row['end_date']
+        ];
+    }
+}
+
 // Fetch categories
 $categories = [];
 if (isset($conn)) {
@@ -46,37 +65,12 @@ if (isset($conn) && $is_logged_in) {
     $count_query->close();
 }
 
-// Check if user is on rental limit (3 instruments per week)
+// Rental limit (3 per week) removed per user request.
+// Any user can now rent any number of instruments.
 $can_rent = true;
 $rentals_this_week = 0;
-$limit = 3;
+$limit = 999;
 $next_rentable_date = null;
-
-if (isset($conn)) {
-    // Count non-cancelled rentals in the last 7 days
-    $one_week_ago_sql = date('Y-m-d H:i:s', strtotime("-1 week"));
-    $stmt = $conn->prepare("SELECT COUNT(*) as rental_count, MIN(created_at) as oldest_rental FROM rentals WHERE cust_id = ? AND status != 'Cancelled' AND created_at >= ?");
-    if ($stmt) {
-        $stmt->bind_param("is", $cust_id, $one_week_ago_sql);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        if ($row = $res->fetch_assoc()) {
-            $rentals_this_week = $row['rental_count'];
-            if ($rentals_this_week >= $limit) {
-                $can_rent = false;
-                // Next rentable date is 1 week after the OLDEST rental that falls within the current rolling week
-                $stmt_oldest = $conn->prepare("SELECT created_at FROM rentals WHERE cust_id = ? AND status != 'Cancelled' AND created_at >= ? ORDER BY created_at ASC LIMIT 1");
-                $stmt_oldest->bind_param("is", $cust_id, $one_week_ago_sql);
-                $stmt_oldest->execute();
-                if ($oldest = $stmt_oldest->get_result()->fetch_assoc()) {
-                    $next_rentable_date = date('d M Y', strtotime("+1 week", strtotime($oldest['created_at'])));
-                }
-                $stmt_oldest->close();
-            }
-        }
-        $stmt->close();
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -182,29 +176,21 @@ if (isset($conn)) {
         </select>
     </div>
 
-    <!-- Rental Warning Message -->
-    <?php if (!$can_rent): ?>
-        <div style="background: #fee2e2; border: 1.5px solid #ef4444; color: #991b1b; padding: 20px; border-radius: 14px; margin-bottom: 32px; display: flex; align-items: flex-start; gap: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-            <span style="font-size: 1.8rem;">⏳</span>
-            <div>
-                <p style="margin: 0; font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Rental Limit Reached (3 per week)</p>
-                <p style="margin: 0; font-size: 0.95rem; opacity: 0.9;">You have reached the maximum of <b>3 instruments per week</b>. Please return your current rentals or wait for your quota to reset to ensure fair access for all customers.</p>
-                <?php if ($next_rentable_date): ?>
-                <p style="margin-top: 10px; font-weight: 700; font-size: 0.9rem; background: rgba(239, 68, 68, 0.1); display: inline-block; padding: 4px 10px; border-radius: 6px;">
-                    🔓 You can rent again starting: <?php echo $next_rentable_date; ?>
-                </p>
-                <?php endif; ?>
-            </div>
+    <div style="background: #f0fdf4; border: 1.5px solid #10b981; color: #166534; padding: 18px; border-radius: 14px; margin-bottom: 32px; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <span style="font-size: 1.5rem;">📅</span>
+        <div>
+            <p style="margin: 0; font-weight: 600; font-size: 0.95rem;">Availability Check Active</p>
+            <p style="margin: 0; font-size: 0.85rem; opacity: 0.8;">Instruments are available based on their individual booking schedule. Select a date range to see availability.</p>
         </div>
-    <?php else: ?>
-        <div style="background: #f0fdf4; border: 1.5px solid #10b981; color: #166534; padding: 18px; border-radius: 14px; margin-bottom: 32px; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-            <span style="font-size: 1.5rem;">✅</span>
-            <div>
-                <p style="margin: 0; font-weight: 600; font-size: 0.95rem;">You are eligible to rent! Current quota: <b><?php echo $rentals_this_week; ?> / 3</b> instruments used this week.</p>
-                <p style="margin: 0; font-size: 0.85rem; opacity: 0.8;">Customers are permitted to rent up to 3 instruments per rolling week.</p>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+        <?php if (isset($_GET['error']) && $_GET['error'] === 'already_booked'): ?>
+            <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 10px 20px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; animation: shake 0.5s;">
+                ⚠️ <?php echo htmlspecialchars($_GET['name'] ?? 'Item'); ?> is already booked for these dates (including maintenance buffer).
             </div>
-        </div>
-    <?php endif; ?>
+        <?php endif; ?>
+    </div>
 
     <div class="product-grid" id="productGrid">
     <?php if (empty($products)): ?>
@@ -334,14 +320,33 @@ function validateRental(form) {
     return true;
 }
 
+const bookedDatesData = <?php echo json_encode($booked_dates); ?>;
+
 document.addEventListener('DOMContentLoaded', function() {
     const pickers = document.querySelectorAll(".range-picker");
     pickers.forEach(el => {
         const prodId = el.getAttribute('data-prod-id');
+        const bookedForThisProd = bookedDatesData[prodId] || [];
+        
+        // Convert to Flatpickr disable format
+        const disableDates = bookedForThisProd.map(range => {
+            const start = new Date(range.from);
+            const end = new Date(range.to);
+            // Add buffer: If end is 18, block until 20 so next start is 21. (+2 days)
+            const bufferedEnd = new Date(end);
+            bufferedEnd.setDate(bufferedEnd.getDate() + 2); 
+            
+            return {
+                from: start,
+                to: bufferedEnd
+            };
+        });
+
         fpInstances[prodId] = flatpickr(el, {
             mode: "range",
             minDate: "today",
             dateFormat: "Y-m-d",
+            disable: disableDates,
             onClose: function(selectedDates, dateStr, instance) {
                 if (selectedDates.length === 2) {
                     const start = instance.formatDate(selectedDates[0], "Y-m-d");
