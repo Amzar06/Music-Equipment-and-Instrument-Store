@@ -1,10 +1,9 @@
 <?php
 session_start();
 include '../database.php';
-if (!isset($_SESSION['cust_id'])) {
-    header("Location: index.php");
-    exit();
-}
+
+// Check if the user is logged in
+$is_logged_in = isset($_SESSION['cust_id']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -13,10 +12,16 @@ if (!isset($_SESSION['cust_id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Musical Instrument Store</title>
 
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
+        body { 
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+
         .hero {
             background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
             height: 500px;
@@ -43,10 +48,8 @@ if (!isset($_SESSION['cust_id'])) {
 
         .category-btn {
             width: 100%;
-        }
-
-        .navbar-custom {
-            background-color: #0d3b8e !important;
+            padding: 15px 0;
+            font-weight: 600;
         }
 
         .btn-primary {
@@ -62,6 +65,21 @@ if (!isset($_SESSION['cust_id'])) {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
+
+        /* User Profile Icon Styling */
+        .user-dropdown-toggle {
+            color: rgba(255, 255, 255, 0.85) !important;
+            font-size: 1.35rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .user-dropdown-toggle:hover {
+            color: #20c997 !important;
+        }
+        .dropdown-menu-end {
+            right: 0;
+            left: auto;
+        }
     </style>
 </head>
 
@@ -74,12 +92,34 @@ if (!isset($_SESSION['cust_id'])) {
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navLogged">
-            <ul class="navbar-nav ms-auto" style="gap: 15px;">
+            <ul class="navbar-nav ms-auto align-items-center" style="gap: 15px;">
                 <li class="nav-item"><a class="nav-link active" href="home_page.php">Home</a></li>
                 <li class="nav-item"><a class="nav-link" href="../product/product page.php">Products</a></li>
-                <li class="nav-item"><a class="nav-link" href="../product/payment history.php">My Orders</a></li>
-                <li class="nav-item"><a class="nav-link" href="user_profile_page.php">Profile</a></li>
-                <li class="nav-item"><a class="nav-link" href="logout_page.php">Logout</a></li>
+                
+                <?php if ($is_logged_in): ?>
+                    <li class="nav-item"><a class="nav-link" href="../product/payment history.php">My Orders</a></li>
+                <?php endif; ?>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle user-dropdown-toggle" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-circle-user"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm mt-2" aria-labelledby="userMenu">
+                        <?php if ($is_logged_in): ?>
+                            <li class="px-3 py-1 text-muted small fw-bold text-uppercase">
+                                Hi, <?php echo htmlspecialchars($_SESSION['cust_name'] ?? 'Customer'); ?>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="user_profile_page.php"><i class="fa-regular fa-id-card me-2"></i> My Profile</a></li>
+                            <li><a class="dropdown-item" href="../product/payment history.php"><i class="fa-solid fa-clock-history me-2"></i> Orders</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="logout_page.php" onclick="return confirmLogout(event);"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</a></li>
+                        <?php else: ?>
+                            <li><a class="dropdown-item" href="../product/cust login.php"><i class="fa-solid fa-right-to-bracket me-2"></i> Customer Login</a></li>
+                            <li><a class="dropdown-item" href="register_page.php"><i class="fa-solid fa-user-plus me-2"></i> Create Account</a></li>
+                        <?php endif; ?>
+                    </ul>
+                </ul>
             </ul>
         </div>
     </div>
@@ -87,13 +127,17 @@ if (!isset($_SESSION['cust_id'])) {
 
 <div class="hero">
     <div class="hero-content text-center">
-        <h1>Welcome Back, <?php echo htmlspecialchars($_SESSION['cust_name'] ?? 'Musician'); ?>!</h1>
-        <p>Your one-stop destination for instruments</p>
+        <?php if ($is_logged_in): ?>
+            <h1>Welcome Back, <?php echo htmlspecialchars($_SESSION['cust_name'] ?? 'Musician'); ?>!</h1>
+            <p>Ready to pick up your next performance asset?</p>
+        <?php else: ?>
+            <h1>Musical Instruments For Everyone</h1>
+            <p>Discover premium equipment options and premium rental selections tailored for your style.</p>
+        <?php endif; ?>
         <a href="../product/product page.php" class="btn btn-primary px-4 py-2 text-white">Explore Instruments</a>
     </div>
 </div>
 
-<!-- FEATURED PRODUCTS -->
 <section class="container py-5">
     <h2 class="mb-4">Featured Instruments</h2>
     <div class="row g-4">
@@ -117,42 +161,47 @@ if (!isset($_SESSION['cust_id'])) {
     </div>
 </section>
 
-<!-- SHOP BY CATEGORY -->
 <section class="container py-5">
     <h2 class="mb-4">Shop By Category</h2>
     <div class="row g-3">
         <div class="col-md-3">
             <a href="../product/product page.php?category=guitar" class="btn btn-outline-dark category-btn">
-                Guitars
+                🎸 Guitars
             </a>
         </div>
-
         <div class="col-md-3">
             <a href="../product/product page.php?category=piano" class="btn btn-outline-dark category-btn">
-                Pianos
+                🎹 Pianos
             </a>
         </div>
-
         <div class="col-md-3">
             <a href="../product/product page.php?category=drum" class="btn btn-outline-dark category-btn">
-                Drums
+                🥁 Drums
             </a>
         </div>
-
         <div class="col-md-3">
             <a href="../product/product page.php?category=violin" class="btn btn-outline-dark category-btn">
-                Violins
+                🎻 Violins
             </a>
         </div>
     </div>
 </section>
 
 <footer class="bg-dark text-white text-center p-3">
-    © 2026 Musical Instrument Rental & Sales System
+    © 2026 Musical Instrument Store
 </footer>
 
+<script>
+function confirmLogout(event) {
+    const confirmation = confirm("Are you sure you want to log out of your account?");
+    if (!confirmation) {
+        event.preventDefault();
+        return false;
+    }
+    return true;
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
->
