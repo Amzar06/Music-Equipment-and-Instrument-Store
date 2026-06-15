@@ -36,6 +36,17 @@ if (isset($conn)) {
         }
     }
 }
+
+// Fetch cart count
+$cart_count = 0;
+if (isset($conn) && $is_logged_in) {
+    $count_query = $conn->prepare("SELECT SUM(ci.quantity) as total FROM cart_items ci JOIN cart c ON ci.cart_id = c.cart_id WHERE c.cust_id = ?");
+    $count_query->bind_param("i", $cust_id);
+    $count_query->execute();
+    $count_res = $count_query->get_result()->fetch_assoc();
+    $cart_count = $count_res['total'] ?? 0;
+    $count_query->close();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -141,7 +152,14 @@ if (isset($conn)) {
             <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">Premium selection for every musician</p>
         </div>
         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <a href="cart page.php" style="padding: 10px 20px; background: #2563eb; color: white; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(37,99,235,0.3);">🛒 View Cart</a>
+            <a href="cart page.php" style="position: relative; padding: 10px 20px; background: #2563eb; color: white; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(37,99,235,0.3);">
+                🛒 View Cart
+                <?php if ($cart_count > 0): ?>
+                    <span style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                        <?php echo $cart_count; ?>
+                    </span>
+                <?php endif; ?>
+            </a>
         </div>
     </div>
 </div>
@@ -193,6 +211,10 @@ if (isset($conn)) {
                     <?php echo htmlspecialchars($product['prod_description']); ?>
                 </p>
 
+                <div class="view-more-hint" style="text-align: right; margin-top: -5px; margin-bottom: 12px; font-size: 0.75rem; color: #2563eb; font-weight: 700;">
+                    View Detail <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
                 <div class="expanded-details" style="max-height: 0; overflow: hidden; transition: all 0.4s ease; border-top: 1px solid #f1f5f9; padding-top: 12px; display: none;">
                     <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px; margin-top: 8px;">
                         <?php echo htmlspecialchars($product['prod_description']); ?>
@@ -240,16 +262,20 @@ function toggleExpand(card) {
     const details = card.querySelector('.expanded-details');
     const shortDesc = card.querySelector('.short-desc');
     
+    const hint = card.querySelector('.view-more-hint');
+    
     if (details.style.display === 'none' || details.style.display === '') {
         details.style.display = 'block';
         details.style.maxHeight = '800px'; 
         shortDesc.style.display = 'none';
+        hint.style.display = 'none';
         card.style.transform = 'translateY(-4px)';
         card.style.boxShadow = '0 12px 20px -5px rgba(0, 0, 0, 0.1)';
     } else {
         details.style.display = 'none';
         details.style.maxHeight = '0px';
         shortDesc.style.display = '-webkit-box';
+        hint.style.display = 'block';
         card.style.transform = 'none';
         card.style.boxShadow = '';
     }

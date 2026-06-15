@@ -34,6 +34,18 @@ if (isset($conn)) {
     }
 }
 
+// Fetch cart count
+$is_logged_in = isset($_SESSION['cust_id']);
+$cart_count = 0;
+if (isset($conn) && $is_logged_in) {
+    $count_query = $conn->prepare("SELECT SUM(ci.quantity) as total FROM cart_items ci JOIN cart c ON ci.cart_id = c.cart_id WHERE c.cust_id = ?");
+    $count_query->bind_param("i", $cust_id);
+    $count_query->execute();
+    $count_res = $count_query->get_result()->fetch_assoc();
+    $cart_count = $count_res['total'] ?? 0;
+    $count_query->close();
+}
+
 // Check if user is on rental limit (3 instruments per week)
 $can_rent = true;
 $rentals_this_week = 0;
@@ -98,8 +110,9 @@ if (isset($conn)) {
         }
     </style>
 </head>
-<!-- Add Bootstrap for Navbar -->
+<!-- Add Bootstrap & FontAwesome -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     .navbar-custom { background-color: #0d3b8e; padding: 12px 0; }
     .navbar-brand, .navbar-nav .nav-link { color: white !important; }
@@ -139,7 +152,14 @@ if (isset($conn)) {
             <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">Flexible rental plans for all instruments</p>
         </div>
         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <a href="cart page.php" style="padding: 10px 20px; background: #2563eb; color: white; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(37,99,235,0.3);">🛒 View Cart</a>
+            <a href="cart page.php" style="position: relative; padding: 10px 20px; background: #2563eb; color: white; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(37,99,235,0.3);">
+                🛒 View Cart
+                <?php if ($cart_count > 0): ?>
+                    <span style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                        <?php echo $cart_count; ?>
+                    </span>
+                <?php endif; ?>
+            </a>
         </div>
     </div>
 </div>
@@ -210,6 +230,10 @@ if (isset($conn)) {
                     <?php echo htmlspecialchars($product['prod_description']); ?>
                 </p>
 
+                <div class="view-more-hint" style="text-align: right; margin-top: -5px; margin-bottom: 12px; font-size: 0.75rem; color: #7c3aed; font-weight: 700;">
+                    View Detail <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
                 <!-- Expanded Details (Hidden by default) -->
                 <div class="expanded-details" style="max-height: 0; overflow: hidden; transition: all 0.4s ease; border-top: 1px solid #f1f5f9; padding-top: 10px; display: none;">
                     <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px; margin-top: 8px;">
@@ -219,7 +243,6 @@ if (isset($conn)) {
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8rem; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
                         <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Category</span> <?php echo htmlspecialchars($product['category_name']); ?></div>
                         <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Stock</span> <?php echo htmlspecialchars($product['prod_rental_qty']); ?> units</div>
-                        <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Status</span> <span style="color: <?php echo strtolower($product['status']) === 'available' ? '#10b981' : '#ef4444'; ?>; font-weight: 600;"><?php echo htmlspecialchars($product['status']); ?></span></div>
                     </div>
                 </div>
 
@@ -272,16 +295,20 @@ function toggleExpand(card) {
     const details = card.querySelector('.expanded-details');
     const shortDesc = card.querySelector('.short-desc');
     
+    const hint = card.querySelector('.view-more-hint');
+    
     if (details.style.display === 'none' || details.style.display === '') {
         details.style.display = 'block';
         details.style.maxHeight = '800px'; 
         shortDesc.style.display = 'none';
+        hint.style.display = 'none';
         card.style.transform = 'translateY(-4px)';
         card.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1)';
     } else {
         details.style.display = 'none';
         details.style.maxHeight = '0px';
         shortDesc.style.display = '-webkit-box';
+        hint.style.display = 'block';
         card.style.transform = 'none';
         card.style.boxShadow = '';
     }
