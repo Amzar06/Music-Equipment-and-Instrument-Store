@@ -8,6 +8,9 @@ if (!isset($_SESSION['cust_id'])) {
 }
 $cust_id = $_SESSION['cust_id'];
 
+// Check if the user is logged in (for navbar profile dynamic context)
+$is_logged_in = isset($_SESSION['cust_id']);
+
 // Handle Cancellation
 if (isset($_GET['action']) && $_GET['action'] === 'cancel' && isset($_GET['id']) && isset($_GET['type'])) {
     $cancel_id = intval($_GET['id']);
@@ -83,6 +86,9 @@ if (isset($conn)) {
     <title>My Order History</title>
     <link rel="stylesheet" href="style.css?v=5.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome CDN Added for the Profile User Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         body { background: #f8fafc; color: #1e293b; }
         .history-card { 
@@ -112,10 +118,26 @@ if (isset($conn)) {
         td { background: white; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; padding: 20px 15px; }
         td:first-child { border-left: 1px solid #f1f5f9; border-radius: 12px 0 0 12px; }
         td:last-child { border-right: 1px solid #f1f5f9; border-radius: 0 12px 12px 0; }
+
+        /* Integrated Custom Profile Icon Dropdown Styles from Homepage */
+        .user-dropdown-toggle {
+            color: rgba(255, 255, 255, 0.85) !important;
+            font-size: 1.35rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .user-dropdown-toggle:hover {
+            color: #20c997 !important;
+        }
+        .dropdown-menu-end {
+            right: 0;
+            left: auto;
+        }
     </style>
 </head>
 <body>
 
+<!-- UPDATED NAVIGATION BAR -->
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #0d3b8e; padding: 12px 0;">
     <div class="container-fluid px-5">
         <a class="navbar-brand" href="../customer/home_page.php" style="font-weight: 500;">Musical Instrument Store</a>
@@ -123,12 +145,32 @@ if (isset($conn)) {
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navLogged">
-            <ul class="navbar-nav ms-auto" style="gap: 15px;">
+            <ul class="navbar-nav ms-auto align-items-center" style="gap: 15px;">
                 <li class="nav-item"><a class="nav-link" href="../customer/home_page.php">Home</a></li>
                 <li class="nav-item"><a class="nav-link" href="product page.php">Products</a></li>
                 <li class="nav-item"><a class="nav-link active" href="payment history.php">My Orders</a></li>
-                <li class="nav-item"><a class="nav-link" href="../customer/user_profile_page.php">Profile</a></li>
-                <li class="nav-item"><a class="nav-link" href="../customer/logout_page.php">Logout</a></li>
+                
+                <!-- CUSTOMER PROFILE ICON ACCORDION DROPDOWN -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle user-dropdown-toggle" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-circle-user"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm mt-2" aria-labelledby="userMenu">
+                        <?php if ($is_logged_in): ?>
+                            <li class="px-3 py-1 text-muted small fw-bold text-uppercase">
+                                Hi, <?php echo htmlspecialchars($_SESSION['cust_name'] ?? 'Customer'); ?>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="../customer/user_profile_page.php"><i class="fa-regular fa-id-card me-2"></i> My Profile</a></li>
+                            <li><a class="dropdown-item active" href="payment history.php"><i class="fa-solid fa-clock-history me-2"></i> Orders</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="../customer/logout_page.php" onclick="return confirmLogout(event);"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</a></li>
+                        <?php else: ?>
+                            <li><a class="dropdown-item" href="cust login.php"><i class="fa-solid fa-right-to-bracket me-2"></i> Customer Login</a></li>
+                            <li><a class="dropdown-item" href="../customer/register_page.php"><i class="fa-solid fa-user-plus me-2"></i> Create Account</a></li>
+                        <?php endif; ?>
+                    </ul>
+                </li>
             </ul>
         </div>
     </div>
@@ -141,7 +183,7 @@ if (isset($conn)) {
     </div>
 </div>
 
-<div class="container pb-5">
+<div class="container pb-5 mt-4">
     <div class="history-card">
         <?php if ($db_error): ?>
             <div class="alert alert-danger">
@@ -216,7 +258,7 @@ if (isset($conn)) {
                                         <a href="?action=cancel&id=<?php echo $order['id']; ?>&type=<?php echo $order['type']; ?>" 
                                            onclick="return confirm('Are you sure you want to cancel?')"
                                            style="font-size: 0.7rem; color: #ef4444; font-weight: 700; text-decoration: none; border-bottom: 1px dashed #ef4444; margin-left: 5px;">
-                                           Cancel Item
+                                            Cancel Item
                                         </a>
                                     <?php endif; ?>
                                 </div>
@@ -234,6 +276,17 @@ if (isset($conn)) {
     </div>
 </div>
 
+<!-- Scripts & Event Observers -->
+<script>
+function confirmLogout(event) {
+    const confirmation = confirm("Are you sure you want to log out of your account?");
+    if (!confirmation) {
+        event.preventDefault();
+        return false;
+    }
+    return true;
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
