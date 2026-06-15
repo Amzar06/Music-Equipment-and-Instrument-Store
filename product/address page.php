@@ -28,12 +28,12 @@ $existing_addresses = [];
 
 if (isset($conn)) {
     // 1. Fetch registration address
-    $stmt_cust = $conn->prepare("SELECT cust_name, street , city, state, postcode FROM customers WHERE cust_id = ?");
+    $stmt_cust = $conn->prepare("SELECT cust_name, cust_street AS street, cust_city AS city, cust_state AS state, cust_postcode AS postcode FROM customers WHERE cust_id = ?");
     $stmt_cust->bind_param("i", $cust_id);
     $stmt_cust->execute();
     $res_cust = $stmt_cust->get_result();
     if ($cust = $res_cust->fetch_assoc()) {
-        if (!empty($cust['cust_street'])) {
+        if (!empty($cust['street'])) {
             $existing_addresses[] = [
                 'address_id' => 'reg',
                 'full_name'  => $cust['cust_name'],
