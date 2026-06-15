@@ -181,7 +181,8 @@ CREATE TABLE `products` (
   `prod_description` text DEFAULT NULL,
   `prod_sale_price` decimal(10,2) DEFAULT NULL,
   `prod_rental_price` decimal(10,2) DEFAULT NULL,
-  `prod_qty` int(11) NOT NULL,
+  `prod_sale_qty` int(11) NOT NULL DEFAULT 0,
+  `prod_rental_qty` int(11) NOT NULL DEFAULT 0,
   `prod_image` varchar(255) DEFAULT NULL,
   `status` enum('Available','Out of Stock','Discontinued') DEFAULT 'Available',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
@@ -191,8 +192,8 @@ CREATE TABLE `products` (
 -- Dumping data for table `products`
 --
 
-INSERT INTO `products` (`prod_id`, `category_id`, `staff_id`, `prod_name`, `prod_description`, `prod_sale_price`, `prod_rental_price`, `prod_qty`, `prod_image`, `status`, `created_at`) VALUES
-(1, 5, 1, 'Yamaha C40', 'Good Guitar, Great Guitar', 400.00, 0.00, 5, '1780462235_Guitar Jamz.jpeg', 'Available', '2026-06-03 04:50:35');
+INSERT INTO `products` (`prod_id`, `category_id`, `staff_id`, `prod_name`, `prod_description`, `prod_sale_price`, `prod_rental_price`, `prod_sale_qty`, `prod_rental_qty`, `prod_image`, `status`, `created_at`) VALUES
+(1, 5, 1, 'Yamaha C40', 'Good Guitar, Great Guitar', 400.00, 0.00, 5, 5, '1780462235_Guitar Jamz.jpeg', 'Available', '2026-06-03 04:50:35');
 
 -- --------------------------------------------------------
 
