@@ -130,8 +130,10 @@ CREATE TABLE `orders` (
   `address_id` int(11) DEFAULT NULL,
   `staff_id` int(11) DEFAULT NULL,
   `total_amount` decimal(10,2) DEFAULT NULL,
-  `status` enum('Pending','Processing','Shipped','Delivered','Cancelled') DEFAULT 'Pending',
-  `order_date` timestamp NOT NULL DEFAULT current_timestamp()
+  `status` enum('Pending','Processing','Shipped','Delivered','Cancelled','Refunded') DEFAULT 'Pending',
+  `order_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `delivered_at` timestamp NULL DEFAULT NULL,
+  `collection_method` enum('Self-Pickup','Delivery') DEFAULT 'Self-Pickup'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -205,7 +207,7 @@ CREATE TABLE `rentals` (
   `staff_id` int(11) DEFAULT NULL,
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
-  `status` enum('Active','Returned','Overdue') DEFAULT 'Active',
+  `status` enum('Active','Returned','Overdue','Processing','Cancelled') DEFAULT 'Active',
   `total_amount` decimal(10,2) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
