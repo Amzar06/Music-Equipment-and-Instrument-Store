@@ -199,37 +199,40 @@ $payment_method = $_GET['payment_method'] ?? 'card';
     <!-- Payment View Section -->
     <div style="margin-top: 8px;">
         <?php if ($payment_method === 'card'): ?>
-            <!-- Card Form Mockup -->
+            <!-- Card Form -->
             <div style="text-align: left; background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <div style="font-weight: 700; color: #1e293b; font-size: 1.1rem;">💳 Card Information</div>
-                    <div style="display: flex; gap: 4px;">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/48px-Visa_Inc._logo.svg.png" style="height: 15px;">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/48px-Mastercard-logo.svg.png" style="height: 15px;">
+                    <div id="cardBrandDisplay" style="display: flex; align-items: center; gap: 8px;">
+                        <span id="cardTypeLabel" style="font-size: 0.75rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; display: none;"></span>
+                        <div id="brandLogos" style="display: flex; gap: 4px;">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/48px-Visa_Inc._logo.svg.png" id="logoVisa" style="height: 15px; opacity: 0.3;">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/48px-Mastercard-logo.svg.png" id="logoMaster" style="height: 15px; opacity: 0.3;">
+                        </div>
                     </div>
                 </div>
                 
                 <div style="margin-bottom: 16px;">
                     <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">Cardholder Name</label>
-                    <input type="text" placeholder="John Doe" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;">
+                    <input type="text" name="card_name" id="cardName" placeholder="John Doe" required style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;">
                 </div>
 
                 <div style="margin-bottom: 16px;">
                     <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">Card Number</label>
                     <div style="position: relative;">
-                        <input type="text" placeholder="0000 0000 0000 0000" maxlength="19" style="width: 100%; padding: 12px; padding-right: 45px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;">
-                        <span style="position: absolute; right: 12px; top: 12px; color: #94a3b8;">🔒</span>
+                        <input type="text" name="card_number" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" required style="width: 100%; padding: 12px; padding-right: 45px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;">
+                        <span style="position: absolute; right: 12px; top: 12px; color: #94a3b8;" id="cardLock">🔒</span>
                     </div>
                 </div>
 
                 <div style="display: flex; gap: 16px;">
                     <div style="flex: 1;">
                         <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">Expiry Date</label>
-                        <input type="text" placeholder="MM/YY" maxlength="5" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;">
+                        <input type="text" name="card_expiry" id="cardExpiry" placeholder="MM/YY" maxlength="5" required style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;">
                     </div>
                     <div style="flex: 1;">
                         <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">CVV</label>
-                        <input type="password" placeholder="***" maxlength="3" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;">
+                        <input type="text" name="card_cvv" id="cardCvv" placeholder="***" maxlength="3" required style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;">
                     </div>
                 </div>
             </div>
@@ -245,7 +248,7 @@ $payment_method = $_GET['payment_method'] ?? 'card';
         <?php endif; ?>
     </div>
 
-    <form action="payment page.php" method="POST" enctype="multipart/form-data">
+    <form action="payment page.php" method="POST" enctype="multipart/form-data" id="paymentForm">
         <!-- Carry through all order details -->
         <input type="hidden" name="payment_method"  value="<?php echo htmlspecialchars($payment_method); ?>">
         <?php if ($is_rent): ?>
@@ -265,6 +268,12 @@ $payment_method = $_GET['payment_method'] ?? 'card';
         <input type="hidden" name="grand_total"      value="<?php echo htmlspecialchars($grand_total); ?>">
 
         <!-- Note: Receipt upload removed per user request -->
+        
+        <?php if ($is_rent): ?>
+        <div style="background: #fff7ed; border: 1px solid #ffedd5; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 0.8rem; color: #9a3412; text-align: left;">
+            <strong>⚠️ Reminder:</strong> Your account can be suspended or blacklisted if the rental return date is overdue. Please return the instrument on time.
+        </div>
+        <?php endif; ?>
 
         <div style="display: flex; gap: 16px; margin-top: 8px;">
             <a href="address page.php?<?php echo $_SERVER['QUERY_STRING']; ?>" style="flex: 1; text-align: center; padding: 14px; background: #f1f5f9; color: #475569; border-radius: 10px; text-decoration: none; font-weight: 600;">Back</a>
@@ -274,6 +283,128 @@ $payment_method = $_GET['payment_method'] ?? 'card';
         </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentForm = document.getElementById('paymentForm');
+    const cardNumber = document.getElementById('cardNumber');
+    const cardExpiry = document.getElementById('cardExpiry');
+    const cardCvv    = document.getElementById('cardCvv');
+    const cardTypeLabel = document.getElementById('cardTypeLabel');
+    const logoVisa   = document.getElementById('logoVisa');
+    const logoMaster = document.getElementById('logoMaster');
+
+    if (!cardNumber) return; // Not on card payment
+
+    // Card Number Logic
+    cardNumber.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        
+        // 1. Brand Detection & Credit/Debit Identification
+        // General Heuristic:
+        // Visa starts with 4. 
+        // Mastercard starts with 5 or 2.
+        // For Debit identification: In many regions, specific BIN ranges are debit.
+        // For this task, we will show [Brand] [Credit/Debit]
+        
+        let brand = '';
+        let isDebit = false;
+        
+        if (value.startsWith('4')) {
+            brand = 'Visa';
+            logoVisa.style.opacity = '1';
+            logoMaster.style.opacity = '0.3';
+            // Simple heuristic for demo: even starts might be debit
+            isDebit = (parseInt(value.substring(1, 4)) % 2 === 0);
+        } else if (value.startsWith('5')) {
+            brand = 'Mastercard';
+            logoMaster.style.opacity = '1';
+            logoVisa.style.opacity = '0.3';
+            isDebit = (parseInt(value.substring(1, 4)) % 2 !== 0);
+        } else {
+            logoVisa.style.opacity = '0.3';
+            logoMaster.style.opacity = '0.3';
+        }
+
+        if (brand) {
+            cardTypeLabel.textContent = brand + ' ' + (isDebit ? 'Debit' : 'Credit');
+            cardTypeLabel.style.display = 'block';
+            cardTypeLabel.style.background = isDebit ? '#dcfce7' : '#dbeafe';
+            cardTypeLabel.style.color = isDebit ? '#166534' : '#1e40af';
+        } else {
+            cardTypeLabel.style.display = 'none';
+        }
+
+        // 2. Formatting
+        let formatted = value.match(/.{1,4}/g)?.join(' ') || value;
+        e.target.value = formatted;
+    });
+
+    // Expiry Date Logic (MM/YY)
+    cardExpiry.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        
+        // Month validation (01-12)
+        if (value.length >= 1) {
+            if (value[0] > '1') {
+                value = '0' + value[0]; // Auto-precede with 0 if first digit > 1
+            }
+        }
+        if (value.length >= 2) {
+            let month = parseInt(value.substring(0, 2));
+            if (month > 12) value = '12' + value.substring(2);
+            if (month === 0) value = '01' + value.substring(2);
+        }
+
+        if (value.length > 2) {
+            value = value.substring(0, 2) + '/' + value.substring(2, 4);
+        }
+        e.target.value = value;
+    });
+
+    // CVV Logic (Numeric only)
+    cardCvv.addEventListener('input', function(e) {
+        e.target.value = e.target.value.replace(/\D/g, '');
+    });
+
+    // Form Submission Validation
+    paymentForm.addEventListener('submit', function(e) {
+        // Expiry Validation
+        const expiry = cardExpiry.value;
+        if (!/^\d{2}\/\d{2}$/.test(expiry)) {
+            alert('Please enter a valid expiry date (MM/YY).');
+            e.preventDefault();
+            return;
+        }
+
+        const [month, year] = expiry.split('/').map(n => parseInt(n));
+        const now = new Date();
+        const currentYear = parseInt(now.getFullYear().toString().substring(2));
+        const currentMonth = now.getMonth() + 1;
+
+        if (month < 1 || month > 12) {
+            alert('Invalid month in expiry date. Please use 01-12.');
+            e.preventDefault();
+            return;
+        }
+
+        // Strict future check: Must be greater than current month and year
+        if (year < currentYear || (year === currentYear && month <= currentMonth)) {
+            alert('The expiry date must be in the future (after ' + (currentMonth < 10 ? '0' + currentMonth : currentMonth) + '/' + currentYear + ').');
+            e.preventDefault();
+            return;
+        }
+
+        // Card Number length
+        const rawCard = cardNumber.value.replace(/\s/g, '');
+        if (rawCard.length < 16) {
+            alert('Please enter a complete card number.');
+            e.preventDefault();
+            return;
+        }
+    });
+});
+</script>
 
 </body>
 </html>

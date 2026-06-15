@@ -110,8 +110,13 @@ CREATE TABLE `customers` (
 -- Dumping data for table `customers`
 --
 
-INSERT INTO `customers` (`cust_id`, `cust_name`, `cust_email`, `cust_password`, `cust_phone_number`, `cust_address`, `created_at`) VALUES
-(1, 'Amzar', 'amzar06@gmail.com', 'abc123', '0123456789', 'taman saujana', '2026-06-03 05:27:47');
+INSERT INTO `customers` (`cust_id`, `cust_name`, `cust_email`, `cust_password`, `cust_phone_number`, `cust_address`, `cust_street`, `cust_city`, `cust_state`, `cust_postcode`, `status`, `created_at`) VALUES
+(1, 'Amzar', 'amzar06@gmail.com', 'Abc@21', '0123456789', 'taman saujana', NULL, NULL, NULL, NULL, 'Active', '2026-06-03 05:27:47'),
+(2, 'Yadusha', 'Yadusha@gmail.com', '$2y$10$c6sw7VqjkeG0OpYiYOegIONHQ7Byr37B33J215l8jt/CRucvKBmMO', '0123114816', NULL, '123', 'ayer keroh', 'Melaka', '70350', 'Active', '2026-06-15 05:43:58'),
+(3, 'Yadusa', 'Yadusha63@gmail.com', '$2y$10$VfbEWDShaDtVYWSieF6DZuB2ka/QhIST1pPjzQF.XwIh59YpnEC2W', '0123114816', NULL, '123', 'ayer keroh', 'Melaka', '70350', 'Active', '2026-06-15 05:46:55'),
+(4, 'Yadusha', 'Yadusha21@gmail.com', '$2y$10$NDKhPOp2/yOB8Hm.1U.HMux..YJv6CcfRtxgRFz9wS.XFArJo6LlK', '0123114816', NULL, '123', 'ayer keroh', 'Melaka', '70350', 'Active', '2026-06-15 05:48:36'),
+(5, 'devya durai', 'devya146@gmail.com', '$2y$10$eBndtas3T2ku1rqLMjEIWOlOOhDzS6I.qtNav/3lC4p83fGLrFZwK', '+60123114816', NULL, '123', 'ayer keroh', 'Melaka', '70350', 'Active', '2026-06-15 05:52:14'),
+(6, 'devi', 'devvyaa93@gmail.com', '$2y$10$Cq3HJGd3LWoDLzPj9TmKpumt0zZ.XzjtSqQtKR4jcoqA5dvR6hdh2', '0123678925', NULL, '123', 'ayer keroh', 'Melaka', '70350', 'Active', '2026-06-15 07:40:02');
 
 -- --------------------------------------------------------
 
@@ -373,7 +378,7 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT for table `customers`
 --
 ALTER TABLE `customers`
-  MODIFY `cust_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `cust_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `orders`
