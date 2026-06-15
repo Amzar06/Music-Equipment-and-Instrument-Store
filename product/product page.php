@@ -8,6 +8,9 @@ if (!isset($_SESSION['cust_id'])) {
 }
 $cust_id = $_SESSION['cust_id'];
 
+// Check if the user is logged in (for navbar dynamic profile display context)
+$is_logged_in = isset($_SESSION['cust_id']);
+
 // Fetch categories
 $categories = [];
 if (isset($conn)) {
@@ -41,6 +44,8 @@ if (isset($conn)) {
     <title>Buy Instruments</title>
     <link rel="stylesheet" href="style.css?v=5.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         /* Smooth transition for filtering */
         .card { transition: all 0.3s ease; }
@@ -68,6 +73,21 @@ if (isset($conn)) {
             25% { transform: translateX(-5px); }
             75% { transform: translateX(5px); }
         }
+
+        /* Integrated Custom Profile Icon Dropdown Styles from Homepage */
+        .user-dropdown-toggle {
+            color: rgba(255, 255, 255, 0.85) !important;
+            font-size: 1.35rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .user-dropdown-toggle:hover {
+            color: #20c997 !important;
+        }
+        .dropdown-menu-end {
+            right: 0;
+            left: auto;
+        }
     </style>
 </head>
 
@@ -80,12 +100,31 @@ if (isset($conn)) {
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navLogged">
-            <ul class="navbar-nav ms-auto" style="gap: 15px;">
+            <ul class="navbar-nav ms-auto align-items-center" style="gap: 15px;">
                 <li class="nav-item"><a class="nav-link" href="../customer/home_page.php">Home</a></li>
                 <li class="nav-item"><a class="nav-link active" href="product page.php">Products</a></li>
                 <li class="nav-item"><a class="nav-link" href="payment history.php">My Orders</a></li>
-                <li class="nav-item"><a class="nav-link" href="../customer/user_profile_page.php">Profile</a></li>
-                <li class="nav-item"><a class="nav-link" href="../customer/logout_page.php" onclick="return confirmLogout(event);">Logout</a></li>
+                
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle user-dropdown-toggle" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-circle-user"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm mt-2" aria-labelledby="userMenu">
+                        <?php if ($is_logged_in): ?>
+                            <li class="px-3 py-1 text-muted small fw-bold text-uppercase">
+                                Hi, <?php echo htmlspecialchars($_SESSION['cust_name'] ?? 'Customer'); ?>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="../customer/user_profile_page.php"><i class="fa-regular fa-id-card me-2"></i> My Profile</a></li>
+                            <li><a class="dropdown-item" href="payment history.php"><i class="fa-solid fa-clock-history me-2"></i> Orders</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="../customer/logout_page.php" onclick="return confirmLogout(event);"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</a></li>
+                        <?php else: ?>
+                            <li><a class="dropdown-item" href="cust login.php"><i class="fa-solid fa-right-to-bracket me-2"></i> Customer Login</a></li>
+                            <li><a class="dropdown-item" href="../customer/register_page.php"><i class="fa-solid fa-user-plus me-2"></i> Create Account</a></li>
+                        <?php endif; ?>
+                    </ul>
+                </li>
             </ul>
         </div>
     </div>
@@ -107,7 +146,7 @@ if (isset($conn)) {
     </div>
 </div>
 
-<div style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+<div style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; margin-top: 25px;">
 
     <div class="nav-tabs">
         <a href="product page.php" class="nav-link buy active">Buy Instruments</a>
@@ -143,7 +182,7 @@ if (isset($conn)) {
                          style="width: 100%; height: 200px; background-size: cover; background-position: center; background-image: url('../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>'); border-radius: 10px; margin-bottom: 16px; transition: transform 0.3s;"
                          onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
                     </div>
-                <?php id_else: ?>
+                <?php else: ?>
                     <div style="width: 100%; height: 200px; background-color: #f1f5f9; border-radius: 10px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; color: #94a3b8; border: 2px dashed #e2e8f0;">[ No Image ]</div>
                 <?php endif; ?>
                 
@@ -181,10 +220,7 @@ if (isset($conn)) {
 <script>
 // Logout Confirmation Box Logic
 function confirmLogout(event) {
-    // Show confirmation popup window
     const baseConfirm = confirm("Are you sure you want to log out of your account?");
-    
-    // If user clicks 'Cancel', stop execution and stay on page
     if (!baseConfirm) {
         event.preventDefault();
         return false;
