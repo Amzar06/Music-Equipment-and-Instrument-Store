@@ -1,42 +1,51 @@
 <?php
 session_start();
 include '../database.php';
+
+$name = $email = $phone = $street = $city = $state = $postcode = '';
+$password = $confirm_password = '';
 $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['name'] ?? '';
     $email = $_POST['email'] ?? '';
-    $password = $_POST['password'] ?? '';
-    $confirm_password = $_POST['confirm_password'] ?? '';
     $phone = $_POST['phone'] ?? '';
     $street = $_POST['street'] ?? '';
     $city = $_POST['city'] ?? '';
     $state = $_POST['state'] ?? '';
     $postcode = $_POST['postcode'] ?? '';
+    
+    $password = $_POST['password'] ?? '';
+    $confirm_password = $_POST['confirm_password'] ?? '';
 
-    // 1. Backend Validation for Password Matching
     if ($password !== $confirm_password) {
         $error = "Passwords do not match.";
+        $password = '';
+        $confirm_password = '';
     } 
-    // 2. Strict Backend Validation for Password Strength (Cannot proceed unless conditions are met)
     elseif (strlen($password) < 8 || !preg_match('/[0-9]/', $password) || !preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password)) {
         $error = "Password must be a minimum of 8 characters and contain at least 1 number and 1 symbol.";
+        $password = '';
+        $confirm_password = '';
     } 
     elseif (isset($conn)) {
-        // Using plain text to match cust login.php
         $stmt = $conn->prepare("SELECT cust_id FROM customers WHERE cust_email = ?");
         if ($stmt) {
             $stmt->bind_param("s", $email);
             $stmt->execute();
             if ($stmt->get_result()->num_rows > 0) {
                 $error = "Email already registered.";
+                $email = ''; 
             } else {
+                $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+
                 $insert = $conn->prepare("INSERT INTO customers (cust_name, cust_email, cust_password, cust_phone_number, cust_street, cust_city, cust_state, cust_postcode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                 if ($insert) {
-                    $insert->bind_param("ssssssss", $name, $email, $password, $phone, $street, $city, $state, $postcode);
+                    $insert->bind_param("ssssssss", $name, $email, $hashed_password, $phone, $street, $city, $state, $postcode);
                     if ($insert->execute()) {
                         $success = "Registration successful! You can now login.";
+                        $name = $email = $phone = $street = $city = $state = $postcode = '';
                     } else {
                         $error = "Registration failed.";
                     }
@@ -53,6 +62,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <title>Register</title>
     <link rel="stylesheet" href="customer.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS to position the eye icon inside the input field natively */
+        .password-container {
+            position: relative;
+            width: 100%;
+        }
+        .password-container input {
+            width: 100%;
+            padding-right: 40px; /* Leave space for the icon so text doesn't overlap */
+            box-sizing: border-box;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 38%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #777;
+        }
+        .toggle-password:hover {
+            color: #333;
+        }
+    </style>
 </head>
 <body>
 
@@ -72,79 +105,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
       <?php endif; ?>
 
-      <form action="register_page.php" method="POST">
+      <form action="register_page.php" method="POST" id="registerForm">
           <label>Full Name</label>
-          <input type="text" name="name" placeholder="Enter your full name" required>
+          <input type="text" name="name" placeholder="Enter your full name" required value="<?php echo htmlspecialchars($name); ?>">
 
           <label>Email Address</label>
-          <input type="email" name="email" placeholder="Enter your email" required>
+          <input type="email" name="email" placeholder="Enter your email" required value="<?php echo htmlspecialchars($email); ?>">
 
           <label>Phone Number</label>
-          <input type="text" name="phone" placeholder="Enter your phone number" required>
+          <input type="text" name="phone" placeholder="Enter your phone number" required value="<?php echo htmlspecialchars($phone); ?>">
 
           <label>Street Address</label>
-          <input type="text" name="street" placeholder="No, Building, Street" required>
+          <input type="text" name="street" placeholder="No, Building, Street" required value="<?php echo htmlspecialchars($street); ?>">
 
           <div style="display: flex; gap: 10px;">
               <div style="flex: 1;">
                   <label>City</label>
-                  <input type="text" name="city" placeholder="City" required>
+                  <input type="text" name="city" placeholder="City" required value="<?php echo htmlspecialchars($city); ?>">
               </div>
               <div style="flex: 1;">
                   <label>Postcode</label>
-                  <input type="text" name="postcode" placeholder="Postcode" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                  <input type="text" name="postcode" placeholder="Postcode" required oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="<?php echo htmlspecialchars($postcode); ?>">
               </div>
           </div>
 
           <label for="state">State</label>
           <select name="state" id="state" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; background-color: #fff; box-sizing: border-box;">
-              <option value="" disabled selected>Select your state</option>
-              <option value="Johor">Johor</option>
-              <option value="Kedah">Kedah</option>
-              <option value="Kelantan">Kelantan</option>
-              <option value="Melaka">Melaka</option>
-              <option value="Negeri Sembilan">Negeri Sembilan</option>
-              <option value="Pahang">Pahang</option>
-              <option value="Penang">Penang</option>
-              <option value="Perak">Perak</option>
-              <option value="Perlis">Perlis</option>
-              <option value="Sabah">Sabah</option>
-              <option value="Sarawak">Sarawak</option>
-              <option value="Selangor">Selangor</option>
-              <option value="Terengganu">Terengganu</option>
-              <option value="W.P. Kuala Lumpur">W.P. Kuala Lumpur</option>
-              <option value="W.P. Labuan">W.P. Labuan</option>
-              <option value="W.P. Putrajaya">W.P. Putrajaya</option>
+              <option value="" disabled <?php echo empty($state) ? 'selected' : ''; ?>>Select your state</option>
+              <?php
+              $states = ["Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", "Pahang", "Penang", "Perak", "Perlis", "Sabah", "Sarawak", "Selangor", "Terengganu", "W.P. Kuala Lumpur", "W.P. Labuan", "W.P. Putrajaya"];
+              foreach ($states as $s) {
+                  $selected = ($state === $s) ? 'selected' : '';
+                  echo "<option value=\"$s\" $selected>$s</option>";
+              }
+              ?>
           </select>
 
-          <?php if ($error && (strpos($error, 'Password') !== false || strpos($error, 'match') !== false)): ?>
-              <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.9em; text-align: center;">
-                  <?php echo htmlspecialchars($error); ?>
-              </div>
-          <?php endif; ?>
-
           <label>Password</label>
-          <input 
-              type="password" 
-              name="password" 
-              placeholder="Enter your password" 
-              required
-              pattern="(?=.*[0-9])(?=.*[!@#$%^&*(),.?\x22:{}|<>]).{8,}"
-              title="Minimum 8 characters, 1 number, and 1 symbol."
-              style="margin-bottom: 4px;"
-          >
-          <div style="font-size: 0.85em; color: #555; margin-bottom: 15px;">
+          <div class="password-container">
+              <input 
+                  type="password" 
+                  name="password" 
+                  id="password"
+                  placeholder="Enter your password" 
+                  required
+                  pattern="^(?=.*[0-9])(?=.*[!@#$%^&*(),.?\x22:{}|<>]).{8,}$"
+                  style="margin-bottom: 4px;"
+                  value="<?php echo htmlspecialchars($password); ?>"
+              >
+              <i class="fa-solid fa-eye toggle-password" id="togglePassword"></i>
+          </div>
+          <div id="pass-hint" style="font-size: 0.85em; color: #555; margin-bottom: 15px;">
               Minimum 8 characters, 1 number, and 1 symbol.
           </div>
 
           <label>Confirm Password</label>
-          <input 
-              type="password" 
-              name="confirm_password" 
-              placeholder="Confirm your password" 
-              required
-              style="margin-bottom: 15px;"
-          >
+          <div class="password-container">
+              <input 
+                  type="password" 
+                  name="confirm_password" 
+                  id="confirm_password"
+                  placeholder="Confirm your password" 
+                  required
+                  style="margin-bottom: 4px;"
+                  value="<?php echo htmlspecialchars($confirm_password); ?>"
+              >
+              <i class="fa-solid fa-eye toggle-password" id="toggleConfirmPassword"></i>
+          </div>
+          <div id="match-hint" style="font-size: 0.85em; color: #555; margin-bottom: 15px;"></div>
 
           <button type="submit" style="width: 100%; margin-top: 12px;">Register</button>
       </form>
@@ -154,6 +182,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </div>
   </div>
+
+  <script>
+      const password = document.getElementById('password');
+      const confirmPassword = document.getElementById('confirm_password');
+      const passHint = document.getElementById('pass-hint');
+      const matchHint = document.getElementById('match-hint');
+      const form = document.getElementById('registerForm');
+      
+      const togglePassword = document.getElementById('togglePassword');
+      const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+
+      // 1. Toggle visibility for Password field
+      togglePassword.addEventListener('click', function () {
+          const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+          password.setAttribute('type', type);
+          
+          // Toggle the eye icon style (slash vs regular eye)
+          this.classList.toggle('fa-eye-slash');
+      });
+
+      // 2. Toggle visibility for Confirm Password field
+      toggleConfirmPassword.addEventListener('click', function () {
+          const type = confirmPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+          confirmPassword.setAttribute('type', type);
+          
+          // Toggle the eye icon style
+          this.classList.toggle('fa-eye-slash');
+      });
+
+      // Live requirement validations
+      password.addEventListener('input', function() {
+          if (password.value.length > 0 && !password.checkValidity()) {
+              passHint.style.color = '#991b1b';
+              passHint.style.fontWeight = 'bold';
+          } else {
+              passHint.style.color = '#555';
+              passHint.style.fontWeight = 'normal';
+          }
+      });
+
+      function checkMatch() {
+          if (confirmPassword.value.length === 0) {
+              matchHint.textContent = '';
+              return;
+          }
+          if (password.value === confirmPassword.value) {
+              matchHint.textContent = '✓ Passwords match';
+              matchHint.style.color = '#166534';
+          } else {
+              matchHint.textContent = '✗ Passwords do not match';
+              matchHint.style.color = '#991b1b';
+          }
+      }
+
+      password.addEventListener('input', checkMatch);
+      confirmPassword.addEventListener('input', checkMatch);
+
+      form.addEventListener('submit', function(e) {
+          if (password.value !== confirmPassword.value) {
+              e.preventDefault();
+              alert('Passwords do not match. Please verify.');
+          }
+      });
+  </script>
 
 </body>
 </html>

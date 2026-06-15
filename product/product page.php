@@ -85,13 +85,12 @@ if (isset($conn)) {
                 <li class="nav-item"><a class="nav-link active" href="product page.php">Products</a></li>
                 <li class="nav-item"><a class="nav-link" href="payment history.php">My Orders</a></li>
                 <li class="nav-item"><a class="nav-link" href="../customer/user_profile_page.php">Profile</a></li>
-                <li class="nav-item"><a class="nav-link" href="../customer/logout_page.php">Logout</a></li>
+                <li class="nav-item"><a class="nav-link" href="../customer/logout_page.php" onclick="return confirmLogout(event);">Logout</a></li>
             </ul>
         </div>
     </div>
 </nav>
 
-<!-- Lightbox Modal -->
 <div id="lightbox" onclick="this.style.display='none'">
     <img id="lightboxImg" src="">
 </div>
@@ -115,7 +114,6 @@ if (isset($conn)) {
         <a href="rent page.php" class="nav-link rent">Rent Instruments</a>
     </div>
 
-    <!-- Category Sort Section -->
     <div style="margin-bottom: 32px; display: flex; align-items: center; gap: 12px;">
         <label for="categoryFilter" style="font-weight: 600; color: var(--text-primary);">Sort by Category:</label>
         <select id="categoryFilter" style="padding: 10px 16px; font-size: 1rem; border-radius: 10px; border: 1.5px solid var(--card-border); background: #f8fafc; color: var(--text-primary); cursor: pointer;" onchange="filterCategory()">
@@ -145,7 +143,7 @@ if (isset($conn)) {
                          style="width: 100%; height: 200px; background-size: cover; background-position: center; background-image: url('../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>'); border-radius: 10px; margin-bottom: 16px; transition: transform 0.3s;"
                          onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
                     </div>
-                <?php else: ?>
+                <?php id_else: ?>
                     <div style="width: 100%; height: 200px; background-color: #f1f5f9; border-radius: 10px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; color: #94a3b8; border: 2px dashed #e2e8f0;">[ No Image ]</div>
                 <?php endif; ?>
                 
@@ -156,7 +154,6 @@ if (isset($conn)) {
                     <?php echo htmlspecialchars($product['prod_description']); ?>
                 </p>
 
-                <!-- Expanded Details (Hidden by default) -->
                 <div class="expanded-details" style="max-height: 0; overflow: hidden; transition: all 0.4s ease; border-top: 1px solid #f1f5f9; padding-top: 12px; display: none;">
                     <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px; margin-top: 8px;">
                         <?php echo htmlspecialchars($product['prod_description']); ?>
@@ -182,6 +179,19 @@ if (isset($conn)) {
 </div>
 
 <script>
+// Logout Confirmation Box Logic
+function confirmLogout(event) {
+    // Show confirmation popup window
+    const baseConfirm = confirm("Are you sure you want to log out of your account?");
+    
+    // If user clicks 'Cancel', stop execution and stay on page
+    if (!baseConfirm) {
+        event.preventDefault();
+        return false;
+    }
+    return true;
+}
+
 function openLightbox(event, imgSrc) {
     event.stopPropagation();
     const lightbox = document.getElementById('lightbox');
