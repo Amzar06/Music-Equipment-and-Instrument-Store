@@ -4,18 +4,24 @@ include '../database.php';
 
 $message = "";
 $message_type = ""; 
-$step = 1; // Step 1: Enter Email | Step 2: Enter Code & New Password
 
-// STEP 1: CUSTOMER SUBMITS THEIR EMAIL
+// Maintain the workflow step across failures or initial load
+$step = isset($_POST['step']) ? (int)$_POST['step'] : 1;
+
+// =========================================================================
+// STEP 1: CUSTOMER SUBMITS THEIR EMAIL TO RECEIVE THE OTP
+// =========================================================================
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_email'])) {
     $email = trim($_POST['email']);
 
     if (empty($email)) {
         $message = "Please enter your email address.";
         $message_type = "danger";
+        $step = 1;
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $message = "Invalid email format.";
         $message_type = "danger";
+        $step = 1;
     } else {
         if (isset($conn)) {
             $stmt = $conn->prepare("SELECT cust_id FROM customers WHERE cust_email = ?");
@@ -41,14 +47,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_email'])) {
                 } else {
                     $message = "This email address is not registered in our system.";
                     $message_type = "danger";
+                    $step = 1;
                 }
                 $stmt->close();
+            } else {
+                $message = "Database error. Please try again later.";
+                $message_type = "danger";
+                $step = 1;
             }
         }
     }
 }
 
+// =========================================================================
 // STEP 2: CUSTOMER SUBMITS CODE AND NEW PASSWORD
+// =========================================================================
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_reset'])) {
     $entered_code = trim($_POST['verification_code']);
     $new_password = $_POST['new_password'];
@@ -60,12 +73,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_reset'])) {
     if (!$cust_id || !$saved_code) {
         $message = "Session expired. Please re-enter your email.";
         $message_type = "danger";
-        $step = 1;
+        $step = 1; // Fall back to start
     } elseif ($entered_code != $saved_code) {
         $message = "Incorrect verification code. Please check again.";
         $message_type = "danger";
-        $step = 2; 
-    } elseif (strlen($new_password) < 6) { // Enforcing a healthier 6-character minimum for hashed accounts
+        $step = 2; // Force retention of step 2 HTML
+    } elseif (strlen($new_password) < 6) { 
         $message = "For better security, your password must be at least 6 characters long.";
         $message_type = "danger";
         $step = 2;
@@ -89,7 +102,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_reset'])) {
                     unset($_SESSION['otp_code']);
                     unset($_SESSION['reset_cust_id']);
                     unset($_SESSION['reset_email']);
-                    $step = 3; 
+                    $step = 3; // Registration success terminal point
                 } else {
                     $message = "Database error. Failed to save password mapping.";
                     $message_type = "danger";
@@ -156,9 +169,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_reset'])) {
             <?php if ($step == 1): ?>
                 <form action="forgot_password.php" method="POST" autocomplete="off">
                     <input type="hidden" name="submit_email" value="1">
+                    <input type="hidden" name="step" value="1">
                     <div class="mb-4">
                         <label for="emailInput" class="form-label">Registered Email Address</label>
-                        <input type="email" name="email" id="emailInput" class="form-control" placeholder="e.g., amzar06@gmail.com" required>
+                        <input type="email" name="email" id="emailInput" class="form-control" placeholder="e.g. abc@gmail.com" value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>" required>
                     </div>
                     <button type="submit" class="btn btn-submit w-100 mb-3">
                         Request Verification Code <i class="fa-solid fa-arrow-right ms-1"></i>
@@ -168,6 +182,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_reset'])) {
             <?php elseif ($step == 2): ?>
                 <form action="forgot_password.php" method="POST" autocomplete="off">
                     <input type="hidden" name="submit_reset" value="1">
+                    <input type="hidden" name="step" value="2">
                     
                     <div class="mb-3">
                         <label for="codeInput" class="form-label" style="color: #2563eb;">Enter 6-Digit Code</label>
@@ -191,12 +206,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_reset'])) {
             
             <?php elseif ($step == 3): ?>
                 <div class="text-center mt-2">
-                    <a href="cust login.php" class="btn btn-submit w-100 py-2 text-decoration-none">Proceed to Login Page</a>
+                    <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php" class="btn btn-submit w-100 py-2 text-decoration-none">Proceed to Login Page</a>
                 </div>
             <?php endif; ?>
 
             <div class="text-center mt-4">
-                <a href="cust login.php" class="back-to-login">
+                <a href="/Music-Equipment-and-Instrument-Store/product/cust login.php" class="back-to-login">
                     <i class="fa-solid fa-arrow-left me-2" style="font-size: 0.8rem;"></i> Return to Login
                 </a>
             </div>

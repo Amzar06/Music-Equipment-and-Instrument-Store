@@ -13,33 +13,49 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cust_name = $_POST['cust_name'] ?? '';
     $cust_email = $_POST['cust_email'] ?? '';
-    $cust_phone_number = $_POST['cust_phone_number'] ?? '';
+    
+    // Sanitize phone number by removing trailing or accidental whitespace
+    $cust_phone_number = trim($_POST['cust_phone_number'] ?? '');
+    
     $cust_street = $_POST['cust_street'] ?? '';
     $cust_city = $_POST['cust_city'] ?? '';
     $cust_state = $_POST['cust_state'] ?? '';
     $cust_postcode = $_POST['cust_postcode'] ?? '';
     
-    if (isset($conn)) {
-        // Prevent duplicate emails
-        $check = $conn->prepare("SELECT cust_id FROM customers WHERE cust_email = ? AND cust_id != ?");
-        if ($check) {
-            $check->bind_param("si", $cust_email, $cust_id);
-            $check->execute();
-            if ($check->get_result()->num_rows > 0) {
-                $error = "Email is already taken by another account.";
-            } else {
-                $update = $conn->prepare("UPDATE customers SET cust_name = ?, cust_email = ?, cust_phone_number = ?, cust_street = ?, cust_city = ?, cust_state = ?, cust_postcode = ? WHERE cust_id = ?");
-                if ($update) {
-                    $update->bind_param("sssssssi", $cust_name, $cust_email, $cust_phone_number, $cust_street, $cust_city, $cust_state, $cust_postcode, $cust_id);
-                    if ($update->execute()) {
-                        $success = "Profile updated successfully!";
-                    } else {
-                        $error = "Failed to update profile.";
+    // =========================================================================
+    // MALAYSIAN PHONE NUMBER VALIDATION CODE
+    // =========================================================================
+    // Pattern checks: Must start with +60, followed by a valid prefix (e.g., mobile 10-19, landlines 3-9) 
+    // and total length between 9 to 11 digits after country code.
+    $my_phone_pattern = '/^\+60(1[0-9]|3|4|5|6|7|8|9)[0-9]{7,8}$/';
+
+    if (empty($cust_phone_number)) {
+        $error = "Phone number is required.";
+    } elseif (!preg_match($my_phone_pattern, $cust_phone_number)) {
+        $error = "Invalid phone number format! It must follow Malaysian format starting with +60 (e.g., +60123456789 or +60312345678).";
+    } else {
+        if (isset($conn)) {
+            // Prevent duplicate emails
+            $check = $conn->prepare("SELECT cust_id FROM customers WHERE cust_email = ? AND cust_id != ?");
+            if ($check) {
+                $check->bind_param("si", $cust_email, $cust_id);
+                $check->execute();
+                if ($check->get_result()->num_rows > 0) {
+                    $error = "Email is already taken by another account.";
+                } else {
+                    $update = $conn->prepare("UPDATE customers SET cust_name = ?, cust_email = ?, cust_phone_number = ?, cust_street = ?, cust_city = ?, cust_state = ?, cust_postcode = ? WHERE cust_id = ?");
+                    if ($update) {
+                        $update->bind_param("sssssssi", $cust_name, $cust_email, $cust_phone_number, $cust_street, $cust_city, $cust_state, $cust_postcode, $cust_id);
+                        if ($update->execute()) {
+                            $success = "Profile updated successfully!";
+                        } else {
+                            $error = "Failed to update profile.";
+                        }
+                        $update->close();
                     }
-                    $update->close();
                 }
+                $check->close();
             }
-            $check->close();
         }
     }
 }
@@ -127,6 +143,7 @@ if (isset($conn)) {
             display: inline-block;
         }
         .btn-cancel:hover { background: #e2e8f0; color: #1e293b; }
+        .phone-hint { font-size: 0.78rem; color: #94a3b8; font-weight: 500; margin-top: -15px; margin-bottom: 15px; display: block; }
     </style>
 </head>
 <body>
@@ -180,7 +197,12 @@ if (isset($conn)) {
             </div>
 
             <label class="form-label">Phone Number</label>
-            <input type="text" name="cust_phone_number" class="form-control" value="<?php echo htmlspecialchars($user_data['cust_phone_number']); ?>">
+            <input type="text" name="cust_phone_number" class="form-control" 
+                   placeholder="e.g., +60123456789" 
+                   pattern="^\+60(1[0-9]|[3-9])[0-9]{7,8}$" 
+                   title="Please enter a valid Malaysian phone number starting with +60 followed by 8 to 10 digits." 
+                   value="<?php echo htmlspecialchars($user_data['cust_phone_number']); ?>" required>
+            <span class="phone-hint"><i class="fa-solid fa-info-circle me-1"></i> Format must be Malaysian standard including country code (e.g., <strong>+60171234567</strong>)</span>
 
             <label class="form-label">Street Address</label>
             <input type="text" name="cust_street" class="form-control" value="<?php echo htmlspecialchars($user_data['cust_street']); ?>">
