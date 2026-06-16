@@ -60,7 +60,7 @@ if (!isset($conn) || $conn->connect_error) {
     $db_error = "Database connection failed";
 } else {
     $query = $conn->prepare("
-        SELECT ci.cart_item_id, p.prod_name, p.prod_sale_price, ci.quantity, p.prod_image, p.prod_sale_qty
+        SELECT ci.cart_item_id, p.prod_name, p.prod_sale_price, p.prod_rental_price, ci.quantity, p.prod_image, p.prod_sale_qty, ci.start_date, ci.end_date
         FROM cart_items ci
         JOIN cart c ON ci.cart_id = c.cart_id
         JOIN products p ON ci.prod_id = p.prod_id
@@ -75,11 +75,22 @@ if (!isset($conn) || $conn->connect_error) {
         } else {
             $result = $query->get_result();
             while($row = $result->fetch_assoc()) {
-                $cart_items[] = $row;
-                if (isset($row['prod_sale_price'])) {
-                    $qty = $row['quantity'] ?? 1;
-                    $total_price += ($row['prod_sale_price'] * $qty);
+                if ($row['start_date'] && $row['end_date']) {
+                    // Rental item
+                    $start = new DateTime($row['start_date']);
+                    $end = new DateTime($row['end_date']);
+                    $days = $start->diff($end)->days;
+                    if ($days < 1) $days = 1;
+                    $row['price'] = $row['prod_rental_price'] * $days;
+                    $row['is_rental'] = true;
+                    $row['duration'] = $days;
+                } else {
+                    // Sale item
+                    $row['price'] = $row['prod_sale_price'];
+                    $row['is_rental'] = false;
                 }
+                $cart_items[] = $row;
+                $total_price += ($row['price'] * ($row['quantity'] ?? 1));
             }
         }
         $query->close();
@@ -165,53 +176,132 @@ if (!isset($conn) || $conn->connect_error) {
                     <a href="product page.php" class="btn btn-primary mt-3 px-4 py-2">Start Shopping</a>
                 </div>
             <?php else: ?>
-                <?php foreach($cart_items as $item): ?>
-                    <div class='cart-item'>
-                        <img src="../uploads/<?php echo htmlspecialchars($item['prod_image'] ?: 'default.jpg'); ?>" 
-                             style="width: 100px; height: 100px; object-fit: cover; border-radius: 12px; border: 1px solid #e2e8f0;">
-                        
-                        <div style="flex: 1;">
-                            <h5 style="margin: 0; font-weight: 700; color: #1e293b;"><?php echo htmlspecialchars($item['prod_name']); ?></h5>
-                            <div style="display: flex; align-items: center; gap: 12px; margin-top: 12px;">
-                                <div style="display: flex; align-items: center; background: #f1f5f9; border-radius: 8px; padding: 5px;">
-                                    <a href="?action=dec&item_id=<?php echo $item['cart_item_id']; ?>" style="padding: 0 12px; color: #475569; font-weight: 800; text-decoration: none; font-size: 1.2rem;">−</a>
-                                    <span style='font-size:1rem; font-weight: 700; padding: 0 5px; color: #1e293b;'> <?php echo $item['quantity']; ?> </span>
-                                    <?php if ($item['quantity'] < $item['prod_sale_qty']): ?>
-                                        <a href="?action=inc&item_id=<?php echo $item['cart_item_id']; ?>" style="padding: 0 12px; color: #475569; font-weight: 800; text-decoration: none; font-size: 1.2rem;">+</a>
+                <form action="address page.php" method="GET" id="cartForm">
+                    <div style="padding: 10px 0; border-bottom: 2px solid #f1f5f9; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="selectAll" style="width: 20px; height: 20px; cursor: pointer;">
+                        <label for="selectAll" style="font-weight: 700; color: #64748b; cursor: pointer; user-select: none;">Select All Items</label>
+                    </div>
+
+                    <?php foreach($cart_items as $item): ?>
+                        <div class='cart-item'>
+                            <div style="padding: 0 10px;">
+                                <input type="checkbox" name="selected_items[]" value="<?php echo $item['cart_item_id']; ?>" 
+                                       class="item-checkbox" 
+                                       data-price="<?php echo $item['price'] * ($item['quantity'] ?? 1); ?>"
+                                       style="width: 20px; height: 20px; cursor: pointer;">
+                            </div>
+
+                            <img src="../uploads/<?php echo htmlspecialchars($item['prod_image'] ?: 'default.jpg'); ?>" 
+                                 style="width: 100px; height: 100px; object-fit: cover; border-radius: 12px; border: 1px solid #e2e8f0;">
+                            
+                            <div style="flex: 1;">
+                                <h5 style="margin: 0; font-weight: 700; color: #1e293b;"><?php echo htmlspecialchars($item['prod_name']); ?></h5>
+                                <?php if ($item['is_rental']): ?>
+                                    <div style="font-size: 0.85rem; color: #64748b; margin-top: 5px;">
+                                        <span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; margin-right: 8px;">Rental</span>
+                                        📅 <strong><?php echo htmlspecialchars($item['start_date']); ?></strong> to <strong><?php echo htmlspecialchars($item['end_date']); ?></strong>
+                                        (<?php echo $item['duration']; ?> days)
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <div style="display: flex; align-items: center; gap: 12px; margin-top: 12px;">
+                                    <?php if (!$item['is_rental']): ?>
+                                        <div style="display: flex; align-items: center; background: #f1f5f9; border-radius: 8px; padding: 5px;">
+                                            <a href="?action=dec&item_id=<?php echo $item['cart_item_id']; ?>" style="padding: 0 12px; color: #475569; font-weight: 800; text-decoration: none; font-size: 1.2rem;">−</a>
+                                            <span style='font-size:1rem; font-weight: 700; padding: 0 5px; color: #1e293b;'> <?php echo $item['quantity']; ?> </span>
+                                            <?php if ($item['quantity'] < $item['prod_sale_qty']): ?>
+                                                <a href="?action=inc&item_id=<?php echo $item['cart_item_id']; ?>" style="padding: 0 12px; color: #475569; font-weight: 800; text-decoration: none; font-size: 1.2rem;">+</a>
+                                            <?php else: ?>
+                                                <span style="padding: 0 12px; color: #cbd5e1; font-weight: 800; cursor: not-allowed; font-size: 1.2rem;">+</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <span style="font-size: 0.85rem; color: #94a3b8;">Price: RM <?php echo number_format($item['price'], 2); ?> each</span>
                                     <?php else: ?>
-                                        <span style="padding: 0 12px; color: #cbd5e1; font-weight: 800; cursor: not-allowed; font-size: 1.2rem;">+</span>
+                                        <span style="font-size: 0.85rem; color: #94a3b8;">Rental Rate: RM <?php echo number_format($item['prod_rental_price'], 2); ?> / day</span>
                                     <?php endif; ?>
                                 </div>
-                                <span style="font-size: 0.85rem; color: #94a3b8;">Price: RM <?php echo number_format($item['prod_sale_price'], 2); ?> each</span>
+                            </div>
+
+                            <div style="text-align: right;">
+                                <div style='font-size:1.25rem; font-weight: 800; color: #10b981; margin-bottom: 8px;'>RM <?php echo number_format($item['price'] * ($item['quantity'] ?? 1), 2); ?></div>
+                                <a href="?remove_id=<?php echo $item['cart_item_id']; ?>" style="color: #ef4444; font-size: 0.85rem; font-weight: 600; text-decoration: none;">🗑️ Remove</a>
                             </div>
                         </div>
-
-                        <div style="text-align: right;">
-                            <div style='font-size:1.25rem; font-weight: 800; color: #10b981; margin-bottom: 8px;'>RM <?php echo number_format($item['prod_sale_price'] * $item['quantity'], 2); ?></div>
-                            <a href="?remove_id=<?php echo $item['cart_item_id']; ?>" style="color: #ef4444; font-size: 0.85rem; font-weight: 600; text-decoration: none;">🗑️ Remove Item</a>
-                        </div>
+                    <?php endforeach; ?>
+                    
+                    <div class="cart-total-box">
+                        <span style="font-size: 1.1rem; color: #64748b; font-weight: 600;">Selected Total:</span> <br>
+                        <span style="font-size: 2rem; font-weight: 800; color: #1e293b;">RM <span id="displayTotal">0.00</span></span>
                     </div>
-                <?php endforeach; ?>
-                
-                <div class="cart-total-box">
-                    <span style="font-size: 1.1rem; color: #64748b; font-weight: 600;">Estimated Total:</span> <br>
-                    <span style="font-size: 2rem; font-weight: 800; color: #1e293b;">RM <?php echo number_format($total_price, 2); ?></span>
-                </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px; gap: 20px;">
-                    <a href="product page.php" style="color: #475569; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px;">
-                        <span>←</span> Continue Shopping
-                    </a>
-                    <a href="address page.php" class="btn btn-primary px-5 py-3" style="border-radius: 12px; font-weight: 700; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(37,99,235,0.3);">
-                        Secure Checkout
-                    </a>
-                </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px; gap: 20px;">
+                        <a href="product page.php" style="color: #475569; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                            <span>←</span> Continue Shopping
+                        </a>
+                        <button type="submit" id="checkoutBtn" disabled class="btn btn-primary px-5 py-3" style="border-radius: 12px; font-weight: 700; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(37,99,235,0.3);">
+                            Secure Checkout (<span id="selectedCount">0</span>)
+                        </button>
+                    </div>
+                </form>
             <?php endif; ?>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+    const displayTotal = document.getElementById('displayTotal');
+    const selectedCount = document.getElementById('selectedCount');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+
+    function updateTotal() {
+        let total = 0;
+        let count = 0;
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                total += parseFloat(cb.dataset.price);
+                count++;
+            }
+        });
+        displayTotal.textContent = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        selectedCount.textContent = count;
+        checkoutBtn.disabled = count === 0;
+        
+        // Update checkout button style when disabled
+        if (count === 0) {
+            checkoutBtn.style.opacity = '0.6';
+            checkoutBtn.style.cursor = 'not-allowed';
+            checkoutBtn.style.boxShadow = 'none';
+        } else {
+            checkoutBtn.style.opacity = '1';
+            checkoutBtn.style.cursor = 'pointer';
+            checkoutBtn.style.boxShadow = '0 4px 15px rgba(37,99,235,0.3)';
+        }
+    }
+
+    selectAll.addEventListener('change', function() {
+        checkboxes.forEach(cb => {
+            cb.checked = selectAll.checked;
+        });
+        updateTotal();
+    });
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+            updateTotal();
+            // Update selectAll state
+            const allChecked = Array.from(checkboxes).every(c => c.checked);
+            selectAll.checked = allChecked;
+        });
+    });
+
+    // Initial check (disabled by default as nothing is selected)
+    updateTotal();
+});
+</script>
 
 </body>
 </html>

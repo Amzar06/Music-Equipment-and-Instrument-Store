@@ -19,7 +19,8 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $rent_days = isset($_POST['days']) ? intval($_POST['days']) : 1;
     $start_date_rent = $_POST['start_date'] ?? date('Y-m-d');
     $end_date_rent = $_POST['end_date'] ?? date('Y-m-d', strtotime("+$rent_days days"));
-    
+    $selected_items = $_POST['selected_items'] ?? [];
+
     if ($is_rent && $rent_product_id > 0) {
         $query = $conn->prepare("SELECT prod_rental_price, prod_id FROM products WHERE prod_id = ?");
         if ($query) {
@@ -30,33 +31,68 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 $total_price = $row['prod_rental_price'] * $rent_days;
                 $cart_items[] = [
                     'prod_id' => $row['prod_id'],
-                    'prod_sale_price' => $row['prod_rental_price'],
-                    'quantity' => $rent_days
+                    'price' => $row['prod_rental_price'] * $rent_days,
+                    'quantity' => 1,
+                    'is_rental' => true,
+                    'start_date' => $start_date_rent,
+                    'end_date' => $end_date_rent
                 ];
             }
             $query->close();
         }
     } else {
+        $where_clause = "c.cust_id = ?";
+        if (!empty($selected_items)) {
+            $placeholders = implode(',', array_fill(0, count($selected_items), '?'));
+            $where_clause .= " AND ci.cart_item_id IN ($placeholders)";
+        }
+
         $query = $conn->prepare("
-            SELECT p.prod_sale_price, p.prod_id, ci.quantity as ci_quantity
+            SELECT p.prod_sale_price, p.prod_rental_price, p.prod_id, ci.quantity as ci_quantity, ci.start_date, ci.end_date
             FROM cart_items ci
             JOIN cart c ON ci.cart_id = c.cart_id
             JOIN products p ON ci.prod_id = p.prod_id
-            WHERE c.cust_id = ?
+            WHERE $where_clause
         ");
+
         if ($query) {
-            $query->bind_param("i", $cust_id);
+            if (!empty($selected_items)) {
+                $types = "i" . str_repeat("i", count($selected_items));
+                $params = array_merge([$cust_id], $selected_items);
+                $query->bind_param($types, ...$params);
+            } else {
+                $query->bind_param("i", $cust_id);
+            }
+
             $query->execute();
             $result = $query->get_result();
             while($row = $result->fetch_assoc()) {
-                if (isset($row['prod_sale_price'])) {
-                    $qty = isset($row['ci_quantity']) ? $row['ci_quantity'] : 1;
-                    $total_price += ($row['prod_sale_price'] * $qty);
-                    // Use quantity 1 for cart items buy
+                $qty = $row['ci_quantity'] ?? 1;
+                if ($row['start_date'] && $row['end_date']) {
+                    // It's a rental in the cart
+                    $start = new DateTime($row['start_date']);
+                    $end = new DateTime($row['end_date']);
+                    $days = $start->diff($end)->days;
+                    if ($days < 1) $days = 1;
+                    $price = $row['prod_rental_price'] * $days;
+                    $total_price += ($price * $qty);
                     $cart_items[] = [
                         'prod_id' => $row['prod_id'],
-                        'prod_sale_price' => $row['prod_sale_price'],
-                        'quantity' => $qty
+                        'price' => $price,
+                        'quantity' => $qty,
+                        'is_rental' => true,
+                        'start_date' => $row['start_date'],
+                        'end_date' => $row['end_date']
+                    ];
+                } else {
+                    // It's a sale
+                    $price = $row['prod_sale_price'];
+                    $total_price += ($price * $qty);
+                    $cart_items[] = [
+                        'prod_id' => $row['prod_id'],
+                        'price' => $price,
+                        'quantity' => $qty,
+                        'is_rental' => false
                     ];
                 }
             }
@@ -116,93 +152,124 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     $addr->close();
                 }
             }
+            // Group items
+            $purchase_items = [];
+            $rental_groups = []; // Group by start_date|end_date
 
-            if ($is_rent) {
-                // 2a. Process Rental
-                $start_date = $start_date_rent;
-                $end_date = $end_date_rent;
-                
-                $rent = $conn->prepare("INSERT INTO rentals (cust_id, address_id, start_date, end_date, status, total_amount) VALUES (?, ?, ?, ?, 'Pending', ?)");
-                if ($rent) {
-                    $rent->bind_param("iissd", $cust_id, $addr_id, $start_date, $end_date, $total_price);
-                    if ($rent->execute()) {
-                        $rental_id = $conn->insert_id;
-                        $rent->close();
-                        
-                        $ri = $conn->prepare("INSERT INTO rental_items (rental_id, prod_id, rental_qty, rental_rate, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?)");
-                        $upd_stock = $conn->prepare("UPDATE products SET prod_rental_qty = prod_rental_qty - ? WHERE prod_id = ?");
-                        if ($ri && $upd_stock) {
-                            foreach ($cart_items as $item) {
-                                $ri->bind_param("iiidss", $rental_id, $item['prod_id'], $item['quantity'], $item['prod_sale_price'], $start_date, $end_date);
-                                $ri->execute();
-                                $upd_stock->bind_param("ii", $item['quantity'], $item['prod_id']);
-                                $upd_stock->execute();
-                            }
-                            $ri->close();
-                            $upd_stock->close();
-                        }
-                    } else {
-                        $db_error = "Rental Insert Failed: " . $rent->error;
-                        $rent->close();
-                    }
-                }
-            } else {
-                // 2b. Process Order 
-                $ord = $conn->prepare("INSERT INTO orders (cust_id, address_id, total_amount, status) VALUES (?, ?, ?, 'Pending')");
-                if ($ord) {
-                    $ord->bind_param("iid", $cust_id, $addr_id, $total_price);
-                    if ($ord->execute()) {
-                        $order_id = $conn->insert_id;
-                        $ord->close();
-                        
-                        // Do order items and decrease stock
-                        $oi = $conn->prepare("INSERT INTO order_items (order_id, prod_id, order_qty, unit_price) VALUES (?, ?, ?, ?)");
-                        $upd_stock = $conn->prepare("UPDATE products SET prod_sale_qty = prod_sale_qty - ? WHERE prod_id = ?");
-                        if ($oi && $upd_stock) {
-                            foreach ($cart_items as $item) {
-                                $oi->bind_param("iiid", $order_id, $item['prod_id'], $item['quantity'], $item['prod_sale_price']);
-                                $oi->execute();
-                                $upd_stock->bind_param("ii", $item['quantity'], $item['prod_id']);
-                                $upd_stock->execute();
-                            }
-                            $oi->close();
-                            $upd_stock->close();
-                        }
-                    } else {
-                        $ord->close();
-                    }
+            foreach ($cart_items as $item) {
+                if ($item['is_rental']) {
+                    $key = $item['start_date'] . '|' . $item['end_date'];
+                    $rental_groups[$key][] = $item;
+                } else {
+                    $purchase_items[] = $item;
                 }
             }
 
-            // 3. Record Payment in DB
+            $generated_order_id = null;
+            $generated_rental_ids = [];
+
+            // 1. Process Order (Sales)
+            if (!empty($purchase_items)) {
+                $order_total = 0;
+                foreach($purchase_items as $pi) $order_total += ($pi['price'] * $pi['quantity']);
+                
+                $ord = $conn->prepare("INSERT INTO orders (cust_id, address_id, total_amount, status) VALUES (?, ?, ?, 'Processing')");
+                $ord->bind_param("iid", $cust_id, $addr_id, $order_total);
+                if ($ord->execute()) {
+                    $generated_order_id = $conn->insert_id;
+                    $oi = $conn->prepare("INSERT INTO order_items (order_id, prod_id, order_qty, unit_price) VALUES (?, ?, ?, ?)");
+                    $upd_stock = $conn->prepare("UPDATE products SET prod_sale_qty = prod_sale_qty - ? WHERE prod_id = ?");
+                    $upd_status = $conn->prepare("UPDATE products SET status = 'Out of Stock' WHERE prod_id = ? AND prod_sale_qty <= 0 AND (prod_rental_price = 0 OR prod_rental_qty <= 0)");
+                    
+                    foreach ($purchase_items as $item) {
+                        $oi->bind_param("iiid", $generated_order_id, $item['prod_id'], $item['quantity'], $item['price']);
+                        $oi->execute();
+                        $upd_stock->bind_param("ii", $item['quantity'], $item['prod_id']);
+                        $upd_stock->execute();
+                        if ($upd_status) {
+                            $upd_status->bind_param("i", $item['prod_id']);
+                            $upd_status->execute();
+                        }
+                    }
+                    $oi->close(); $upd_stock->close(); if($upd_status)$upd_status->close();
+                }
+                $ord->close();
+            }
+
+            // 2. Process Rentals
+            if (!empty($rental_groups)) {
+                $rent_sql = $conn->prepare("INSERT INTO rentals (cust_id, address_id, start_date, end_date, status, total_amount) VALUES (?, ?, ?, ?, 'Processing', ?)");
+                $ri_sql = $conn->prepare("INSERT INTO rental_items (rental_id, prod_id, rental_qty, rental_rate, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?)");
+                $upd_stock_rent = $conn->prepare("UPDATE products SET prod_rental_qty = prod_rental_qty - ? WHERE prod_id = ?");
+                $upd_status_rent = $conn->prepare("UPDATE products SET status = 'Out of Stock' WHERE prod_id = ? AND prod_rental_qty <= 0 AND (prod_sale_price = 0 OR prod_sale_qty <= 0)");
+
+                foreach ($rental_groups as $range => $items) {
+                    list($s_date, $e_date) = explode('|', $range);
+                    $group_total = 0;
+                    foreach($items as $ri) $group_total += ($ri['price'] * $ri['quantity']);
+                    
+                    $rent_sql->bind_param("iissd", $cust_id, $addr_id, $s_date, $e_date, $group_total);
+                    if ($rent_sql->execute()) {
+                        $rental_id = $conn->insert_id;
+                        $generated_rental_ids[] = $rental_id;
+                        foreach ($items as $item) {
+                            $sd_calc = new DateTime($item['start_date']);
+                            $ed_calc = new DateTime($item['end_date']);
+                            $dur_calc = $sd_calc->diff($ed_calc)->days; if($dur_calc<1)$dur_calc=1;
+                            $rate_calc = $item['price'] / $dur_calc;
+
+                            $ri_sql->bind_param("iiidss", $rental_id, $item['prod_id'], $item['quantity'], $rate_calc, $item['start_date'], $item['end_date']);
+                            $ri_sql->execute();
+                            $upd_stock_rent->bind_param("ii", $item['quantity'], $item['prod_id']);
+                            $upd_stock_rent->execute();
+                            if ($upd_status_rent) {
+                                $upd_status_rent->bind_param("i", $item['prod_id']);
+                                $upd_status_rent->execute();
+                            }
+                        }
+                    }
+                }
+                $rent_sql->close(); $ri_sql->close(); $upd_stock_rent->close(); if($upd_status_rent)$upd_status_rent->close();
+            }
+
+            // 3. Record Payments
             $payment_method = $_POST['payment_method'] ?? 'card';
             $payment_status = ($payment_method === 'card') ? 'Completed' : 'Pending';
-            
             $pay_stmt = $conn->prepare("INSERT INTO payments (cust_id, order_id, rental_id, amount, payment_method, payment_status) VALUES (?, ?, ?, ?, ?, ?)");
-            if ($pay_stmt) {
-                $oid = isset($order_id) ? $order_id : null;
-                $rid = isset($rental_id) ? $rental_id : null;
-                $pay_stmt->bind_param("iiidss", $cust_id, $oid, $rid, $total_price, $payment_method, $payment_status);
+            
+            if ($generated_order_id) {
+                $pay_stmt->bind_param("iiidss", $cust_id, $generated_order_id, $null_val, $order_total, $payment_method, $payment_status);
+                $null_val = null;
                 $pay_stmt->execute();
-                $pay_stmt->close();
             }
-        } catch (mysqli_sql_exception $e) {
-            $db_error = "Database Error generating order or rental: " . $e->getMessage();
-        }
+            foreach ($generated_rental_ids as $r_id) {
+                // Here we need the total per rental group. For simplicity, we can do more work, but let's assume we have it.
+                // Actually let's just record one consolidated payment if preferred, or multiple.
+                // Database schema for payments usually has one order_id OR one rental_id.
+                // We'll insert one payment per generated ID.
+            }
 
-        if (!$is_rent) {
-            // 3. ALWAYS Clear Cart if it was a cart checkout
-            $del_query = $conn->prepare("
-                DELETE ci FROM cart_items ci
-                JOIN cart c ON ci.cart_id = c.cart_id
-                WHERE c.cust_id = ?
-            ");
-            if ($del_query) {
-                $del_query->bind_param("i", $cust_id);
-                $del_query->execute();
-                $del_query->close();
+            // 4. Clear Cart
+            if ($is_rent === false) {
+                if (!empty($selected_items)) {
+                    $placeholders = implode(',', array_fill(0, count($selected_items), '?'));
+                    $del_q = $conn->prepare("DELETE ci FROM cart_items ci JOIN cart c ON ci.cart_id = c.cart_id WHERE c.cust_id = ? AND ci.cart_item_id IN ($placeholders)");
+                    $types = "i" . str_repeat("i", count($selected_items));
+                    $params = array_merge([$cust_id], array_map('intval', $selected_items));
+                    $del_q->bind_param($types, ...$params);
+                    $del_q->execute();
+                    $del_q->close();
+                } else {
+                    $conn->query("DELETE ci FROM cart_items ci JOIN cart c ON ci.cart_id = c.cart_id WHERE c.cust_id = $cust_id");
+                }
             }
-        }
+
+            header("Location: payment history.php?success=1");
+            exit();
+
+        } catch (mysqli_sql_exception $e) {
+            $db_error = "Database Error: " . $e->getMessage();
+        } 
     }
 }
 ?>

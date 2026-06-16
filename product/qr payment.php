@@ -52,13 +52,48 @@ $days        = intval($_GET['days'] ?? 1);
 $product_id  = intval($_GET['product_id'] ?? 0);
 $start_date  = $_GET['start_date'] ?? '';
 $end_date    = $_GET['end_date']   ?? '';
+$selected_items = $_GET['selected_items'] ?? [];
 
-// For buy (cart), recalculate subtotal if not passed
+// For buy (cart) or mixed cart, recalculate subtotal if not a single-item rent
 if (!$is_rent && $subtotal == 0 && isset($conn)) {
-    $q = $conn->prepare("SELECT SUM(p.prod_sale_price * ci.quantity) as total FROM cart_items ci JOIN cart c ON ci.cart_id=c.cart_id JOIN products p ON ci.prod_id=p.prod_id WHERE c.cust_id=?");
-    $q->bind_param("i", $cust_id); $q->execute();
-    $r = $q->get_result()->fetch_assoc(); $q->close();
-    $subtotal = floatval($r['total'] ?? 0);
+    $where_clause = "c.cust_id=?";
+    if (!empty($selected_items)) {
+        $placeholders = implode(',', array_fill(0, count($selected_items), '?'));
+        $where_clause .= " AND ci.cart_item_id IN ($placeholders)";
+    }
+
+    $q = $conn->prepare("
+        SELECT p.prod_sale_price, p.prod_rental_price, ci.quantity, ci.start_date, ci.end_date 
+        FROM cart_items ci 
+        JOIN cart c ON ci.cart_id=c.cart_id 
+        JOIN products p ON ci.prod_id=p.prod_id 
+        WHERE $where_clause
+    ");
+
+    if (!empty($selected_items)) {
+        $types = "i" . str_repeat("i", count($selected_items));
+        $params = array_merge([$cust_id], $selected_items);
+        $q->bind_param($types, ...$params);
+    } else {
+        $q->bind_param("i", $cust_id);
+    }
+
+    $q->execute();
+    $res = $q->get_result();
+    $total_calc = 0;
+    while($row = $res->fetch_assoc()) {
+        if ($row['start_date'] && $row['end_date']) {
+            $s_calc = new DateTime($row['start_date']);
+            $e_calc = new DateTime($row['end_date']);
+            $d_calc = $s_calc->diff($e_calc)->days;
+            if ($d_calc < 1) $d_calc = 1;
+            $total_calc += ($row['prod_rental_price'] * $d_calc * $row['quantity']);
+        } else {
+            $total_calc += ($row['prod_sale_price'] * $row['quantity']);
+        }
+    }
+    $q->close();
+    $subtotal = $total_calc;
 }
 
 // Get product name for rent
@@ -266,6 +301,12 @@ $payment_method = $_GET['payment_method'] ?? 'card';
         <input type="hidden" name="state"            value="<?php echo htmlspecialchars($display_state); ?>">
         <input type="hidden" name="existing_address_id" value="<?php echo htmlspecialchars($existing_addr_id); ?>">
         <input type="hidden" name="grand_total"      value="<?php echo htmlspecialchars($grand_total); ?>">
+
+        <?php if (!empty($selected_items)): ?>
+            <?php foreach ($selected_items as $item_id): ?>
+                <input type="hidden" name="selected_items[]" value="<?php echo htmlspecialchars($item_id); ?>">
+            <?php endforeach; ?>
+        <?php endif; ?>
 
         <!-- Note: Receipt upload removed per user request -->
         

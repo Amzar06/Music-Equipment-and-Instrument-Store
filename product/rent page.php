@@ -38,13 +38,16 @@ if (isset($conn)) {
     }
 }
 
-// Fetch products with their category names
+// Fetch products with their category names — only products available for rent
 $products = [];
 if (isset($conn)) {
     $prod_query = $conn->query("
         SELECT p.*, c.category_name 
         FROM products p 
         LEFT JOIN categories c ON p.category_id = c.category_id
+        WHERE p.prod_rental_price > 0
+          AND p.status != 'Discontinued'
+        ORDER BY p.prod_id DESC
     ");
     if ($prod_query) {
         while($row = $prod_query->fetch_assoc()) {
@@ -241,23 +244,28 @@ $next_rentable_date = null;
                             if ($is_out_of_stock) $btn_text = 'Out of Stock';
                             elseif (!$can_rent) $btn_text = 'Restriction Active';
                         ?>
-                        <form action="address page.php" method="GET" class="rent-form" onsubmit="return validateRental(this)">
-                            <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
+                        <form action="add_to_cart.php" method="POST" class="rent-form" onsubmit="return validateRental(this)" style="display: flex; flex-direction: column; gap: 8px;">
+                            <input type="hidden" name="prod_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
                             <input type="hidden" name="type" value="rent">
-                            <input type="hidden" name="price" value="<?php echo htmlspecialchars($product['prod_rental_price']); ?>">
                             
                             <!-- Hidden fields to store split dates for backend -->
                             <input type="hidden" name="start_date" id="start_date_<?php echo $product['prod_id']; ?>">
                             <input type="hidden" name="end_date" id="end_date_<?php echo $product['prod_id']; ?>">
     
-                            <div style="margin-bottom: 16px;">
+                            <div style="margin-bottom: 8px;">
                                 <label style="display:block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 6px;">Select Rental Period <span style="color: #ef4444;">*</span></label>
                                 <input type="text" class="range-picker" placeholder="<?php echo !$rent_btn_disabled ? 'Choose dates..' : $btn_text; ?>" readonly 
                                        data-prod-id="<?php echo $product['prod_id']; ?>"
                                        <?php echo $rent_btn_disabled ? 'disabled' : ''; ?>
                                        style="padding: 12px; font-size: 0.95rem; background: <?php echo !$rent_btn_disabled ? 'white' : '#f1f5f9'; ?>; cursor: <?php echo !$rent_btn_disabled ? 'pointer' : 'not-allowed'; ?>; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%;">
                             </div>
-                            <button type="submit" class="rent-btn" <?php echo $rent_btn_disabled ? 'disabled style="background:#94a3b8; cursor:not-allowed;"' : ''; ?> style="width: 100%;"><?php echo $btn_text; ?></button>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <button type="submit" name="add_to_cart" class="btn btn-primary" <?php echo $rent_btn_disabled ? 'disabled style="background:#94a3b8; border-color:#94a3b8; cursor:not-allowed;"' : ''; ?> style="padding: 12px; border-radius: 10px; font-weight: 700;">🛒 Add to Cart</button>
+                                <button type="button" class="btn btn-success" <?php echo $rent_btn_disabled ? 'disabled style="background:#059669; border-color:#059669; cursor:not-allowed;"' : ''; ?> 
+                                        onclick="if(validateRental(this.form)) { this.form.action='address page.php'; this.form.method='GET'; this.form.submit(); }"
+                                        style="padding: 12px; border-radius: 10px; font-weight: 700; background: #10b981; border-color: #10b981; color: white;">⚡ Rent Now</button>
+                            </div>
                         </form>
                 </div>
             </div>
