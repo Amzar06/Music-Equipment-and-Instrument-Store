@@ -10,7 +10,7 @@ $cust_id = $_SESSION['cust_id'];
 
 $delivery_type   = $_GET['delivery_type'] ?? 'delivery'; // 'delivery' or 'self_collect'
 $is_delivery     = $delivery_type === 'delivery';
-$delivery_fee    = $is_delivery ? 5.00 : 0.00;
+$delivery_fee    = $is_delivery ? 30.00 : 0.00;
 
 // ----- Address details from GET -----
 $full_name   = $_GET['full_name']   ?? '';
@@ -220,7 +220,6 @@ $grand_total = $subtotal + $delivery_fee;
         <div style="display:flex; gap:10px;">
             <a href="https://www.google.com/maps/search/?api=1&query=Multimedia+University+Melaka" target="_blank" rel="noopener" 
                style="flex:1; text-align:center; padding:10px; border-radius:8px; text-decoration:none; font-weight:700; font-size:0.85rem; background:#4285f4; color:white; display:flex; align-items:center; justify-content:center; gap:5px;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Google_Maps_Logo_2020.svg/32px-Google_Maps_Logo_2020.svg.png" style="width:18px; height:18px;">
                 View Location on Google Maps
             </a>
         </div>
@@ -273,12 +272,12 @@ $payment_method = $_GET['payment_method'] ?? 'card';
             </div>
         <?php else: ?>
             <!-- QR Code Section -->
-            <div style="background: white; padding: 24px; border-radius: 12px; display: inline-block; margin-bottom: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                <div style="margin-bottom: 16px; font-weight: 700; color: #1e293b;">
+            <div style="background: white; padding: 20px; border-radius: 16px; display: inline-block; margin-bottom: 24px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
+                <div style="margin-bottom: 12px; font-weight: 700; color: #1e293b; font-size: 1.1rem;">
                     <?php echo $payment_method === 'tng' ? '📱 Touch \'n Go eWallet' : '🏦 DuitNow QR'; ?>
                 </div>
-                <img src="qr_placeholder.png" alt="Scan to Pay" style="width: 180px; height: 180px; object-fit: contain; padding: 10px; border: 1px solid #f1f5f9; border-radius: 8px;">
-                <p style="color: #64748b; font-size: 0.85rem; margin-top: 14px; line-height: 1.5;">Scan the QR code above using your<br>banking or e-wallet app to pay.</p>
+                <img src="../uploads/duitnow_qr.jpg" alt="Scan to Pay" style="width: 220px; height: auto; object-fit: contain; border-radius: 12px;">
+                <p style="color: #64748b; font-size: 0.85rem; margin-top: 14px; line-height: 1.5; font-weight: 500;">Scan the QR code above using your<br>banking or e-wallet app to pay.</p>
             </div>
         <?php endif; ?>
     </div>

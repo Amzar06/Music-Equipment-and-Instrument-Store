@@ -236,7 +236,7 @@ if ($type === 'rent' && isset($conn)) {
             <label for="opt_self">🏪 Self Collect<br><span style="font-size:0.78rem; font-weight:400; opacity:0.8;">Free</span></label>
 
             <input type="radio" id="opt_delivery" name="delivery_type" value="delivery" onchange="onDeliveryChange()" checked>
-            <label for="opt_delivery">🚚 Delivery<span class="delivery-badge">+RM 5.00</span><br><span style="font-size:0.78rem; font-weight:400; opacity:0.8;">To your door</span></label>
+            <label for="opt_delivery">🚚 Delivery<span class="delivery-badge">+RM 30.00</span><br><span style="font-size:0.78rem; font-weight:400; opacity:0.8;">To your door</span></label>
         </div>
 
         <!-- Self Collect Message -->
@@ -263,8 +263,6 @@ if ($type === 'rent' && isset($conn)) {
                        target="_blank" rel="noopener"
                        style="flex:1; text-align:center; padding:11px 8px; border-radius:9px; text-decoration:none; font-weight:700; font-size:0.9rem;
                               background:#4285f4; color:white; display:flex; align-items:center; justify-content:center; gap:6px;">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Google_Maps_Logo_2020.svg/32px-Google_Maps_Logo_2020.svg.png"
-                             style="width:20px; height:20px; object-fit:contain;" alt="Google Maps">
                         Google Maps
                     </a>
                 </div>

@@ -103,7 +103,7 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     // Add delivery fee
     $delivery_type = $_POST['delivery_type'] ?? 'delivery';
     if ($delivery_type === 'delivery') {
-        $delivery_fee  = 5.00;
+        $delivery_fee  = 30.00;
         $total_price  += $delivery_fee;
     }
 
