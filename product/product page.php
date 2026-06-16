@@ -22,13 +22,16 @@ if (isset($conn)) {
     }
 }
 
-// Fetch products with their category names
+// Fetch products with their category names — only products available for sale
 $products = [];
 if (isset($conn)) {
     $prod_query = $conn->query("
         SELECT p.*, c.category_name 
         FROM products p 
         LEFT JOIN categories c ON p.category_id = c.category_id
+        WHERE p.prod_sale_price > 0
+          AND p.status != 'Discontinued'
+        ORDER BY p.prod_id DESC
     ");
     if ($prod_query) {
         while($row = $prod_query->fetch_assoc()) {
@@ -195,13 +198,29 @@ if (isset($conn) && $is_logged_in) {
     <?php else: ?>
         <?php foreach($products as $product): ?>
             <div class="card" data-category="<?php echo htmlspecialchars(strtolower($product['category_name'])); ?>" onclick="toggleExpand(this)" style="cursor: pointer;">
+                <?php 
+                    $is_out_of_stock = ($product['prod_sale_qty'] <= 0);
+                ?>
                 <?php if (!empty($product['prod_image'])): ?>
-                    <div onclick="openLightbox(event, '../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>')" 
-                         style="width: 100%; height: 200px; background-size: cover; background-position: center; background-image: url('../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>'); border-radius: 10px; margin-bottom: 16px; transition: transform 0.3s;"
-                         onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                    <div style="position: relative;" onclick="openLightbox(event, '../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>')">
+                        <div style="width: 100%; height: 200px; background-size: cover; background-position: center; background-image: url('../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>'); border-radius: 10px; margin-bottom: 16px; transition: transform 0.3s; <?php echo $is_out_of_stock ? 'filter: grayscale(60%) brightness(0.8);' : ''; ?>"
+                             onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        </div>
+                        <?php if ($is_out_of_stock): ?>
+                            <div style="position: absolute; top: 10px; left: 10px; background: #ef4444; color: white; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 6px rgba(239,68,68,0.4);">
+                                Out of Stock
+                            </div>
+                        <?php endif; ?>
                     </div>
                 <?php else: ?>
-                    <div style="width: 100%; height: 200px; background-color: #f1f5f9; border-radius: 10px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; color: #94a3b8; border: 2px dashed #e2e8f0;">[ No Image ]</div>
+                    <div style="position: relative;">
+                        <div style="width: 100%; height: 200px; background-color: #f1f5f9; border-radius: 10px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; color: #94a3b8; border: 2px dashed #e2e8f0;">[ No Image ]</div>
+                        <?php if ($is_out_of_stock): ?>
+                            <div style="position: absolute; top: 10px; left: 10px; background: #ef4444; color: white; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 6px rgba(239,68,68,0.4);">
+                                Out of Stock
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
                 
                 <h3 style="margin-bottom: 4px;"><?php echo htmlspecialchars($product['prod_name']); ?></h3>
@@ -223,15 +242,27 @@ if (isset($conn) && $is_logged_in) {
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.8rem; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
                         <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Category</span> <?php echo htmlspecialchars($product['category_name']); ?></div>
                         <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Stock</span> <?php echo htmlspecialchars($product['prod_sale_qty']); ?> units</div>
-                        <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Status</span> <span style="color: <?php echo strtolower($product['status']) === 'available' ? '#10b981' : '#ef4444'; ?>; font-weight: 700;"><?php echo htmlspecialchars($product['status']); ?></span></div>
+                        <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Status</span> 
+                            <span style="color: <?php echo $is_out_of_stock ? '#ef4444' : '#10b981'; ?>; font-weight: 700;">
+                                <?php echo $is_out_of_stock ? 'Out of Stock' : 'Available'; ?>
+                            </span>
+                        </div>
                     </div>
                 </div>
 
                 <div class="product-actions mt-2" onclick="event.stopPropagation()">
-                    <form action="add_to_cart.php" method="POST">
-                        <input type="hidden" name="prod_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
-                        <button type="submit" style="width: 100%; padding: 12px; border-radius: 10px; font-weight: 700;">Add to Cart</button>
-                    </form>
+                    <?php if ($is_out_of_stock): ?>
+                        <button type="button" disabled style="width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; background: #e5e7eb; color: #9ca3af; border: none; cursor: not-allowed; margin-bottom: 8px;">Out of Stock</button>
+                    <?php else: ?>
+                        <form action="add_to_cart.php" method="POST" style="margin-bottom: 8px;">
+                            <input type="hidden" name="prod_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
+                            <button type="submit" style="width: 100%; padding: 12px; border-radius: 10px; font-weight: 700;">🛒 Add to Cart</button>
+                        </form>
+                        <a href="address page.php?type=buy&product_id=<?php echo htmlspecialchars($product['prod_id']); ?>" 
+                           style="display: block; width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; background: #10b981; color: white; text-align: center; text-decoration: none; font-size: 0.95rem; box-sizing: border-box;">
+                            ⚡ Buy Now
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>

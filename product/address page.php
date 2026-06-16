@@ -11,6 +11,7 @@ $type = $_GET['type'] ?? '';
 $product_id = $_GET['product_id'] ?? 0;
 $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
+$selected_items = $_GET['selected_items'] ?? [];
 $days = 1;
 
 if (!empty($start_date) && !empty($end_date)) {
@@ -107,6 +108,30 @@ if ($type === 'rent' && isset($conn)) {
         }
         $stmt->close();
     }
+} elseif (!empty($selected_items) && isset($conn)) {
+    $placeholders = implode(',', array_fill(0, count($selected_items), '?'));
+    $q = $conn->prepare("
+        SELECT p.prod_sale_price, p.prod_rental_price, ci.quantity, ci.start_date, ci.end_date 
+        FROM cart_items ci 
+        JOIN products p ON ci.prod_id = p.prod_id 
+        WHERE ci.cart_item_id IN ($placeholders)
+    ");
+    $types = str_repeat("i", count($selected_items));
+    $params = array_map('intval', $selected_items);
+    $q->bind_param($types, ...$params);
+    $q->execute();
+    $res = $q->get_result();
+    while($row = $res->fetch_assoc()) {
+        if ($row['start_date'] && $row['end_date']) {
+            $s = new DateTime($row['start_date']);
+            $e = new DateTime($row['end_date']);
+            $d = $s->diff($e)->days; if($d < 1) $d = 1;
+            $subtotal += ($row['prod_rental_price'] * $d * $row['quantity']);
+        } else {
+            $subtotal += ($row['prod_sale_price'] * $row['quantity']);
+        }
+    }
+    $q->close();
 }
 ?>
 <!DOCTYPE html>
@@ -178,6 +203,14 @@ if ($type === 'rent' && isset($conn)) {
         </div>
         <div style="margin-top: 10px; font-weight: 800; color: #10b981; font-size: 1.25rem;">Subtotal: RM <?php echo number_format($subtotal, 2); ?></div>
     </div>
+    <?php elseif (!empty($selected_items) && $subtotal > 0): ?>
+    <div style="margin-bottom: 30px; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px;">
+        <div style="font-weight: 800; color: #1e293b; margin-bottom: 4px; font-size: 1.1rem;">Selected Order Summary</div>
+        <div style="font-size: 0.9rem; color: #64748b; font-weight: 600;">
+            🛒 <?php echo count($selected_items); ?> Item(s) selected from cart
+        </div>
+        <div style="margin-top: 10px; font-weight: 800; color: #10b981; font-size: 1.25rem;">Subtotal: RM <?php echo number_format($subtotal, 2); ?></div>
+    </div>
     <?php endif; ?>
 
     <form action="qr payment.php" method="GET" id="addressForm" onsubmit="return validateForm()">
@@ -190,6 +223,12 @@ if ($type === 'rent' && isset($conn)) {
             <input type="hidden" name="subtotal"   value="<?php echo htmlspecialchars($subtotal); ?>">
         <?php endif; ?>
 
+        <?php if (!empty($selected_items)): ?>
+            <?php foreach ($selected_items as $item_id): ?>
+                <input type="hidden" name="selected_items[]" value="<?php echo htmlspecialchars($item_id); ?>">
+            <?php endforeach; ?>
+        <?php endif; ?>
+
         <!-- Delivery Method Toggle -->
         <div style="margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Delivery Method</div>
         <div class="delivery-toggle">
@@ -197,7 +236,7 @@ if ($type === 'rent' && isset($conn)) {
             <label for="opt_self">🏪 Self Collect<br><span style="font-size:0.78rem; font-weight:400; opacity:0.8;">Free</span></label>
 
             <input type="radio" id="opt_delivery" name="delivery_type" value="delivery" onchange="onDeliveryChange()" checked>
-            <label for="opt_delivery">🚚 Delivery<span class="delivery-badge">+RM 5.00</span><br><span style="font-size:0.78rem; font-weight:400; opacity:0.8;">To your door</span></label>
+            <label for="opt_delivery">🚚 Delivery<span class="delivery-badge">+RM 30.00</span><br><span style="font-size:0.78rem; font-weight:400; opacity:0.8;">To your door</span></label>
         </div>
 
         <!-- Self Collect Message -->
@@ -224,8 +263,6 @@ if ($type === 'rent' && isset($conn)) {
                        target="_blank" rel="noopener"
                        style="flex:1; text-align:center; padding:11px 8px; border-radius:9px; text-decoration:none; font-weight:700; font-size:0.9rem;
                               background:#4285f4; color:white; display:flex; align-items:center; justify-content:center; gap:6px;">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Google_Maps_Logo_2020.svg/32px-Google_Maps_Logo_2020.svg.png"
-                             style="width:20px; height:20px; object-fit:contain;" alt="Google Maps">
                         Google Maps
                     </a>
                 </div>
