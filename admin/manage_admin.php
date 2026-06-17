@@ -49,7 +49,7 @@ if (isset($_GET['delete_id'])) {
     exit();
 }
 
-// 2. HANDLE ADD STAFF (Password-less Setup)
+// 2. HANDLE ADD STAFF (With Default Temporary Password)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_staff'])) {
     $staff_name    = mysqli_real_escape_string($conn, trim($_POST['staff_name']));
     $staff_email   = mysqli_real_escape_string($conn, trim($_POST['staff_email']));
@@ -57,10 +57,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_staff'])) {
     $staff_address = mysqli_real_escape_string($conn, trim($_POST['staff_address']));
     $staff_role    = mysqli_real_escape_string($conn, $_POST['staff_role']);
     
-    // Generate an impossible-to-guess random password hash.
-    // The user MUST use 'Forgot Password' to overwrite this and log in.
-    $random_string = bin2hex(random_bytes(16)); 
-    $staff_pass    = password_hash($random_string, PASSWORD_DEFAULT);
+    // Set the standardized temporary password
+    $default_temp_password = "Meais@67"; 
+    $staff_pass = password_hash($default_temp_password, PASSWORD_DEFAULT);
 
     if (!empty($staff_name) && !empty($staff_email)) {
         $check_query = "SELECT * FROM staff WHERE staff_email = '$staff_email'";
@@ -74,8 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_staff'])) {
                              VALUES ('$staff_name', '$staff_email', '$staff_phone', '$staff_address', '$staff_pass', '$staff_role', 'Active')";
             
             if (mysqli_query($conn, $insert_query)) {
-                // Success message instructing the admin
-                $_SESSION['flash_message'] = "Account created! Instruct " . htmlspecialchars($staff_name) . " to use 'Forgot Password' to set up their access.";
+                $_SESSION['flash_message'] = "Account created! Instruct " . htmlspecialchars($staff_name) . " to log in using the temporary password 'Meais@67' and set up their profile.";
                 $_SESSION['flash_type'] = "success";
             } else {
                 $_SESSION['flash_message'] = "Database error: " . mysqli_error($conn);
@@ -152,6 +150,12 @@ require_once('admin_header.php');
                     <option value="Staff">Staff</option>
                     <option value="Administrator">Administrator (Superadmin)</option>
                 </select>
+            </div>
+
+            <div style="padding: 12px 16px; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 4px; margin-bottom: 20px;">
+                <p style="margin: 0; font-size: 0.8rem; color: #1e3a8a;">
+                    <strong>Note:</strong> The account will be created with the temporary password <strong>Meais@67</strong>.
+                </p>
             </div>
 
             <button type="submit" name="add_staff" style="width: 100%; padding: 12px; background: #4f46e5; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;" onmouseover="this.style.backgroundColor='#4338ca'" onmouseout="this.style.backgroundColor='#4f46e5'">

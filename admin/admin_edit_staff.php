@@ -51,20 +51,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_staff'])) {
     $status        = mysqli_real_escape_string($conn, $_POST['status']);
 
     if (!empty($staff_name) && !empty($staff_email)) {
+        
+        // Excludes password, security_question, and security_answer.
+        // Those belong to the user's private admin_profile.php now.
         $update_query = "UPDATE staff SET 
                          staff_name = '$staff_name', 
                          staff_email = '$staff_email', 
                          staff_phone_number = '$staff_phone', 
                          staff_address = '$staff_address', 
                          staff_role = '$staff_role', 
-                         status = '$status'";
-        
-        if (!empty($_POST['staff_password'])) {
-            $new_pass = password_hash($_POST['staff_password'], PASSWORD_DEFAULT);
-            $update_query .= ", staff_password = '$new_pass'";
-        }
-        
-        $update_query .= " WHERE staff_id = $edit_id";
+                         status = '$status'
+                         WHERE staff_id = $edit_id";
         
         $email_check = mysqli_query($conn, "SELECT * FROM staff WHERE staff_email = '$staff_email' AND staff_id != $edit_id");
         
@@ -125,9 +122,10 @@ require_once('admin_header.php');
                 <textarea name="staff_address" rows="3" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-family: inherit; outline: none; box-sizing: border-box; resize: vertical;"><?php echo htmlspecialchars($staff['staff_address']); ?></textarea>
             </div>
 
-            <div style="padding: 16px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 24px;">
-                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Reset Password (Optional)</label>
-                <input type="password" name="staff_password" placeholder="Type a new password to override..." style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; box-sizing: border-box;">
+            <div style="padding: 12px 16px; background: #f3f4f6; border-left: 4px solid #6b7280; border-radius: 4px; margin-bottom: 24px;">
+                <p style="margin: 0; font-size: 0.85rem; color: #4b5563; font-weight: 500;">
+                    🔒 <strong>Security Notice:</strong> To maintain strict data privacy, Superadmins cannot view or change staff passwords or security questions. Staff must utilize the Account Recovery portal if they lose access.
+                </p>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
