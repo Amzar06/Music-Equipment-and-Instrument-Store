@@ -7,7 +7,7 @@ if (!isset($_SESSION['staff_id'])) {
 
 require_once('../database.php');
 
-$page_title = "Process Returns";
+$page_title = "Rented Items Returns";
 $active = "returns"; 
 
 $message = ""; $message_type = "";
@@ -15,9 +15,11 @@ $message = ""; $message_type = "";
 // ==========================================
 // THE AUTO-TRACKING RETURN LOGIC
 // ==========================================
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['confirm_return'])) {
+// Check if EITHER button was clicked by looking for 'return_action'
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['return_action'])) {
     $rental_item_id = intval($_POST['rental_item_id']);
     $return_condition = mysqli_real_escape_string($conn, trim($_POST['return_condition']));
+    $action = $_POST['return_action']; // Will be 'restock' or 'writeoff'
 
     if (!empty($return_condition)) {
         // 1. Find out which product this is and how many were rented
@@ -33,17 +35,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['confirm_return'])) {
                             SET return_status = 'Returned', return_condition = '$return_condition' 
                             WHERE rental_item_id = $rental_item_id";
             
-            // 3. Auto-Restock: Add the quantity back into the RENTAL catalog specifically
-            $restock_product = "UPDATE products 
-                                SET prod_rental_qty = prod_rental_qty + $qty_to_return 
-                                WHERE prod_id = $p_id";
+            // 3. Execute logic based on which button was clicked
+            if ($action === 'restock') {
+                // Auto-Restock: Add the quantity back into the RENTAL catalog
+                $restock_product = "UPDATE products 
+                                    SET prod_rental_qty = prod_rental_qty + $qty_to_return 
+                                    WHERE prod_id = $p_id";
 
-            if (mysqli_query($conn, $update_item) && mysqli_query($conn, $restock_product)) {
-                $message = "Item successfully returned and rental inventory auto-restocked (+{$qty_to_return}).";
-                $message_type = "success";
-            } else {
-                $message = "Database Error: " . mysqli_error($conn);
-                $message_type = "error";
+                if (mysqli_query($conn, $update_item) && mysqli_query($conn, $restock_product)) {
+                    $message = "Item successfully returned and rental inventory auto-restocked (+{$qty_to_return}).";
+                    $message_type = "success";
+                } else {
+                    $message = "Database Error: " . mysqli_error($conn);
+                    $message_type = "error";
+                }
+            } elseif ($action === 'writeoff') {
+                // Write-Off: Only update the transaction, DO NOT restock the product
+                if (mysqli_query($conn, $update_item)) {
+                    $message = "Item transaction closed. Item was written off and NOT added back to inventory.";
+                    // Using success type so it shows green, but clear messaging
+                    $message_type = "success"; 
+                } else {
+                    $message = "Database Error: " . mysqli_error($conn);
+                    $message_type = "error";
+                }
             }
         }
     } else {
@@ -67,8 +82,8 @@ require_once('admin_header.php');
 <div style="max-width: 1000px; margin: 0 auto; margin-top: 20px;">
     
     <div style="margin-bottom: 24px;">
-        <h2 style="margin: 0; color: #111827;">Process Pending Returns</h2>
-        <p style="color: #6b7280; font-size: 0.95rem; margin-top: 6px;">Log wear-and-tear conditions to automatically restore rental catalog availability.</p>
+        <h2 style="margin: 0; color: #111827;">Process Returns</h2>
+        <p style="color: #6b7280; font-size: 0.95rem; margin-top: 6px;">Item Condition</p>
     </div>
 
     <?php if (!empty($message)): ?>
@@ -81,10 +96,10 @@ require_once('admin_header.php');
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
                 <tr>
-                    <th style="padding: 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase;">Trans. ID</th>
+                    <th style="padding: 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase;">Transaction ID</th>
                     <th style="padding: 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase;">Product Detail</th>
-                    <th style="padding: 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase;">Qty Out</th>
-                    <th style="padding: 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase; width: 40%;">Inspection & Return</th>
+                    <th style="padding: 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase;">Quantity</th>
+                    <th style="padding: 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase; width: 45%;">Inspection & Return</th>
                 </tr>
             </thead>
             <tbody>
@@ -105,16 +120,22 @@ require_once('admin_header.php');
                             </span>
                         </td>
                         <td style="padding: 16px; background: #fafaf9;">
-                            <form action="admin_returns.php" method="POST" style="display: flex; gap: 8px;">
+                            <form action="" method="POST" style="display: flex; gap: 8px;">
                                 <input type="hidden" name="rental_item_id" value="<?php echo $item['rental_item_id']; ?>">
                                 
-                                <input type="text" name="return_condition" placeholder="e.g., Good, Minor Scratch..." required 
-                                       style="flex-grow: 1; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; font-size: 0.9rem;">
+                                <input type="text" name="return_condition" placeholder="Condition (Broken String)..." required 
+                                       style="flex-grow: 1; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; font-size: 0.9rem; min-width: 150px;">
                                 
-                                <button type="submit" name="confirm_return" 
-                                        style="padding: 10px 16px; background: #10b981; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s;" 
+                                <button type="submit" name="return_action" value="restock" title="Item is good. Add back to stock."
+                                        style="padding: 10px; background: #10b981; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap;" 
                                         onmouseover="this.style.backgroundColor='#059669'" onmouseout="this.style.backgroundColor='#10b981'">
                                     Restock
+                                </button>
+
+                                <button type="submit" name="return_action" value="writeoff" title="Item is damaged. Do NOT add to stock."
+                                        style="padding: 10px; background: #ef4444; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap;" 
+                                        onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='#ef4444'">
+                                    Repair
                                 </button>
                             </form>
                         </td>

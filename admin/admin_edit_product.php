@@ -3,7 +3,7 @@ session_start();
 if (!isset($_SESSION['staff_id'])) { header("Location: admin_login.php"); exit(); }
 require_once('../database.php');
 
-$page_title = "Edit Catalog Item";
+$page_title = "Edit Item";
 $active = "products";
 $hide_search = true;
 
@@ -89,7 +89,7 @@ require_once('admin_header.php');
             <img src="../uploads/<?php echo $product['prod_image'] ?: 'default.jpg'; ?>" style="width: 100px; height: 100px; border-radius: 8px; object-fit: cover; border: 1px solid #d1d5db;">
             <div>
                 <h2 style="margin: 0 0 8px 0; color: #111827;">Edit Item: <?php echo htmlspecialchars($product['prod_name']); ?></h2>
-                <span style="background: #e0e7ff; color: #4f46e5; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">Active in Catalog</span>
+                <span style="background: #e0e7ff; color: #4f46e5; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">In Catalog</span>
             </div>
         </div>
 
@@ -103,15 +103,15 @@ require_once('admin_header.php');
             <div style="margin-bottom: 20px;">
                 <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">Listing Mode</label>
                 <select id="listing_mode" onchange="toggleFields()" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem; background: #f8fafc; cursor: pointer;">
-                    <option value="hybrid">Hybrid (Available for Sale & Rent)</option>
-                    <option value="sale_only">Retail Only (Sale)</option>
-                    <option value="rent_only">Fleet Only (Rent)</option>
+                    <option value="hybrid">Both (Available for Sale & Rent)</option>
+                    <option value="sale_only">Sale Only</option>
+                    <option value="rent_only">Rental Only</option>
                 </select>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                 <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <h4 style="margin-top: 0; color: #0f172a; margin-bottom: 12px;">Retail Sales Data</h4>
+                    <h4 style="margin-top: 0; color: #0f172a; margin-bottom: 12px;">Sale Data</h4>
                     <label style="display: block; margin-bottom: 4px; font-size: 0.85rem; color: #64748b; font-weight: bold;">Sale Price (RM)</label>
                     <input type="number" step="0.01" name="prod_sale_price" value="<?php echo $product['prod_sale_price']; ?>" required style="width: 100%; padding: 8px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 4px;">
                     
@@ -120,7 +120,7 @@ require_once('admin_header.php');
                 </div>
 
                 <div style="background: #fffbeb; padding: 16px; border-radius: 8px; border: 1px solid #fef3c7;">
-                    <h4 style="margin-top: 0; color: #92400e; margin-bottom: 12px;">Rental Fleet Data</h4>
+                    <h4 style="margin-top: 0; color: #92400e; margin-bottom: 12px;">Rental Data</h4>
                     <label style="display: block; margin-bottom: 4px; font-size: 0.85rem; color: #b45309; font-weight: bold;">Rental Rate (RM/Day)</label>
                     <input type="number" step="0.01" name="prod_rental_price" value="<?php echo $product['prod_rental_price']; ?>" required style="width: 100%; padding: 8px; margin-bottom: 12px; border: 1px solid #fde68a; border-radius: 4px;">
                     
@@ -136,7 +136,7 @@ require_once('admin_header.php');
 
             <div style="display: flex; gap: 12px; margin-top: 10px;">
                 <button type="submit" name="update_product" style="flex-grow: 1; padding: 14px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 1.05rem; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.backgroundColor='#1d4ed8'" onmouseout="this.style.backgroundColor='#2563eb'">
-                    Save Catalog Changes
+                    Save Changes
                 </button>
                 
                 <button type="submit" name="delete_product" onclick="return confirm('Are you sure you want to permanently delete this item?');" style="padding: 14px 24px; background: #ef4444; color: white; border: none; border-radius: 8px; font-size: 1.05rem; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='#ef4444'">

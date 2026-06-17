@@ -3,7 +3,7 @@ session_start();
 if (!isset($_SESSION['staff_id'])) { header("Location: admin_login.php"); exit(); }
 require_once('../database.php');
 
-$page_title = "Sales Orders";
+$page_title = "Orders";
 $active = "orders";
 
 // ==========================================
@@ -33,7 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_order_status'])
 // ==========================================
 // FETCH ORDERS + CUSTOMER DATA + ADDRESS DATA
 // ==========================================
-// Note: o.* will automatically fetch the new collection_method column!
 $query = "SELECT o.*, 
                  c.cust_name, c.cust_email, c.cust_phone_number,
                  a.full_name AS ship_name, a.phone_number AS ship_phone, 
@@ -107,36 +106,54 @@ require_once('admin_header.php');
                                         <h4 style="margin: 0 0 12px 0; color: #111827; font-size: 0.95rem; border-bottom: 1px solid #d1d5db; padding-bottom: 8px;">Customer & Fulfillment</h4>
                                         <div style="font-size: 0.85rem; color: #4b5563; line-height: 1.6;">
                                             
-                                            <?php $method = $row['collection_method'] ?? 'Self-Pickup'; ?>
-                                            <div style="margin-bottom: 12px; background: <?php echo ($method == 'Self-Pickup') ? '#f0fdf4' : '#e0e7ff'; ?>; padding: 8px 12px; border-radius: 6px; border: 1px solid <?php echo ($method == 'Self-Pickup') ? '#bbf7d0' : '#c7d2fe'; ?>; display: inline-block;">
-                                                <strong style="color: <?php echo ($method == 'Self-Pickup') ? '#166534' : '#3730a3'; ?>;">Method:</strong> 
-                                                <span style="color: <?php echo ($method == 'Self-Pickup') ? '#15803d' : '#312e81'; ?>; font-weight: 600;"><?php echo htmlspecialchars($method); ?></span>
-                                            </div>
-                                            <br>
-
-                                            <strong>Email:</strong> <?php echo htmlspecialchars($row['cust_email']); ?><br>
-                                            <strong>Account Phone:</strong> <?php echo !empty($row['cust_phone_number']) ? htmlspecialchars($row['cust_phone_number']) : 'N/A'; ?><br>
+                                            <?php 
+                                            // Safely check method, defaulting to Self-Pickup if empty
+                                            $method = !empty($row['collection_method']) ? trim($row['collection_method']) : 'Self-Pickup'; 
+                                            $is_delivery = (strtolower($method) === 'delivery');
+                                            ?>
                                             
-                                            <div style="margin-top: 14px; background: #f9fafb; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb;">
-                                                <?php if ($method == 'Self-Pickup'): ?>
+                                            <?php if ($is_delivery): ?>
+                                                <div style="margin-bottom: 12px; background: #e0e7ff; padding: 8px 12px; border-radius: 6px; border: 1px solid #c7d2fe; display: inline-block;">
+                                                    <strong style="color: #3730a3;">Method:</strong> 
+                                                    <span style="color: #312e81; font-weight: 600;">Delivery</span>
+                                                </div>
+                                                <br>
+                                                <strong>Email:</strong> <?php echo htmlspecialchars($row['cust_email']); ?><br>
+                                                <strong>Account Phone:</strong> <?php echo !empty($row['cust_phone_number']) ? htmlspecialchars($row['cust_phone_number']) : 'N/A'; ?><br>
+                                                
+                                                <div style="margin-top: 14px; background: #f9fafb; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                                                    <?php if (!empty($row['street'])): ?>
+                                                        <strong style="color: #111827; display: block; margin-bottom: 4px;">🚚 Delivery Address:</strong>
+                                                        <span style="display: block; font-weight: 600; color: #374151;">
+                                                            <?php echo htmlspecialchars($row['ship_name']); ?> 
+                                                            <?php if(!empty($row['ship_phone'])) echo '<span style="font-weight: normal; color: #6b7280;">(' . htmlspecialchars($row['ship_phone']) . ')</span>'; ?>
+                                                        </span>
+                                                        <span style="color: #6b7280; display: block; margin-top: 4px;">
+                                                            <?php 
+                                                                $parts = array_filter([$row['street'], $row['city'], $row['postcode'], $row['state'], $row['country']]);
+                                                                echo htmlspecialchars(implode(', ', $parts));
+                                                            ?>
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <em style="color:#ef4444;">Delivery requested, but address data is missing.</em>
+                                                    <?php endif; ?>
+                                                </div>
+
+                                            <?php else: ?>
+                                                <div style="margin-bottom: 12px; background: #f0fdf4; padding: 8px 12px; border-radius: 6px; border: 1px solid #bbf7d0; display: inline-block;">
+                                                    <strong style="color: #166534;">Method:</strong> 
+                                                    <span style="color: #15803d; font-weight: 600;">Self-Pickup</span>
+                                                </div>
+                                                <br>
+                                                <strong>Email:</strong> <?php echo htmlspecialchars($row['cust_email']); ?><br>
+                                                <strong>Account Phone:</strong> <?php echo !empty($row['cust_phone_number']) ? htmlspecialchars($row['cust_phone_number']) : 'N/A'; ?><br>
+                                                
+                                                <div style="margin-top: 14px; background: #f9fafb; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb;">
                                                     <span style="color: #166534; font-weight: 700; display: block;">🏪 Self Collection at Store</span>
                                                     <span style="font-size: 0.78rem; color: #15803d; display: block; margin-top: 2px;">Customer will pick up at store location. No shipping required.</span>
-                                                <?php elseif (!empty($row['street'])): ?>
-                                                    <strong style="color: #111827; display: block; margin-bottom: 4px;">Delivery Address:</strong>
-                                                    <span style="display: block; font-weight: 600; color: #374151;">
-                                                        <?php echo htmlspecialchars($row['ship_name']); ?> 
-                                                        <?php if(!empty($row['ship_phone'])) echo '<span style="font-weight: normal; color: #6b7280;">(' . htmlspecialchars($row['ship_phone']) . ')</span>'; ?>
-                                                    </span>
-                                                    <span style="color: #6b7280; display: block; margin-top: 4px;">
-                                                        <?php 
-                                                            $parts = array_filter([$row['street'], $row['city'], $row['postcode'], $row['state'], $row['country']]);
-                                                            echo htmlspecialchars(implode(', ', $parts));
-                                                        ?>
-                                                    </span>
-                                                <?php else: ?>
-                                                    <em style="color:#ef4444;">Delivery requested, but address data is missing.</em>
-                                                <?php endif; ?>
-                                            </div>
+                                                </div>
+                                            <?php endif; ?>
+
                                         </div>
                                     </div>
 
@@ -148,7 +165,6 @@ require_once('admin_header.php');
                                                 if($items_query && mysqli_num_rows($items_query) > 0) {
                                                     echo '<ul style="margin: 0; padding-left: 16px; line-height: 1.6;">';
                                                     while($item = mysqli_fetch_assoc($items_query)) {
-                                                        // Fallbacks to handle different possible column names for unit price
                                                         $price = $item['unit_price'] ?? $item['price'] ?? 0;
                                                         echo '<li><strong>' . $item['order_qty'] . 'x</strong> ' . htmlspecialchars($item['prod_name']) . ' <span style="color:#9ca3af;">(RM ' . number_format($price, 2) . ' each)</span></li>';
                                                     }
@@ -165,14 +181,13 @@ require_once('admin_header.php');
                                         <form action="admin_order_list.php" method="POST" style="display: flex; flex-direction: column; gap: 10px;">
                                             <input type="hidden" name="order_id" value="<?php echo $order_id; ?>">
                                             <select name="new_status" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.85rem; outline: none;">
-                                                <option value="Pending" <?php echo ($status == 'Pending') ? 'selected' : ''; ?>>Pending (Awaiting Processing)</option>
-                                                <option value="Processing" <?php echo ($status == 'Processing') ? 'selected' : ''; ?>>Processing (Preparing / Return Req)</option>
-                                                <option value="Shipped" <?php echo ($status == 'Shipped') ? 'selected' : ''; ?>>Shipped (Out for Delivery)</option>
-                                                <option value="Delivered" <?php echo ($status == 'Delivered') ? 'selected' : ''; ?>>Delivered (Completed)</option>
-                                                <option value="Refunded" <?php echo ($status == 'Refunded') ? 'selected' : ''; ?>>Refunded (Return Approved)</option>
+                                                <option value="Processing" <?php echo ($status == 'Processing') ? 'selected' : ''; ?>>Processing</option>
+                                                <option value="Shipped" <?php echo ($status == 'Shipped') ? 'selected' : ''; ?>>Shipped</option>
+                                                <option value="Delivered" <?php echo ($status == 'Delivered') ? 'selected' : ''; ?>>Delivered</option>
+                                                <option value="Refunded" <?php echo ($status == 'Refunded') ? 'selected' : ''; ?>>Refunded</option>
                                                 <option value="Cancelled" <?php echo ($status == 'Cancelled') ? 'selected' : ''; ?>>Cancelled</option>
                                             </select>
-                                            <button type="submit" name="update_order_status" style="background: #4f46e5; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">Save Status</button>
+                                            <button type="submit" name="update_order_status" style="background: #4f46e5; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">Update Status</button>
                                         </form>
 
                                         <?php 

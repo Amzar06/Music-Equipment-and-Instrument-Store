@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $page_title; ?> | Admin Music Store</title>
+    <title><?php echo $page_title; ?> | Admin Music Equipment & Instrument Store</title>
     <link rel="stylesheet" href="admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,7 +11,7 @@
 <body>
 
 <aside class="sidebar">
-    <h2>Music Store</h2>
+    <h2>Music Equipment & Instrument Store</h2>
     <ul class="nav-links">
         <li><a href="admin_dashboard.php" class="<?php echo ($active == 'dashboard') ? 'active' : ''; ?>">Dashboard</a></li>
         <li><a href="admin_products.php" class="<?php echo ($active == 'products') ? 'active' : ''; ?>">Products</a></li>
@@ -21,13 +21,16 @@
         <li><a href="admin_rental_list.php" class="<?php echo ($active == 'rentals') ? 'active' : ''; ?>">Rentals</a></li>
         <li><a href="manage_customer.php" class="<?php echo ($active == 'customers') ? 'active' : ''; ?>">Customers</a></li>
         
-        <?php if (isset($_SESSION['staff_role']) && $_SESSION['staff_role'] === 'Administrator'): ?>
+        <?php 
+        // We keep the exact database name 'Administrator' here so your permissions don't break!
+        if (isset($_SESSION['staff_role']) && $_SESSION['staff_role'] === 'Administrator'): 
+        ?>
             <li><a href="manage_admin.php" class="<?php echo ($active == 'staff') ? 'active' : ''; ?>">Staff</a></li>
             <li><a href="admin_report.php" class="<?php echo ($active == 'reports') ? 'active' : ''; ?>">Reports</a></li>
         <?php endif; ?>
     </ul>
     <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-        <a href="admin_logout.php" style="color: #ef4444; text-decoration: none; font-size: 0.9rem; font-weight: 600;">Logout</a>
+        <a href="admin_logout.php" onclick="return confirm('Are you sure you want to log out?');" style="color: #ef4444; text-decoration: none; font-size: 0.9rem; font-weight: 600;">Logout</a>
     </div>
 </aside>
 
@@ -48,7 +51,15 @@
 
         <div class="admin-profile" style="display: flex; align-items: center; gap: 15px;">
             <span class="status-pill completed" style="text-transform: uppercase; letter-spacing: 1px; padding: 6px 12px; font-size: 0.75rem;">
-                <?php echo htmlspecialchars($_SESSION['staff_role'] ?? 'Admin'); ?>
+                <?php 
+                    // This maps the UI display names without touching your database
+                    $db_role = $_SESSION['staff_role'] ?? 'staff';
+                    if ($db_role === 'Administrator') {
+                        echo 'SUPERADMIN';
+                    } else {
+                        echo 'ADMIN';
+                    }
+                ?>
             </span>
             
             <a href="admin_profile.php" 

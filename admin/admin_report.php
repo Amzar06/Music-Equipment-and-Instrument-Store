@@ -1,15 +1,9 @@
 <?php
 session_start();
-if (!isset($_SESSION['staff_id'])) { 
-    header("Location: admin_login.php"); 
-    exit(); 
-}
+if (!isset($_SESSION['staff_id'])) { header("Location: admin_login.php"); exit(); }
 
-// ==========================================
-// SUPERADMIN SECURITY LOCK
-// ==========================================
 if (!isset($_SESSION['staff_role']) || $_SESSION['staff_role'] !== 'Administrator') {
-    $_SESSION['flash_message'] = "Access Denied: Only Administrators can view financial reports.";
+    $_SESSION['flash_message'] = "Access Denied: Only Administrators can view reports.";
     $_SESSION['flash_type'] = "error";
     header("Location: admin_dashboard.php");
     exit();
@@ -17,155 +11,130 @@ if (!isset($_SESSION['staff_role']) || $_SESSION['staff_role'] !== 'Administrato
 
 require_once('../database.php');
 
-$page_title = "Business Reports";
-$active = "reports";
-$hide_search = true; 
+$page_title = "Revenue Reports";
+$active = "reports"; 
+$hide_search = true;
 
-// ==========================================
-// TIMEFRAME FILTER LOGIC
-// ==========================================
-$timeframe = isset($_GET['timeframe']) ? $_GET['timeframe'] : 'all';
-$order_date_filter = "";
-$rental_date_filter = "";
+// Get the current filter from URL (default to 'all')
+$filter = isset($_GET['type']) ? $_GET['type'] : 'all';
 
-if ($timeframe == 'daily') {
-    $order_date_filter = "AND DATE(order_date) = CURDATE()";
-    $rental_date_filter = "AND DATE(start_date) = CURDATE()";
-} elseif ($timeframe == 'weekly') {
-    $order_date_filter = "AND YEARWEEK(order_date, 1) = YEARWEEK(CURDATE(), 1)";
-    $rental_date_filter = "AND YEARWEEK(start_date, 1) = YEARWEEK(CURDATE(), 1)";
-} elseif ($timeframe == 'monthly') {
-    $order_date_filter = "AND MONTH(order_date) = MONTH(CURDATE()) AND YEAR(order_date) = YEAR(CURDATE())";
-    $rental_date_filter = "AND MONTH(start_date) = MONTH(CURDATE()) AND YEAR(start_date) = YEAR(CURDATE())";
-} elseif ($timeframe == 'yearly') {
-    $order_date_filter = "AND YEAR(order_date) = YEAR(CURDATE())";
-    $rental_date_filter = "AND YEAR(start_date) = YEAR(CURDATE())";
-}
+$transactions = [];
+$total_revenue = 0;
+$total_count = 0;
 
-// ==========================================
-// FETCH FILTERED DATA
-// ==========================================
-// Sales Revenue 
-$sales_query = mysqli_query($conn, "SELECT SUM(total_amount) as revenue FROM orders WHERE status='Delivered' $order_date_filter");
-$sales_total = ($sales_query && mysqli_num_rows($sales_query) > 0) ? (float)mysqli_fetch_assoc($sales_query)['revenue'] : 0.00;
-
-// Rental Revenue
-$rental_query = mysqli_query($conn, "SELECT SUM(total_amount) as revenue FROM rentals WHERE status='Returned' $rental_date_filter");
-$rental_total = ($rental_query && mysqli_num_rows($rental_query) > 0) ? (float)mysqli_fetch_assoc($rental_query)['revenue'] : 0.00;
-
-// Top Performing Products (Filtered by timeframe)
-$top_products = [];
-$top_query = "SELECT p.prod_name, c.category_name, SUM(oi.order_qty) as total_sold
-              FROM order_items oi
-              JOIN products p ON oi.prod_id = p.prod_id
-              JOIN categories c ON p.category_id = c.category_id
-              JOIN orders o ON oi.order_id = o.order_id
-              WHERE o.status = 'Delivered' $order_date_filter
-              GROUP BY p.prod_id
-              ORDER BY total_sold DESC
-              LIMIT 5";
-$top_res = mysqli_query($conn, $top_query);
-if ($top_res) {
-    while($row = mysqli_fetch_assoc($top_res)) {
-        $top_products[] = $row;
+// 1. Fetch Orders (Sales) if applicable
+if ($filter == 'all' || $filter == 'sales') {
+    $order_query = "SELECT o.order_id AS id, o.order_date AS date, o.total_amount, o.status, c.cust_name 
+                    FROM orders o 
+                    JOIN customers c ON o.cust_id = c.cust_id 
+                    WHERE o.status != 'Cancelled'";
+    $order_result = mysqli_query($conn, $order_query);
+    
+    while ($row = mysqli_fetch_assoc($order_result)) {
+        $row['trans_type'] = 'Sale';
+        $transactions[] = $row;
+        $total_revenue += $row['total_amount'];
+        $total_count++;
     }
 }
+
+// 2. Fetch Rentals if applicable
+if ($filter == 'all' || $filter == 'rentals') {
+    $rental_query = "SELECT r.rental_id AS id, r.created_at AS date, r.total_amount, r.status, c.cust_name 
+                     FROM rentals r 
+                     JOIN customers c ON r.cust_id = c.cust_id 
+                     WHERE r.status != 'Cancelled'";
+    $rental_result = mysqli_query($conn, $rental_query);
+    
+    while ($row = mysqli_fetch_assoc($rental_result)) {
+        $row['trans_type'] = 'Rental';
+        $transactions[] = $row;
+        $total_revenue += $row['total_amount'];
+        $total_count++;
+    }
+}
+
+// 3. Sort the combined array by Date (Newest First)
+usort($transactions, function($a, $b) {
+    return strtotime($b['date']) - strtotime($a['date']);
+});
 
 require_once('admin_header.php');
 ?>
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; max-width: 1200px; margin-left: auto; margin-right: auto;">
+<div style="max-width: 1200px; margin: 0 auto; margin-top: 20px;">
     
-    <form action="admin_report.php" method="GET" style="display: flex; align-items: center; gap: 10px;">
-        <label style="font-weight: 600; color: #4b5563; font-size: 0.9rem;">Filter By:</label>
-        <select name="timeframe" onchange="this.form.submit()" style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; font-weight: 600; color: #111827; background: white;">
-            <option value="all" <?php echo ($timeframe == 'all') ? 'selected' : ''; ?>>All Time (Lifetime)</option>
-            <option value="daily" <?php echo ($timeframe == 'daily') ? 'selected' : ''; ?>>Today</option>
-            <option value="weekly" <?php echo ($timeframe == 'weekly') ? 'selected' : ''; ?>>This Week</option>
-            <option value="monthly" <?php echo ($timeframe == 'monthly') ? 'selected' : ''; ?>>This Month</option>
-            <option value="yearly" <?php echo ($timeframe == 'yearly') ? 'selected' : ''; ?>>This Year</option>
-        </select>
-    </form>
-
-    <button onclick="downloadPDF()" style="background: #4f46e5; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s;" onmouseover="this.style.backgroundColor='#4338ca'" onmouseout="this.style.backgroundColor='#4f46e5'">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-        </svg>
-        Download PDF
-    </button>
-</div>
-
-<div id="printable-report" style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); max-width: 1200px; margin: 0 auto;">
-    
-    <div style="border-bottom: 2px solid #e5e7eb; padding-bottom: 15px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end;">
-        <div>
-            <h2 style="margin: 0; color: #111827; font-size: 1.8rem;">Financial Performance Report</h2>
-            <p style="margin: 4px 0 0 0; color: #4f46e5; font-weight: 600; text-transform: uppercase; font-size: 0.85rem;">
-                Timeframe: <?php echo htmlspecialchars($timeframe == 'all' ? 'Lifetime' : $timeframe); ?>
-            </p>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+        <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
+            <h4 style="margin: 0; color: #6b7280; font-size: 0.9rem; text-transform: uppercase;">Filtered Revenue</h4>
+            <div style="font-size: 2.5rem; font-weight: 700; color: #10b981; margin-top: 8px;">
+                RM <?php echo number_format($total_revenue, 2); ?>
+            </div>
         </div>
-        <div style="text-align: right; color: #9ca3af; font-size: 0.85rem;">
-            Generated on: <strong><?php echo date('d M Y, h:i A'); ?></strong>
+        <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
+            <h4 style="margin: 0; color: #6b7280; font-size: 0.9rem; text-transform: uppercase;">Valid Transactions</h4>
+            <div style="font-size: 2.5rem; font-weight: 700; color: #4f46e5; margin-top: 8px;">
+                <?php echo $total_count; ?>
+            </div>
         </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
-        <div style="background: #f9fafb; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; text-align: center;">
-            <span style="color: #6b7280; font-weight: 600; text-transform: uppercase; font-size: 0.85rem;">Sales Revenue</span>
-            <h3 style="color: #4f46e5; margin: 10px 0 0 0; font-size: 2rem;">RM <?php echo number_format($sales_total, 2); ?></h3>
-        </div>
-        <div style="background: #f9fafb; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; text-align: center;">
-            <span style="color: #6b7280; font-weight: 600; text-transform: uppercase; font-size: 0.85rem;">Rental Revenue</span>
-            <h3 style="color: #10b981; margin: 10px 0 0 0; font-size: 2rem;">RM <?php echo number_format($rental_total, 2); ?></h3>
-        </div>
-    </div>
-
-    <div class="table-container" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
-        <h3 style="margin-top: 0; margin-bottom: 5px; font-weight: 700; color: #111827;">Top Performing Products</h3>
-        <p style="color: #6b7280; margin-bottom: 20px; font-size: 0.85rem;">Based on units successfully delivered during the selected timeframe.</p>
+    <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
         
-        <?php if (!empty($top_products)): ?>
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr style="text-align: left; border-bottom: 2px solid #e5e7eb; background: #f3f4f6;">
-                            <th style="padding: 12px 16px; color: #374151;">Product Name</th>
-                            <th style="padding: 12px 16px; color: #374151;">Category</th>
-                            <th style="padding: 12px 16px; text-align: right; color: #374151;">Total Sold</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($top_products as $prod): ?>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h3 style="margin: 0; font-weight: 700; color: #111827; font-size: 1.25rem;">Transaction History</h3>
+            
+            <form action="admin_report.php" method="GET" style="display: flex; align-items: center; gap: 12px;">
+                <label style="font-size: 0.9rem; font-weight: 600; color: #4b5563;">View:</label>
+                <select name="type" style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; font-size: 0.9rem;" onchange="this.form.submit()">
+                    <option value="all" <?php echo ($filter == 'all') ? 'selected' : ''; ?>>All Transactions</option>
+                    <option value="sales" <?php echo ($filter == 'sales') ? 'selected' : ''; ?>>Sales Only</option>
+                    <option value="rentals" <?php echo ($filter == 'rentals') ? 'selected' : ''; ?>>Rentals Only</option>
+                </select>
+            </form>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                    <tr>
+                        <th style="padding: 12px 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase;">Date</th>
+                        <th style="padding: 12px 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase;">Type</th>
+                        <th style="padding: 12px 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase;">ID</th>
+                        <th style="padding: 12px 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase;">Customer</th>
+                        <th style="padding: 12px 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase;">Amount (RM)</th>
+                        <th style="padding: 12px 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (count($transactions) > 0): ?>
+                        <?php foreach ($transactions as $t): ?>
                         <tr style="border-bottom: 1px solid #f3f4f6;">
-                            <td style="padding: 14px 16px; font-weight: 600; color: #111827;"><?php echo htmlspecialchars($prod['prod_name']); ?></td>
-                            <td style="padding: 14px 16px; color: #4b5563;"><?php echo htmlspecialchars($prod['category_name']); ?></td>
-                            <td style="padding: 14px 16px; text-align: right; font-weight: 700; color: #4f46e5;"><?php echo $prod['total_sold']; ?></td>
+                            <td style="padding: 16px; color: #6b7280; font-size: 0.9rem;"><?php echo date('d M Y, h:i A', strtotime($t['date'])); ?></td>
+                            
+                            <td style="padding: 16px;">
+                                <span style="font-weight: 700; font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; <?php echo ($t['trans_type'] == 'Sale') ? 'background: #e0e7ff; color: #3730a3;' : 'background: #fef3c7; color: #92400e;'; ?>">
+                                    <?php echo strtoupper($t['trans_type']); ?>
+                                </span>
+                            </td>
+                            
+                            <td style="padding: 16px; font-weight: 600; color: #111827;">#<?php echo $t['id']; ?></td>
+                            <td style="padding: 16px; color: #4b5563;"><?php echo htmlspecialchars($t['cust_name']); ?></td>
+                            <td style="padding: 16px; font-weight: 700; color: #111827;"><?php echo number_format($t['total_amount'], 2); ?></td>
+                            <td style="padding: 16px;">
+                                <span style="background: #f3f4f6; color: #4b5563; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
+                                    <?php echo htmlspecialchars($t['status']); ?>
+                                </span>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php else: ?>
-            <div style="text-align: center; padding: 40px; color: #9ca3af; background: #f9fafb; border-radius: 8px; border: 1px dashed #d1d5db;">
-                No sales data available for the selected timeframe.
-            </div>
-        <?php endif; ?>
+                    <?php else: ?>
+                        <tr><td colspan="6" style="text-align: center; padding: 40px; color: #9ca3af;">No transactions found for this filter.</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script>
-function downloadPDF() {
-    var element = document.getElementById('printable-report');
-    var opt = {
-        margin:       0.5,
-        filename:     'Business_Report_<?php echo htmlspecialchars($timeframe); ?>_<?php echo date("Y_m_d"); ?>.pdf',
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
-    html2pdf().set(opt).from(element).save();
-}
-</script>
 
 <?php require_once('admin_footer.php'); ?>

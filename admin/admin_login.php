@@ -2,7 +2,7 @@
 session_start();
 require_once('../database.php');
 
-// If already logged in, send them straight to the dashboard/orders
+// If already logged in, send them straight to the dashboard
 if (isset($_SESSION['staff_id'])) {
     header("Location: admin_dashboard.php"); 
     exit();
@@ -15,14 +15,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $password = $_POST['password'];
 
-    // Assuming your admin table is called 'staff' - adjust if needed!
+    // Query your staff table using the escaped email input
     $query = "SELECT * FROM staff WHERE staff_email = '$email'"; 
     $result = mysqli_query($conn, $query);
 
     if (mysqli_num_rows($result) == 1) {
         $staff = mysqli_fetch_assoc($result);
         
-        if ($password == $staff['staff_password']) { 
+        // FIXED: Uses password_verify to check user input against the database hash
+        if (password_verify($password, $staff['staff_password'])) { 
             $_SESSION['staff_id'] = $staff['staff_id'];
             $_SESSION['staff_name'] = $staff['staff_name']; 
             $_SESSION['staff_role'] = $staff['staff_role'];
@@ -157,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
 
     <div class="login-card">
-        <h2>Admin Portal</h2>
+        <h2>Admin Portal Login</h2>
         
         <?php if (!empty($error)): ?>
             <div class="error-message">
@@ -168,13 +169,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <form action="admin_login.php" method="POST">
             <div class="form-group">
                 <label>Email Address</label>
-                <input type="email" name="email" class="form-control">
+                <input type="email" name="email" required class="form-control">
             </div>
             
             <div class="form-group">
                 <label>Password</label>
                 <div class="password-container">
-                    <input type="password" name="password" id="password" class="form-control">
+                    <input type="password" name="password" id="password" required class="form-control">
                     <button type="button" class="toggle-btn" onclick="togglePassword()">
                         <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -186,8 +187,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             <button type="submit" class="login-btn">Login</button>
             <div style="text-align: center; margin-top: 15px;">
-            <a href="admin_forgot_password.php" style="color: #6b7280; font-size: 0.85rem; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#111827'" onmouseout="this.style.color='#6b7280'">Forgot Password?</a>
-           </div>
+                <a href="admin_forgot_password.php" style="color: #6b7280; font-size: 0.85rem; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#111827'" onmouseout="this.style.color='#6b7280'">Forgot Password?</a>
+            </div>
         </form>
     </div>
 
