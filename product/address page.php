@@ -38,10 +38,10 @@ if (isset($conn)) {
             $existing_addresses[] = [
                 'address_id' => 'reg',
                 'full_name'  => $cust['cust_name'],
-                'street'     => $cust['cust_street'],
-                'city'       => $cust['cust_city'] ?? '',
-                'state'      => $cust['cust_state'] ?? '',
-                'postcode'   => $cust['cust_postcode'] ?? '',
+                'street'     => $cust['street'],
+                'city'       => $cust['city'] ?? '',
+                'state'      => $cust['state'] ?? '',
+                'postcode'   => $cust['postcode'] ?? '',
                 'label'      => 'Primary Address (From Profile)',
                 'is_reg'     => true
             ];

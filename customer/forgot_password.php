@@ -42,8 +42,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_email'])) {
                 if ($result->num_rows > 0) {
                     $user = $result->fetch_assoc();
                     
-                    // Case-insensitive verification matchmaking 
-                    if ($user['cust_security_question'] !== $security_question || strtolower($user['cust_security_answer']) !== strtolower($security_answer)) {
+                    // Standardize the answer to lowercase to match the formatting used during registration
+                    $processed_answer = strtolower($security_answer);
+                    
+                    // HASH MATCHING: Check the question explicitly, and verify the hashed answer using password_verify
+                    if ($user['cust_security_question'] !== $security_question || !password_verify($processed_answer, $user['cust_security_answer'])) {
                         $message = "Security verification failed. Incorrect question or answer matching.";
                         $message_type = "danger";
                     } else {
@@ -128,7 +131,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_email'])) {
                 </div>
             <?php endif; ?>
 
-            <form action="forgot_password.php" method="POST" autocomplete="off">
+            <form action="" method="POST" autocomplete="off">
                 <input type="hidden" name="submit_email" value="1">
                 
                 <div class="mb-3">

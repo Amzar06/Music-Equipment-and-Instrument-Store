@@ -57,14 +57,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = "Email already registered.";
                 $email = ''; 
             } else {
+                // HASHING THE PASSWORD
                 $hashed_password = password_hash($password, PASSWORD_BCRYPT);
-                // Lowercase the answer for case-insensitive verification later, or hash it depending on your security preference
+                
+                // HASHING THE SECURITY ANSWER
+                // Standardize to lowercase before hashing to prevent simple case mismatch failures later
                 $processed_answer = strtolower($security_answer);
+                $hashed_security_answer = password_hash($processed_answer, PASSWORD_BCRYPT);
 
                 // Make sure your database table columns match these: `cust_security_question` and `cust_security_answer`
                 $insert = $conn->prepare("INSERT INTO customers (cust_name, cust_email, cust_password, cust_phone_number, cust_street, cust_city, cust_state, cust_postcode, cust_security_question, cust_security_answer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 if ($insert) {
-                    $insert->bind_param("ssssssssss", $name, $email, $hashed_password, $phone, $street, $city, $state, $postcode, $security_question, $processed_answer);
+                    $insert->bind_param("ssssssssss", $name, $email, $hashed_password, $phone, $street, $city, $state, $postcode, $security_question, $hashed_security_answer);
                     if ($insert->execute()) {
                         $success = "Registration successful! You can now login.";
                         $name = $email = $phone = $street = $city = $state = $postcode = $security_question = $security_answer = '';
@@ -144,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
       <?php endif; ?>
 
-      <form action="register_page.php" method="POST" id="registerForm">
+      <form action="" method="POST" id="registerForm">
           <label>Full Name</label>
           <input type="text" name="name" placeholder="Enter your full name" required value="<?php echo htmlspecialchars($name); ?>">
 
@@ -191,14 +195,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <?php
               $questions = [
                   "What was the name of your first pet?",
-                  "What is your mother's  name?",
+                  "What is your mother's name?",
                   "What elementary school did you attend?",
                   "In what city were you born?",
                   "What was your favorite food as a child?"
               ];
               foreach ($questions as $q) {
                   $selected = ($security_question === $q) ? 'selected' : '';
-                  echo "<option value=\"$q\" $selected>$q</option>";
+                  echo "<option value=\"$q\" $selected>$q</option>"; // FIXED: Changed $s to $q here
               }
               ?>
           </select>
@@ -268,8 +272,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       togglePassword.addEventListener('click', function () {
           const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
           password.setAttribute('type', type);
-          
-          // Toggle the eye icon style (slash vs regular eye)
           this.classList.toggle('fa-eye-slash');
       });
 
@@ -277,8 +279,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       toggleConfirmPassword.addEventListener('click', function () {
           const type = confirmPassword.getAttribute('type') === 'password' ? 'text' : 'password';
           confirmPassword.setAttribute('type', type);
-          
-          // Toggle the eye icon style
           this.classList.toggle('fa-eye-slash');
       });
 
