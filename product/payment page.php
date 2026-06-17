@@ -40,6 +40,23 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $query->close();
         }
+    } elseif (isset($_POST['type']) && $_POST['type'] === 'buy' && $rent_product_id > 0) {
+        $query = $conn->prepare("SELECT prod_sale_price, prod_id FROM products WHERE prod_id = ?");
+        if ($query) {
+            $query->bind_param("i", $rent_product_id);
+            $query->execute();
+            $result = $query->get_result();
+            if ($row = $result->fetch_assoc()) {
+                $total_price = $row['prod_sale_price'];
+                $cart_items[] = [
+                    'prod_id' => $row['prod_id'],
+                    'price' => $row['prod_sale_price'],
+                    'quantity' => 1,
+                    'is_rental' => false
+                ];
+            }
+            $query->close();
+        }
     } else {
         $where_clause = "c.cust_id = ?";
         if (!empty($selected_items)) {
@@ -173,8 +190,9 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 $order_total = 0;
                 foreach($purchase_items as $pi) $order_total += ($pi['price'] * $pi['quantity']);
                 
-                $ord = $conn->prepare("INSERT INTO orders (cust_id, address_id, total_amount, status) VALUES (?, ?, ?, 'Processing')");
-                $ord->bind_param("iid", $cust_id, $addr_id, $order_total);
+                $collection_method = ($delivery_type === 'delivery') ? 'Delivery' : 'Self-Pickup';
+                $ord = $conn->prepare("INSERT INTO orders (cust_id, address_id, total_amount, status, collection_method) VALUES (?, ?, ?, 'Processing', ?)");
+                $ord->bind_param("iids", $cust_id, $addr_id, $order_total, $collection_method);
                 if ($ord->execute()) {
                     $generated_order_id = $conn->insert_id;
                     $oi = $conn->prepare("INSERT INTO order_items (order_id, prod_id, order_qty, unit_price) VALUES (?, ?, ?, ?)");

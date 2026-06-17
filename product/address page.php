@@ -68,7 +68,7 @@ if (isset($conn)) {
             if ($is_same) continue;
         }
         $row['is_reg'] = false;
-        $row['label']  = "Recent: " . $row['full_name'];
+        $row['label']  = "Created Address: " . $row['street'] . " (" . $row['full_name'] . ")";
         $existing_addresses[] = $row;
     }
     $stmt_addr->close();
@@ -105,6 +105,18 @@ if ($type === 'rent' && isset($conn)) {
                 exit();
             }
             $stmt_check->close();
+        }
+        $stmt->close();
+    }
+} elseif ($type === 'buy' && $product_id > 0 && isset($conn)) {
+    $stmt = $conn->prepare("SELECT prod_name, prod_sale_price FROM products WHERE prod_id = ?");
+    if ($stmt) {
+        $stmt->bind_param("i", $product_id);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if ($row = $res->fetch_assoc()) {
+            $subtotal = floatval($row['prod_sale_price']);
+            $prod_name_display = $row['prod_name'];
         }
         $stmt->close();
     }
@@ -194,12 +206,16 @@ if ($type === 'rent' && isset($conn)) {
         <h3 style="font-weight: 800; color: #1e293b; margin-bottom: 8px;">Delivery Details</h3>
         <p style="color: #64748b; margin-bottom: 32px;">Please confirm where you'd like to receive your item.</p>
 
-    <?php if ($type === 'rent' && $subtotal > 0): ?>
+    <?php if (($type === 'rent' || $type === 'buy') && $subtotal > 0): ?>
     <div style="margin-bottom: 30px; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px;">
         <div style="font-weight: 800; color: #1e293b; margin-bottom: 4px; font-size: 1.1rem;"><?php echo htmlspecialchars($prod_name_display); ?></div>
         <div style="font-size: 0.9rem; color: #64748b; font-weight: 600;">
-            📅 <?php echo htmlspecialchars($start_date); ?> to <?php echo htmlspecialchars($end_date); ?>
-            &nbsp;·&nbsp; <?php echo $days; ?> day(s) × RM <?php echo number_format($rent_price_per_day, 2); ?>
+            <?php if ($type === 'rent'): ?>
+                📅 <?php echo htmlspecialchars($start_date); ?> to <?php echo htmlspecialchars($end_date); ?>
+                &nbsp;·&nbsp; <?php echo $days; ?> day(s) × RM <?php echo number_format($rent_price_per_day, 2); ?>
+            <?php else: ?>
+                ⚡ Direct Purchase
+            <?php endif; ?>
         </div>
         <div style="margin-top: 10px; font-weight: 800; color: #10b981; font-size: 1.25rem;">Subtotal: RM <?php echo number_format($subtotal, 2); ?></div>
     </div>
@@ -214,12 +230,14 @@ if ($type === 'rent' && isset($conn)) {
     <?php endif; ?>
 
     <form action="qr payment.php" method="GET" id="addressForm" onsubmit="return validateForm()">
-        <?php if ($type === 'rent'): ?>
-            <input type="hidden" name="type"       value="rent">
+        <?php if ($type === 'rent' || $type === 'buy'): ?>
+            <input type="hidden" name="type"       value="<?php echo htmlspecialchars($type); ?>">
             <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($product_id); ?>">
-            <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($start_date); ?>">
-            <input type="hidden" name="end_date"   value="<?php echo htmlspecialchars($end_date); ?>">
-            <input type="hidden" name="days"       value="<?php echo htmlspecialchars($days); ?>">
+            <?php if ($type === 'rent'): ?>
+                <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($start_date); ?>">
+                <input type="hidden" name="end_date"   value="<?php echo htmlspecialchars($end_date); ?>">
+                <input type="hidden" name="days"       value="<?php echo htmlspecialchars($days); ?>">
+            <?php endif; ?>
             <input type="hidden" name="subtotal"   value="<?php echo htmlspecialchars($subtotal); ?>">
         <?php endif; ?>
 
@@ -276,13 +294,14 @@ if ($type === 'rent' && isset($conn)) {
                     <label style="display: block; font-weight: 700; margin-bottom: 10px; color: #0369a1;">Use Existing Address</label>
                     <select name="existing_address_id" id="existingAddr" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #7dd3fc; background: white;" onchange="toggleAddressType()">
                         <option value="new">-- Create New Address --</option>
-                        <?php foreach ($existing_addresses as $addr): ?>
+                        <?php $first = true; foreach ($existing_addresses as $addr): ?>
                             <option value="<?php echo $addr['address_id']; ?>"
                                     data-street="<?php echo htmlspecialchars($addr['street'] ?? ''); ?>"
                                     data-city="<?php echo htmlspecialchars($addr['city'] ?? ''); ?>"
                                     data-state="<?php echo htmlspecialchars($addr['state'] ?? ''); ?>"
                                     data-postcode="<?php echo htmlspecialchars($addr['postcode'] ?? ''); ?>"
-                                    data-name="<?php echo htmlspecialchars($addr['full_name'] ?? ''); ?>">
+                                    data-name="<?php echo htmlspecialchars($addr['full_name'] ?? ''); ?>"
+                                    <?php if ($first) { echo "selected"; $first = false; } ?>>
                                 <?php echo htmlspecialchars($addr['label']); ?>
                             </option>
                         <?php endforeach; ?>
@@ -311,7 +330,22 @@ if ($type === 'rent' && isset($conn)) {
                 </div>
                 <div style="margin-bottom: 24px;">
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary);">State *</label>
-                    <input type="text" name="state" placeholder="State" id="state">
+                    <select name="state" id="state" style="width: 100%; padding: 12px; border-radius: 8px; border: 1.5px solid #e2e8f0; background: white;">
+                        <option value="">Select State</option>
+                        <option value="Johor">Johor</option>
+                        <option value="Kedah">Kedah</option>
+                        <option value="Kelantan">Kelantan</option>
+                        <option value="Melaka">Melaka</option>
+                        <option value="Negeri Sembilan">Negeri Sembilan</option>
+                        <option value="Pahang">Pahang</option>
+                        <option value="Perak">Perak</option>
+                        <option value="Perlis">Perlis</option>
+                        <option value="Pulau Pinang">Pulau Pinang</option>
+                        <option value="Selangor">Selangor</option>
+                        <option value="Terengganu">Terengganu</option>
+                        <option value="Kuala Lumpur">Kuala Lumpur</option>
+                        <option value="Putrajaya">Putrajaya</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -374,11 +408,14 @@ function toggleAddressType() {
         cityInp.value     = opt.getAttribute('data-city')     || '';
         postcodeInp.value = opt.getAttribute('data-postcode') || '';
         stateInp.value    = opt.getAttribute('data-state')    || '';
-        fullNameInp.readOnly = streetInp.readOnly = cityInp.readOnly = postcodeInp.readOnly = stateInp.readOnly = true;
+        fullNameInp.readOnly = streetInp.readOnly = cityInp.readOnly = postcodeInp.readOnly = true;
+        stateInp.disabled = true;
         fields.style.opacity = '0.7';
     } else {
-        fullNameInp.value = streetInp.value = cityInp.value = postcodeInp.value = stateInp.value = '';
-        fullNameInp.readOnly = streetInp.readOnly = cityInp.readOnly = postcodeInp.readOnly = stateInp.readOnly = false;
+        fullNameInp.value = streetInp.value = cityInp.value = postcodeInp.value = '';
+        stateInp.value = '';
+        fullNameInp.readOnly = streetInp.readOnly = cityInp.readOnly = postcodeInp.readOnly = false;
+        stateInp.disabled = false;
         fields.style.opacity = '1';
     }
 }
