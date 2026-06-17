@@ -158,7 +158,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_reset'])) {
                     <input type="hidden" name="submit_email" value="1">
                     <div class="mb-4">
                         <label for="emailInput" class="form-label">Registered Email Address</label>
-                        <input type="email" name="email" id="emailInput" class="form-control" placeholder="e.g., amzar06@gmail.com" required>
+                        <input type="email" name="email" id="emailInput" class="form-control" placeholder="e.g., abc@gmail.com" required>
                     </div>
                     <button type="submit" class="btn btn-submit w-100 mb-3">
                         Request Verification Code <i class="fa-solid fa-arrow-right ms-1"></i>
