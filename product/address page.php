@@ -28,7 +28,7 @@ $existing_addresses = [];
 
 if (isset($conn)) {
     // 1. Fetch registration address
-    $stmt_cust = $conn->prepare("SELECT cust_name, street , city, state, postcode FROM customers WHERE cust_id = ?");
+    $stmt_cust = $conn->prepare("SELECT cust_name, cust_street, cust_city, cust_state, cust_postcode FROM customers WHERE cust_id = ?");
     $stmt_cust->bind_param("i", $cust_id);
     $stmt_cust->execute();
     $res_cust = $stmt_cust->get_result();
@@ -37,10 +37,10 @@ if (isset($conn)) {
             $existing_addresses[] = [
                 'address_id' => 'reg',
                 'full_name'  => $cust['cust_name'],
-                'street'     => $cust['street'] ?? '',
-                'city'       => $cust['city'] ?? '',
-                'state'      => $cust['state'] ?? '',
-                'postcode'   => $cust['postcode'] ?? '',
+                'street'     => $cust['cust_street'],
+                'city'       => $cust['cust_city'] ?? '',
+                'state'      => $cust['cust_state'] ?? '',
+                'postcode'   => $cust['cust_postcode'] ?? '',
                 'label'      => 'Primary Address (From Profile)',
                 'is_reg'     => true
             ];
