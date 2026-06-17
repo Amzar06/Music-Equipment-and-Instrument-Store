@@ -14,7 +14,8 @@
     <h2>Music Store</h2>
     <ul class="nav-links">
         <li><a href="admin_dashboard.php" class="<?php echo ($active == 'dashboard') ? 'active' : ''; ?>">Dashboard</a></li>
-        <li><a href="admin_products.php" class="<?php echo ($active == 'products') ? 'active' : ''; ?>">Inventory</a></li>
+        <li><a href="admin_products.php" class="<?php echo ($active == 'products') ? 'active' : ''; ?>">Products</a></li>
+        <li><a href="admin_return_products.php" class="<?php echo ($active == 'returns') ? 'active' : ''; ?>">Return Products</a></li>
         <li><a href="admin_categories.php" class="<?php echo ($active == 'categories') ? 'active' : ''; ?>">Categories</a></li>
         <li><a href="admin_order_list.php" class="<?php echo ($active == 'orders') ? 'active' : ''; ?>">Orders</a></li>
         <li><a href="admin_rental_list.php" class="<?php echo ($active == 'rentals') ? 'active' : ''; ?>">Rentals</a></li>

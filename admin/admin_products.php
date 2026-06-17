@@ -38,7 +38,7 @@ if (isset($_GET['delete_id'])) {
 }
 
 // ==========================================
-// 2. HANDLE ADD PRODUCT (Your Original Logic)
+// 2. HANDLE ADD PRODUCT
 // ==========================================
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
     $prod_name        = mysqli_real_escape_string($conn, $_POST['prod_name']);
@@ -96,20 +96,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
 }
 
 // ==========================================
-// 3. FETCH DATA (Splitting into Sale and Rent)
+// 3. FETCH DATA 
 // ==========================================
 $categories_result = mysqli_query($conn, "SELECT * FROM categories ORDER BY category_name ASC");
 
 $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['search']) : '';
 $sort = isset($_GET['sort']) ? $_GET['sort'] : 'newest';
-$view = isset($_GET['view']) ? $_GET['view'] : 'sale'; // NEW: Tracks which tab is active
+$view = isset($_GET['view']) ? $_GET['view'] : 'sale'; 
 
 $where_clause = "WHERE p.status != 'Discontinued'";
 if (!empty($search)) {
     $where_clause .= " AND (p.prod_name LIKE '%$search%' OR c.category_name LIKE '%$search%')";
 }
 
-// Filter by Sale or Rent for the active tab
 $sale_where = $where_clause . " AND p.prod_sale_price > 0";
 $rent_where = $where_clause . " AND p.prod_rental_price > 0";
 
@@ -137,16 +136,16 @@ require_once('admin_header.php');
 <div style="display: grid; grid-template-columns: 350px 1fr; gap: 32px; align-items: start;">
     
     <div style="background: white; padding: 24px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-        <h3 style="margin-top: 0; margin-bottom: 20px; font-weight: 700; color: #111827; font-size: 1.25rem;">Add New Instrument</h3>
+        <h3 style="margin-top: 0; margin-bottom: 20px; font-weight: 700; color: #111827; font-size: 1.25rem;">Add New Product</h3>
         
         <form action="admin_products.php" method="POST" enctype="multipart/form-data">
             <div style="margin-bottom: 16px;">
-                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Product Name *</label>
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Product Name:</label>
                 <input type="text" name="prod_name" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; outline: none;">
             </div>
 
             <div style="margin-bottom: 16px;">
-                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Category *</label>
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Category:</label>
                 <select name="category_id" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: white; outline: none;">
                     <option value="">-- Select Category --</option>
                     <?php while($cat = mysqli_fetch_assoc($categories_result)): ?>
@@ -156,7 +155,7 @@ require_once('admin_header.php');
             </div>
 
             <div style="margin-bottom: 16px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb;">
-                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 14px; color: #111827;">Availability, Price & Stock *</label>
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 14px; color: #111827;">Price & Stock:</label>
 
                 <div style="display: flex; flex-direction: column; gap: 16px;">
                     <div>
@@ -167,12 +166,12 @@ require_once('admin_header.php');
                         <div id="stock_sale_container" style="display: none; padding-left: 24px;">
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                 <div>
-                                    <label style="font-size: 0.75rem; color: #6b7280; display: block; margin-bottom: 4px;">Sale Price (RM)</label>
-                                    <input type="number" step="0.01" name="prod_sale_price" id="prod_sale_price" placeholder="0.00" disabled style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none;">
+                                    <label style="font-size: 0.75rem; color: #6b7280; display: block; margin-bottom: 4px;">Sale Price (RM):</label>
+                                    <input type="number" step="0.01" name="prod_sale_price" id="prod_sale_price" placeholder="0.00" readonly style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; background: #f3f4f6;">
                                 </div>
                                 <div>
-                                    <label style="font-size: 0.75rem; color: #6b7280; display: block; margin-bottom: 4px;">Sale Quantity</label>
-                                    <input type="number" name="prod_sale_qty" id="prod_sale_qty" placeholder="1" disabled style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none;">
+                                    <label style="font-size: 0.75rem; color: #6b7280; display: block; margin-bottom: 4px;">Sale Quantity:</label>
+                                    <input type="number" name="prod_sale_qty" id="prod_sale_qty" placeholder="1" readonly style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; background: #f3f4f6;">
                                 </div>
                             </div>
                         </div>
@@ -188,12 +187,12 @@ require_once('admin_header.php');
                         <div id="stock_rent_container" style="display: none; padding-left: 24px;">
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                 <div>
-                                    <label style="font-size: 0.75rem; color: #6b7280; display: block; margin-bottom: 4px;">Rental Price/Day (RM)</label>
-                                    <input type="number" step="0.01" name="prod_rental_price" id="prod_rental_price" placeholder="0.00" disabled style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none;">
+                                    <label style="font-size: 0.75rem; color: #6b7280; display: block; margin-bottom: 4px;">Rental Price/Day (RM):</label>
+                                    <input type="number" step="0.01" name="prod_rental_price" id="prod_rental_price" placeholder="0.00" readonly style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; background: #f3f4f6;">
                                 </div>
                                 <div>
-                                    <label style="font-size: 0.75rem; color: #6b7280; display: block; margin-bottom: 4px;">Rental Quantity</label>
-                                    <input type="number" name="prod_rental_qty" id="prod_rental_qty" placeholder="1" disabled style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none;">
+                                    <label style="font-size: 0.75rem; color: #6b7280; display: block; margin-bottom: 4px;">Rental Quantity:</label>
+                                    <input type="number" name="prod_rental_qty" id="prod_rental_qty" placeholder="1" readonly style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; background: #f3f4f6;">
                                 </div>
                             </div>
                         </div>
@@ -202,12 +201,12 @@ require_once('admin_header.php');
             </div>
 
             <div style="margin-bottom: 16px;">
-                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Instrument Description</label>
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Product Description:</label>
                 <textarea name="prod_description" rows="3" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; resize: vertical;"></textarea>
             </div>
 
             <div style="margin-bottom: 24px;">
-                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Product Image</label>
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Product Image:</label>
                 <input type="file" name="prod_image" accept="image/*" style="font-size: 0.9rem;">
             </div>
 
@@ -306,20 +305,32 @@ require_once('admin_header.php');
         
         if (checkbox.checked) {
             container.style.display = 'block';
-            priceInput.disabled = false;
+            priceInput.readOnly = false;
+            priceInput.style.background = '#ffffff';
             priceInput.setAttribute('required', 'true');
-            qtyInput.disabled = false;
+            
+            qtyInput.readOnly = false;
+            qtyInput.style.background = '#ffffff';
             qtyInput.setAttribute('required', 'true');
         } else {
             container.style.display = 'none';
-            priceInput.disabled = true;
+            priceInput.readOnly = true;
+            priceInput.style.background = '#f3f4f6';
             priceInput.removeAttribute('required');
             priceInput.value = '';
-            qtyInput.disabled = true;
+            
+            qtyInput.readOnly = true;
+            qtyInput.style.background = '#f3f4f6';
             qtyInput.removeAttribute('required');
             qtyInput.value = '';
         }
     }
+
+    // This forces the script to sync with the checkboxes the moment the page loads!
+    window.onload = function() {
+        toggleStock('sale');
+        toggleStock('rent');
+    };
 </script>
 
 <?php require_once('admin_footer.php'); ?>
