@@ -22,19 +22,33 @@ if (isset($conn)) {
     }
 }
 
-// Fetch products with their category names
+// Fetch products with their category names — only products available for sale
 $products = [];
 if (isset($conn)) {
     $prod_query = $conn->query("
         SELECT p.*, c.category_name 
         FROM products p 
         LEFT JOIN categories c ON p.category_id = c.category_id
+        WHERE p.prod_sale_price > 0
+          AND p.status != 'Discontinued'
+        ORDER BY p.prod_id DESC
     ");
     if ($prod_query) {
         while($row = $prod_query->fetch_assoc()) {
             $products[] = $row;
         }
     }
+}
+
+// Fetch cart count
+$cart_count = 0;
+if (isset($conn) && $is_logged_in) {
+    $count_query = $conn->prepare("SELECT SUM(ci.quantity) as total FROM cart_items ci JOIN cart c ON ci.cart_id = c.cart_id WHERE c.cust_id = ?");
+    $count_query->bind_param("i", $cust_id);
+    $count_query->execute();
+    $count_res = $count_query->get_result()->fetch_assoc();
+    $cart_count = $count_res['total'] ?? 0;
+    $count_query->close();
 }
 ?>
 <!DOCTYPE html>
@@ -141,7 +155,14 @@ if (isset($conn)) {
             <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">Premium selection for every musician</p>
         </div>
         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <a href="cart page.php" style="padding: 10px 20px; background: #2563eb; color: white; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(37,99,235,0.3);">🛒 View Cart</a>
+            <a href="cart page.php" style="position: relative; padding: 10px 20px; background: #2563eb; color: white; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(37,99,235,0.3);">
+                🛒 View Cart
+                <?php if ($cart_count > 0): ?>
+                    <span style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                        <?php echo $cart_count; ?>
+                    </span>
+                <?php endif; ?>
+            </a>
         </div>
     </div>
 </div>
@@ -177,13 +198,29 @@ if (isset($conn)) {
     <?php else: ?>
         <?php foreach($products as $product): ?>
             <div class="card" data-category="<?php echo htmlspecialchars(strtolower($product['category_name'])); ?>" onclick="toggleExpand(this)" style="cursor: pointer;">
+                <?php 
+                    $is_out_of_stock = ($product['prod_sale_qty'] <= 0);
+                ?>
                 <?php if (!empty($product['prod_image'])): ?>
-                    <div onclick="openLightbox(event, '../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>')" 
-                         style="width: 100%; height: 200px; background-size: cover; background-position: center; background-image: url('../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>'); border-radius: 10px; margin-bottom: 16px; transition: transform 0.3s;"
-                         onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                    <div style="position: relative;" onclick="openLightbox(event, '../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>')">
+                        <div style="width: 100%; height: 200px; background-size: cover; background-position: center; background-image: url('../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>'); border-radius: 10px; margin-bottom: 16px; transition: transform 0.3s; <?php echo $is_out_of_stock ? 'filter: grayscale(60%) brightness(0.8);' : ''; ?>"
+                             onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        </div>
+                        <?php if ($is_out_of_stock): ?>
+                            <div style="position: absolute; top: 10px; left: 10px; background: #ef4444; color: white; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 6px rgba(239,68,68,0.4);">
+                                Out of Stock
+                            </div>
+                        <?php endif; ?>
                     </div>
                 <?php else: ?>
-                    <div style="width: 100%; height: 200px; background-color: #f1f5f9; border-radius: 10px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; color: #94a3b8; border: 2px dashed #e2e8f0;">[ No Image ]</div>
+                    <div style="position: relative;">
+                        <div style="width: 100%; height: 200px; background-color: #f1f5f9; border-radius: 10px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; color: #94a3b8; border: 2px dashed #e2e8f0;">[ No Image ]</div>
+                        <?php if ($is_out_of_stock): ?>
+                            <div style="position: absolute; top: 10px; left: 10px; background: #ef4444; color: white; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 6px rgba(239,68,68,0.4);">
+                                Out of Stock
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
                 
                 <h3 style="margin-bottom: 4px;"><?php echo htmlspecialchars($product['prod_name']); ?></h3>
@@ -193,6 +230,10 @@ if (isset($conn)) {
                     <?php echo htmlspecialchars($product['prod_description']); ?>
                 </p>
 
+                <div class="view-more-hint" style="text-align: right; margin-top: -5px; margin-bottom: 12px; font-size: 0.75rem; color: #2563eb; font-weight: 700;">
+                    View Detail <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
                 <div class="expanded-details" style="max-height: 0; overflow: hidden; transition: all 0.4s ease; border-top: 1px solid #f1f5f9; padding-top: 12px; display: none;">
                     <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px; margin-top: 8px;">
                         <?php echo htmlspecialchars($product['prod_description']); ?>
@@ -201,15 +242,27 @@ if (isset($conn)) {
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.8rem; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
                         <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Category</span> <?php echo htmlspecialchars($product['category_name']); ?></div>
                         <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Stock</span> <?php echo htmlspecialchars($product['prod_sale_qty']); ?> units</div>
-                        <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Status</span> <span style="color: <?php echo strtolower($product['status']) === 'available' ? '#10b981' : '#ef4444'; ?>; font-weight: 700;"><?php echo htmlspecialchars($product['status']); ?></span></div>
+                        <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Status</span> 
+                            <span style="color: <?php echo $is_out_of_stock ? '#ef4444' : '#10b981'; ?>; font-weight: 700;">
+                                <?php echo $is_out_of_stock ? 'Out of Stock' : 'Available'; ?>
+                            </span>
+                        </div>
                     </div>
                 </div>
 
                 <div class="product-actions mt-2" onclick="event.stopPropagation()">
-                    <form action="add_to_cart.php" method="POST">
-                        <input type="hidden" name="prod_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
-                        <button type="submit" style="width: 100%; padding: 12px; border-radius: 10px; font-weight: 700;">Add to Cart</button>
-                    </form>
+                    <?php if ($is_out_of_stock): ?>
+                        <button type="button" disabled style="width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; background: #e5e7eb; color: #9ca3af; border: none; cursor: not-allowed; margin-bottom: 8px;">Out of Stock</button>
+                    <?php else: ?>
+                        <form action="add_to_cart.php" method="POST" style="margin-bottom: 8px;">
+                            <input type="hidden" name="prod_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
+                            <button type="submit" style="width: 100%; padding: 12px; border-radius: 10px; font-weight: 700;">🛒 Add to Cart</button>
+                        </form>
+                        <a href="address page.php?type=buy&product_id=<?php echo htmlspecialchars($product['prod_id']); ?>" 
+                           style="display: block; width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; background: #10b981; color: white; text-align: center; text-decoration: none; font-size: 0.95rem; box-sizing: border-box;">
+                            ⚡ Buy Now
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>
@@ -240,16 +293,20 @@ function toggleExpand(card) {
     const details = card.querySelector('.expanded-details');
     const shortDesc = card.querySelector('.short-desc');
     
+    const hint = card.querySelector('.view-more-hint');
+    
     if (details.style.display === 'none' || details.style.display === '') {
         details.style.display = 'block';
         details.style.maxHeight = '800px'; 
         shortDesc.style.display = 'none';
+        hint.style.display = 'none';
         card.style.transform = 'translateY(-4px)';
         card.style.boxShadow = '0 12px 20px -5px rgba(0, 0, 0, 0.1)';
     } else {
         details.style.display = 'none';
         details.style.maxHeight = '0px';
         shortDesc.style.display = '-webkit-box';
+        hint.style.display = 'block';
         card.style.transform = 'none';
         card.style.boxShadow = '';
     }

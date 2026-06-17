@@ -3,6 +3,7 @@ session_start();
 include '../database.php';
 
 $name = $email = $phone = $street = $city = $state = $postcode = '';
+$security_question = $security_answer = '';
 $password = $confirm_password = '';
 $error = '';
 $success = '';
@@ -10,16 +11,30 @@ $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['name'] ?? '';
     $email = $_POST['email'] ?? '';
-    $phone = $_POST['phone'] ?? '';
+    
+    // Sanitize phone number by removing trailing or accidental whitespace
+    $phone = trim($_POST['phone'] ?? '');
+    
     $street = $_POST['street'] ?? '';
     $city = $_POST['city'] ?? '';
     $state = $_POST['state'] ?? '';
     $postcode = $_POST['postcode'] ?? '';
     
+    $security_question = $_POST['security_question'] ?? '';
+    $security_answer = trim($_POST['security_answer'] ?? '');
+    
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
 
-    if ($password !== $confirm_password) {
+    // =========================================================================
+    // MALAYSIAN PHONE NUMBER PATTERN MAPPING
+    // =========================================================================
+    $my_phone_pattern = '/^\+60(1[0-9]|3|4|5|6|7|8|9)[0-9]{7,8}$/';
+
+    if (empty($security_question) || empty($security_answer)) {
+        $error = "Please select a security question and provide an answer.";
+    }
+    elseif ($password !== $confirm_password) {
         $error = "Passwords do not match.";
         $password = '';
         $confirm_password = '';
@@ -29,6 +44,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $password = '';
         $confirm_password = '';
     } 
+    // Backend Validation check for Malaysian +60 structure
+    elseif (!preg_match($my_phone_pattern, $phone)) {
+        $error = "Invalid phone number format! Must be a valid Malaysian standard format starting with +60 (e.g., +60123456789).";
+    }
     elseif (isset($conn)) {
         $stmt = $conn->prepare("SELECT cust_id FROM customers WHERE cust_email = ?");
         if ($stmt) {
@@ -39,13 +58,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $email = ''; 
             } else {
                 $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+                // Lowercase the answer for case-insensitive verification later, or hash it depending on your security preference
+                $processed_answer = strtolower($security_answer);
 
-                $insert = $conn->prepare("INSERT INTO customers (cust_name, cust_email, cust_password, cust_phone_number, cust_street, cust_city, cust_state, cust_postcode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                // Make sure your database table columns match these: `cust_security_question` and `cust_security_answer`
+                $insert = $conn->prepare("INSERT INTO customers (cust_name, cust_email, cust_password, cust_phone_number, cust_street, cust_city, cust_state, cust_postcode, cust_security_question, cust_security_answer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 if ($insert) {
-                    $insert->bind_param("ssssssss", $name, $email, $hashed_password, $phone, $street, $city, $state, $postcode);
+                    $insert->bind_param("ssssssssss", $name, $email, $hashed_password, $phone, $street, $city, $state, $postcode, $security_question, $processed_answer);
                     if ($insert->execute()) {
                         $success = "Registration successful! You can now login.";
-                        $name = $email = $phone = $street = $city = $state = $postcode = '';
+                        $name = $email = $phone = $street = $city = $state = $postcode = $security_question = $security_answer = '';
                     } else {
                         $error = "Registration failed.";
                     }
@@ -85,6 +107,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .toggle-password:hover {
             color: #333;
         }
+        .phone-hint {
+            font-size: 0.82rem;
+            color: #666;
+            margin-top: -10px;
+            margin-bottom: 15px;
+            display: block;
+        }
+        /* Style consistency helper for selects */
+        .form-select {
+            width: 100%; 
+            padding: 10px; 
+            margin-bottom: 15px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            background-color: #fff; 
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
@@ -113,7 +152,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <input type="email" name="email" placeholder="Enter your email" required value="<?php echo htmlspecialchars($email); ?>">
 
           <label>Phone Number</label>
-          <input type="text" name="phone" placeholder="Enter your phone number" required value="<?php echo htmlspecialchars($phone); ?>">
+          <input type="text" name="phone" 
+                 placeholder="e.g., +60123456789" 
+                 pattern="^\+60(1[0-9]|[3-9])[0-9]{7,8}$"
+                 title="Please enter a valid Malaysian phone number starting with +60 followed by 8 to 10 digits."
+                 required value="<?php echo htmlspecialchars($phone); ?>" style="margin-bottom: 4px;">
+          <span class="phone-hint"><i class="fa-solid fa-circle-info"></i> Format must include country code (e.g., <strong>+60171234567</strong>)</span>
 
           <label>Street Address</label>
           <input type="text" name="street" placeholder="No, Building, Street" required value="<?php echo htmlspecialchars($street); ?>">
@@ -130,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
 
           <label for="state">State</label>
-          <select name="state" id="state" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; background-color: #fff; box-sizing: border-box;">
+          <select name="state" id="state" class="form-select" required>
               <option value="" disabled <?php echo empty($state) ? 'selected' : ''; ?>>Select your state</option>
               <?php
               $states = ["Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", "Pahang", "Penang", "Perak", "Perlis", "Sabah", "Sarawak", "Selangor", "Terengganu", "W.P. Kuala Lumpur", "W.P. Labuan", "W.P. Putrajaya"];
@@ -141,6 +185,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               ?>
           </select>
 
+          <label for="security_question">Security Question</label>
+          <select name="security_question" id="security_question" class="form-select" required>
+              <option value="" disabled <?php echo empty($security_question) ? 'selected' : ''; ?>>Choose a Security Verification Question</option>
+              <?php
+              $questions = [
+                  "What was the name of your first pet?",
+                  "What is your mother's  name?",
+                  "What elementary school did you attend?",
+                  "In what city were you born?",
+                  "What was your favorite food as a child?"
+              ];
+              foreach ($questions as $q) {
+                  $selected = ($security_question === $q) ? 'selected' : '';
+                  echo "<option value=\"$q\" $selected>$q</option>";
+              }
+              ?>
+          </select>
+
+          <label for="security_answer">Security Answer</label>
+          <input 
+              type="text" 
+              name="security_answer" 
+              id="security_answer" 
+              placeholder="Case-insensitive answer protection" 
+              required 
+              value="<?php echo htmlspecialchars($security_answer); ?>"
+          >
           <label>Password</label>
           <div class="password-container">
               <input 

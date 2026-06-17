@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 03, 2026 at 07:33 AM
+-- Generation Time: Jun 16, 2026
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -110,8 +110,13 @@ CREATE TABLE `customers` (
 -- Dumping data for table `customers`
 --
 
-INSERT INTO `customers` (`cust_id`, `cust_name`, `cust_email`, `cust_password`, `cust_phone_number`, `cust_address`, `created_at`) VALUES
-(1, 'Amzar', 'amzar06@gmail.com', 'abc123', '0123456789', 'taman saujana', '2026-06-03 05:27:47');
+INSERT INTO `customers` (`cust_id`, `cust_name`, `cust_email`, `cust_password`, `cust_phone_number`, `cust_address`, `cust_street`, `cust_city`, `cust_state`, `cust_postcode`, `status`, `created_at`) VALUES
+(1, 'Amzar', 'amzar06@gmail.com', 'Abc@21', '0123456789', 'taman saujana', NULL, NULL, NULL, NULL, 'Active', '2026-06-03 05:27:47'),
+(2, 'Yadusha', 'Yadusha@gmail.com', '$2y$10$c6sw7VqjkeG0OpYiYOegIONHQ7Byr37B33J215l8jt/CRucvKBmMO', '0123114816', NULL, '123', 'ayer keroh', 'Melaka', '70350', 'Active', '2026-06-15 05:43:58'),
+(3, 'Yadusa', 'Yadusha63@gmail.com', '$2y$10$VfbEWDShaDtVYWSieF6DZuB2ka/QhIST1pPjzQF.XwIh59YpnEC2W', '0123114816', NULL, '123', 'ayer keroh', 'Melaka', '70350', 'Active', '2026-06-15 05:46:55'),
+(4, 'Yadusha', 'Yadusha21@gmail.com', '$2y$10$NDKhPOp2/yOB8Hm.1U.HMux..YJv6CcfRtxgRFz9wS.XFArJo6LlK', '0123114816', NULL, '123', 'ayer keroh', 'Melaka', '70350', 'Active', '2026-06-15 05:48:36'),
+(5, 'devya durai', 'devya146@gmail.com', '$2y$10$eBndtas3T2ku1rqLMjEIWOlOOhDzS6I.qtNav/3lC4p83fGLrFZwK', '+60123114816', NULL, '123', 'ayer keroh', 'Melaka', '70350', 'Active', '2026-06-15 05:52:14'),
+(6, 'devi', 'devvyaa93@gmail.com', '$2y$10$Cq3HJGd3LWoDLzPj9TmKpumt0zZ.XzjtSqQtKR4jcoqA5dvR6hdh2', '0123678925', NULL, '123', 'ayer keroh', 'Melaka', '70350', 'Active', '2026-06-15 07:40:02');
 
 -- --------------------------------------------------------
 
@@ -125,8 +130,10 @@ CREATE TABLE `orders` (
   `address_id` int(11) DEFAULT NULL,
   `staff_id` int(11) DEFAULT NULL,
   `total_amount` decimal(10,2) DEFAULT NULL,
-  `status` enum('Pending','Processing','Shipped','Delivered','Cancelled') DEFAULT 'Pending',
-  `order_date` timestamp NOT NULL DEFAULT current_timestamp()
+  `status` enum('Pending','Processing','Shipped','Delivered','Cancelled','Refunded') DEFAULT 'Pending',
+  `order_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `delivered_at` timestamp NULL DEFAULT NULL,
+  `collection_method` enum('Self-Pickup','Delivery') DEFAULT 'Self-Pickup'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -141,6 +148,19 @@ CREATE TABLE `order_items` (
   `prod_id` int(11) NOT NULL,
   `order_qty` int(11) NOT NULL,
   `unit_price` decimal(10,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `password_resets`
+--
+
+CREATE TABLE `password_resets` (
+  `id` int(11) NOT NULL,
+  `staff_email` varchar(255) NOT NULL,
+  `reset_token` varchar(255) NOT NULL,
+  `expires_at` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -174,7 +194,8 @@ CREATE TABLE `products` (
   `prod_description` text DEFAULT NULL,
   `prod_sale_price` decimal(10,2) DEFAULT NULL,
   `prod_rental_price` decimal(10,2) DEFAULT NULL,
-  `prod_qty` int(11) NOT NULL,
+  `prod_sale_qty` int(11) NOT NULL DEFAULT 0,
+  `prod_rental_qty` int(11) NOT NULL DEFAULT 0,
   `prod_image` varchar(255) DEFAULT NULL,
   `status` enum('Available','Out of Stock','Discontinued') DEFAULT 'Available',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
@@ -184,8 +205,27 @@ CREATE TABLE `products` (
 -- Dumping data for table `products`
 --
 
-INSERT INTO `products` (`prod_id`, `category_id`, `staff_id`, `prod_name`, `prod_description`, `prod_sale_price`, `prod_rental_price`, `prod_qty`, `prod_image`, `status`, `created_at`) VALUES
-(1, 5, 1, 'Yamaha C40', 'Good Guitar, Great Guitar', 400.00, 0.00, 5, '1780462235_Guitar Jamz.jpeg', 'Available', '2026-06-03 04:50:35');
+INSERT INTO `products` (`prod_id`, `category_id`, `staff_id`, `prod_name`, `prod_description`, `prod_sale_price`, `prod_rental_price`, `prod_sale_qty`, `prod_rental_qty`, `prod_image`, `status`, `created_at`) VALUES
+(1, 5, 1, 'Yamaha C40', 'Good Guitar, Great Guitar', 400.00, 0.00, 5, 0, '1780462235_Guitar Jamz.jpeg', 'Available', '2026-06-03 04:50:35'),
+(3, 4, 1, 'Fender Stratocaster (Candy Apple Red)', 'good flute', 1200.00, 0.00, 2, 0, '1781253981_Yamaha YFL-222 Intermediate Flute_.jpeg', 'Available', '2026-06-12 08:46:21'),
+(4, 4, 1, 'Yamaha YFL-222 Intermediate Flute (Silver)', 'great flute', 0.00, 200.00, 0, 5, '1781254036_Yamaha YFL-222 Intermediate Flute_.jpeg', 'Available', '2026-06-12 08:47:16');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `product_returns`
+--
+
+CREATE TABLE `product_returns` (
+  `return_id` int(11) NOT NULL,
+  `order_id` int(11) NOT NULL,
+  `cust_id` int(11) NOT NULL,
+  `reason` enum('Physically Damaged','malfunction/faulty','wrong item','empty parcel','any other reason') NOT NULL,
+  `details` text DEFAULT NULL,
+  `photo` varchar(255) DEFAULT NULL,
+  `status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -200,9 +240,23 @@ CREATE TABLE `rentals` (
   `staff_id` int(11) DEFAULT NULL,
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
-  `status` enum('Active','Returned','Overdue') DEFAULT 'Active',
+  `status` enum('Active','Returned','Overdue','Processing','Cancelled') DEFAULT 'Active',
   `total_amount` decimal(10,2) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `rental_inventory`
+--
+
+CREATE TABLE `rental_inventory` (
+  `rental_item_id` int(11) NOT NULL,
+  `prod_id` int(11) NOT NULL,
+  `serial_number` varchar(100) NOT NULL,
+  `condition_level` enum('Excellent','Good','Minor Wear','Needs Repair') DEFAULT 'Excellent',
+  `current_status` enum('Available','Rented Out','In Maintenance','Retired') DEFAULT 'Available'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -233,16 +287,18 @@ CREATE TABLE `staff` (
   `staff_email` varchar(255) NOT NULL,
   `staff_password` varchar(255) NOT NULL,
   `staff_phone_number` varchar(20) DEFAULT NULL,
-  `staff_role` enum('Staff','Manager','Admin') NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `staff_address` text DEFAULT NULL,
+  `staff_role` enum('Staff','Administrator') NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `status` enum('Active','Suspended','Inactive') NOT NULL DEFAULT 'Active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `staff`
 --
 
-INSERT INTO `staff` (`staff_id`, `staff_name`, `staff_email`, `staff_password`, `staff_phone_number`, `staff_role`, `created_at`) VALUES
-(1, 'Amzar', 'amzar06@gmail.com', 'amzar06', NULL, '', '2026-05-08 06:59:38');
+INSERT INTO `staff` (`staff_id`, `staff_name`, `staff_email`, `staff_password`, `staff_phone_number`, `staff_address`, `staff_role`, `created_at`, `status`) VALUES
+(1, 'Amzar', 'amzar06@gmail.com', 'AmzarSyahmi@06', NULL, NULL, 'Administrator', '2026-05-08 06:59:38', 'Active');
 
 --
 -- Indexes for dumped tables
@@ -301,6 +357,12 @@ ALTER TABLE `order_items`
   ADD KEY `fk_oi_prod` (`prod_id`);
 
 --
+-- Indexes for table `password_resets`
+--
+ALTER TABLE `password_resets`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `payments`
 --
 ALTER TABLE `payments`
@@ -318,6 +380,14 @@ ALTER TABLE `products`
   ADD KEY `fk_prod_staff` (`staff_id`);
 
 --
+-- Indexes for table `product_returns`
+--
+ALTER TABLE `product_returns`
+  ADD PRIMARY KEY (`return_id`),
+  ADD KEY `order_id` (`order_id`),
+  ADD KEY `cust_id` (`cust_id`);
+
+--
 -- Indexes for table `rentals`
 --
 ALTER TABLE `rentals`
@@ -325,6 +395,14 @@ ALTER TABLE `rentals`
   ADD KEY `fk_rental_cust` (`cust_id`),
   ADD KEY `fk_rental_addr` (`address_id`),
   ADD KEY `fk_rental_staff` (`staff_id`);
+
+--
+-- Indexes for table `rental_inventory`
+--
+ALTER TABLE `rental_inventory`
+  ADD PRIMARY KEY (`rental_item_id`),
+  ADD UNIQUE KEY `serial_number` (`serial_number`),
+  ADD KEY `prod_id` (`prod_id`);
 
 --
 -- Indexes for table `rental_items`
@@ -373,7 +451,7 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT for table `customers`
 --
 ALTER TABLE `customers`
-  MODIFY `cust_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `cust_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `orders`
@@ -388,6 +466,12 @@ ALTER TABLE `order_items`
   MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `password_resets`
+--
+ALTER TABLE `password_resets`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
@@ -397,13 +481,25 @@ ALTER TABLE `payments`
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `prod_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `prod_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `product_returns`
+--
+ALTER TABLE `product_returns`
+  MODIFY `return_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `rentals`
 --
 ALTER TABLE `rentals`
   MODIFY `rental_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `rental_inventory`
+--
+ALTER TABLE `rental_inventory`
+  MODIFY `rental_item_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `rental_items`
@@ -471,12 +567,25 @@ ALTER TABLE `products`
   ADD CONSTRAINT `fk_prod_staff` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`staff_id`);
 
 --
+-- Constraints for table `product_returns`
+--
+ALTER TABLE `product_returns`
+  ADD CONSTRAINT `product_returns_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `product_returns_ibfk_2` FOREIGN KEY (`cust_id`) REFERENCES `customers` (`cust_id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `rentals`
 --
 ALTER TABLE `rentals`
   ADD CONSTRAINT `fk_rental_addr` FOREIGN KEY (`address_id`) REFERENCES `addresses` (`address_id`),
   ADD CONSTRAINT `fk_rental_cust` FOREIGN KEY (`cust_id`) REFERENCES `customers` (`cust_id`),
   ADD CONSTRAINT `fk_rental_staff` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`staff_id`);
+
+--
+-- Constraints for table `rental_inventory`
+--
+ALTER TABLE `rental_inventory`
+  ADD CONSTRAINT `rental_inventory_ibfk_1` FOREIGN KEY (`prod_id`) REFERENCES `products` (`prod_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `rental_items`

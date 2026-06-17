@@ -8,6 +8,25 @@ if (!isset($_SESSION['cust_id'])) {
 }
 $cust_id = $_SESSION['cust_id'];
 
+// Fetch all active rental date ranges to disable them in the picker
+$booked_dates = [];
+if (isset($conn)) {
+    $res = $conn->query("
+        SELECT ri.prod_id, r.start_date, r.end_date 
+        FROM rental_items ri 
+        JOIN rentals r ON ri.rental_id = r.rental_id 
+        WHERE r.status NOT IN ('Cancelled', 'Returned')
+    ");
+    while($row = $res->fetch_assoc()) {
+        $pid = $row['prod_id'];
+        if (!isset($booked_dates[$pid])) $booked_dates[$pid] = [];
+        $booked_dates[$pid][] = [
+            'from' => $row['start_date'],
+            'to' => $row['end_date']
+        ];
+    }
+}
+
 // Fetch categories
 $categories = [];
 if (isset($conn)) {
@@ -19,13 +38,16 @@ if (isset($conn)) {
     }
 }
 
-// Fetch products with their category names
+// Fetch products with their category names — only products available for rent
 $products = [];
 if (isset($conn)) {
     $prod_query = $conn->query("
         SELECT p.*, c.category_name 
         FROM products p 
         LEFT JOIN categories c ON p.category_id = c.category_id
+        WHERE p.prod_rental_price > 0
+          AND p.status != 'Discontinued'
+        ORDER BY p.prod_id DESC
     ");
     if ($prod_query) {
         while($row = $prod_query->fetch_assoc()) {
@@ -34,37 +56,24 @@ if (isset($conn)) {
     }
 }
 
-// Check if user is on rental limit (3 instruments per week)
+// Fetch cart count
+$is_logged_in = isset($_SESSION['cust_id']);
+$cart_count = 0;
+if (isset($conn) && $is_logged_in) {
+    $count_query = $conn->prepare("SELECT SUM(ci.quantity) as total FROM cart_items ci JOIN cart c ON ci.cart_id = c.cart_id WHERE c.cust_id = ?");
+    $count_query->bind_param("i", $cust_id);
+    $count_query->execute();
+    $count_res = $count_query->get_result()->fetch_assoc();
+    $cart_count = $count_res['total'] ?? 0;
+    $count_query->close();
+}
+
+// Rental limit (3 per week) removed per user request.
+// Any user can now rent any number of instruments.
 $can_rent = true;
 $rentals_this_week = 0;
-$limit = 3;
+$limit = 999;
 $next_rentable_date = null;
-
-if (isset($conn)) {
-    // Count non-cancelled rentals in the last 7 days
-    $one_week_ago_sql = date('Y-m-d H:i:s', strtotime("-1 week"));
-    $stmt = $conn->prepare("SELECT COUNT(*) as rental_count, MIN(created_at) as oldest_rental FROM rentals WHERE cust_id = ? AND status != 'Cancelled' AND created_at >= ?");
-    if ($stmt) {
-        $stmt->bind_param("is", $cust_id, $one_week_ago_sql);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        if ($row = $res->fetch_assoc()) {
-            $rentals_this_week = $row['rental_count'];
-            if ($rentals_this_week >= $limit) {
-                $can_rent = false;
-                // Next rentable date is 1 week after the OLDEST rental that falls within the current rolling week
-                $stmt_oldest = $conn->prepare("SELECT created_at FROM rentals WHERE cust_id = ? AND status != 'Cancelled' AND created_at >= ? ORDER BY created_at ASC LIMIT 1");
-                $stmt_oldest->bind_param("is", $cust_id, $one_week_ago_sql);
-                $stmt_oldest->execute();
-                if ($oldest = $stmt_oldest->get_result()->fetch_assoc()) {
-                    $next_rentable_date = date('d M Y', strtotime("+1 week", strtotime($oldest['created_at'])));
-                }
-                $stmt_oldest->close();
-            }
-        }
-        $stmt->close();
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -98,8 +107,9 @@ if (isset($conn)) {
         }
     </style>
 </head>
-<!-- Add Bootstrap for Navbar -->
+<!-- Add Bootstrap & FontAwesome -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     .navbar-custom { background-color: #0d3b8e; padding: 12px 0; }
     .navbar-brand, .navbar-nav .nav-link { color: white !important; }
@@ -139,7 +149,14 @@ if (isset($conn)) {
             <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">Flexible rental plans for all instruments</p>
         </div>
         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <a href="cart page.php" style="padding: 10px 20px; background: #2563eb; color: white; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(37,99,235,0.3);">🛒 View Cart</a>
+            <a href="cart page.php" style="position: relative; padding: 10px 20px; background: #2563eb; color: white; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(37,99,235,0.3);">
+                🛒 View Cart
+                <?php if ($cart_count > 0): ?>
+                    <span style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                        <?php echo $cart_count; ?>
+                    </span>
+                <?php endif; ?>
+            </a>
         </div>
     </div>
 </div>
@@ -162,29 +179,21 @@ if (isset($conn)) {
         </select>
     </div>
 
-    <!-- Rental Warning Message -->
-    <?php if (!$can_rent): ?>
-        <div style="background: #fee2e2; border: 1.5px solid #ef4444; color: #991b1b; padding: 20px; border-radius: 14px; margin-bottom: 32px; display: flex; align-items: flex-start; gap: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-            <span style="font-size: 1.8rem;">⏳</span>
-            <div>
-                <p style="margin: 0; font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Rental Limit Reached (3 per week)</p>
-                <p style="margin: 0; font-size: 0.95rem; opacity: 0.9;">You have reached the maximum of <b>3 instruments per week</b>. Please return your current rentals or wait for your quota to reset to ensure fair access for all customers.</p>
-                <?php if ($next_rentable_date): ?>
-                <p style="margin-top: 10px; font-weight: 700; font-size: 0.9rem; background: rgba(239, 68, 68, 0.1); display: inline-block; padding: 4px 10px; border-radius: 6px;">
-                    🔓 You can rent again starting: <?php echo $next_rentable_date; ?>
-                </p>
-                <?php endif; ?>
-            </div>
+    <div style="background: #f0fdf4; border: 1.5px solid #10b981; color: #166534; padding: 18px; border-radius: 14px; margin-bottom: 32px; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <span style="font-size: 1.5rem;">📅</span>
+        <div>
+            <p style="margin: 0; font-weight: 600; font-size: 0.95rem;">Availability Check Active</p>
+            <p style="margin: 0; font-size: 0.85rem; opacity: 0.8;">Instruments are available based on their individual booking schedule. Select a date range to see availability.</p>
         </div>
-    <?php else: ?>
-        <div style="background: #f0fdf4; border: 1.5px solid #10b981; color: #166534; padding: 18px; border-radius: 14px; margin-bottom: 32px; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-            <span style="font-size: 1.5rem;">✅</span>
-            <div>
-                <p style="margin: 0; font-weight: 600; font-size: 0.95rem;">You are eligible to rent! Current quota: <b><?php echo $rentals_this_week; ?> / 3</b> instruments used this week.</p>
-                <p style="margin: 0; font-size: 0.85rem; opacity: 0.8;">Customers are permitted to rent up to 3 instruments per rolling week.</p>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+        <?php if (isset($_GET['error']) && $_GET['error'] === 'already_booked'): ?>
+            <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 10px 20px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; animation: shake 0.5s;">
+                ⚠️ <?php echo htmlspecialchars($_GET['name'] ?? 'Item'); ?> is already booked for these dates (including maintenance buffer).
             </div>
-        </div>
-    <?php endif; ?>
+        <?php endif; ?>
+    </div>
 
     <div class="product-grid" id="productGrid">
     <?php if (empty($products)): ?>
@@ -210,16 +219,19 @@ if (isset($conn)) {
                     <?php echo htmlspecialchars($product['prod_description']); ?>
                 </p>
 
+                <div class="view-more-hint" style="text-align: right; margin-top: -5px; margin-bottom: 12px; font-size: 0.75rem; color: #7c3aed; font-weight: 700;">
+                    View Detail <i class="fa-solid fa-chevron-down"></i>
+                </div>
+
                 <!-- Expanded Details (Hidden by default) -->
                 <div class="expanded-details" style="max-height: 0; overflow: hidden; transition: all 0.4s ease; border-top: 1px solid #f1f5f9; padding-top: 10px; display: none;">
                     <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px; margin-top: 8px;">
                         <?php echo htmlspecialchars($product['prod_description']); ?>
                     </p>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8rem; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
-                        <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Category</span> <?php echo htmlspecialchars($product['category_name']); ?></div>
-                        <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Stock</span> <?php echo htmlspecialchars($product['prod_rental_qty']); ?> units</div>
-                        <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Status</span> <span style="color: <?php echo strtolower($product['status']) === 'available' ? '#10b981' : '#ef4444'; ?>; font-weight: 600;"><?php echo htmlspecialchars($product['status']); ?></span></div>
+                    <div style="font-size: 0.8rem; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                        <span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700; margin-bottom: 2px;">Instrument Category</span> 
+                        <span style="font-weight: 600; color: #1e293b;"><?php echo htmlspecialchars($product['category_name']); ?></span>
                     </div>
                 </div>
 
@@ -232,23 +244,28 @@ if (isset($conn)) {
                             if ($is_out_of_stock) $btn_text = 'Out of Stock';
                             elseif (!$can_rent) $btn_text = 'Restriction Active';
                         ?>
-                        <form action="address page.php" method="GET" class="rent-form" onsubmit="return validateRental(this)">
-                            <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
+                        <form action="add_to_cart.php" method="POST" class="rent-form" onsubmit="return validateRental(this)" style="display: flex; flex-direction: column; gap: 8px;">
+                            <input type="hidden" name="prod_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
                             <input type="hidden" name="type" value="rent">
-                            <input type="hidden" name="price" value="<?php echo htmlspecialchars($product['prod_rental_price']); ?>">
                             
                             <!-- Hidden fields to store split dates for backend -->
                             <input type="hidden" name="start_date" id="start_date_<?php echo $product['prod_id']; ?>">
                             <input type="hidden" name="end_date" id="end_date_<?php echo $product['prod_id']; ?>">
     
-                            <div style="margin-bottom: 16px;">
+                            <div style="margin-bottom: 8px;">
                                 <label style="display:block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 6px;">Select Rental Period <span style="color: #ef4444;">*</span></label>
                                 <input type="text" class="range-picker" placeholder="<?php echo !$rent_btn_disabled ? 'Choose dates..' : $btn_text; ?>" readonly 
                                        data-prod-id="<?php echo $product['prod_id']; ?>"
                                        <?php echo $rent_btn_disabled ? 'disabled' : ''; ?>
                                        style="padding: 12px; font-size: 0.95rem; background: <?php echo !$rent_btn_disabled ? 'white' : '#f1f5f9'; ?>; cursor: <?php echo !$rent_btn_disabled ? 'pointer' : 'not-allowed'; ?>; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%;">
                             </div>
-                            <button type="submit" class="rent-btn" <?php echo $rent_btn_disabled ? 'disabled style="background:#94a3b8; cursor:not-allowed;"' : ''; ?> style="width: 100%;"><?php echo $btn_text; ?></button>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <button type="submit" name="add_to_cart" class="btn btn-primary" <?php echo $rent_btn_disabled ? 'disabled style="background:#94a3b8; border-color:#94a3b8; cursor:not-allowed;"' : ''; ?> style="padding: 12px; border-radius: 10px; font-weight: 700;">🛒 Add to Cart</button>
+                                <button type="button" class="btn btn-success" <?php echo $rent_btn_disabled ? 'disabled style="background:#059669; border-color:#059669; cursor:not-allowed;"' : ''; ?> 
+                                        onclick="if(validateRental(this.form)) { this.form.action='address page.php'; this.form.method='GET'; this.form.submit(); }"
+                                        style="padding: 12px; border-radius: 10px; font-weight: 700; background: #10b981; border-color: #10b981; color: white;">⚡ Rent Now</button>
+                            </div>
                         </form>
                 </div>
             </div>
@@ -272,16 +289,20 @@ function toggleExpand(card) {
     const details = card.querySelector('.expanded-details');
     const shortDesc = card.querySelector('.short-desc');
     
+    const hint = card.querySelector('.view-more-hint');
+    
     if (details.style.display === 'none' || details.style.display === '') {
         details.style.display = 'block';
         details.style.maxHeight = '800px'; 
         shortDesc.style.display = 'none';
+        hint.style.display = 'none';
         card.style.transform = 'translateY(-4px)';
         card.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1)';
     } else {
         details.style.display = 'none';
         details.style.maxHeight = '0px';
         shortDesc.style.display = '-webkit-box';
+        hint.style.display = 'block';
         card.style.transform = 'none';
         card.style.boxShadow = '';
     }
@@ -307,14 +328,33 @@ function validateRental(form) {
     return true;
 }
 
+const bookedDatesData = <?php echo json_encode($booked_dates); ?>;
+
 document.addEventListener('DOMContentLoaded', function() {
     const pickers = document.querySelectorAll(".range-picker");
     pickers.forEach(el => {
         const prodId = el.getAttribute('data-prod-id');
+        const bookedForThisProd = bookedDatesData[prodId] || [];
+        
+        // Convert to Flatpickr disable format
+        const disableDates = bookedForThisProd.map(range => {
+            const start = new Date(range.from);
+            const end = new Date(range.to);
+            // Add buffer: If end is 18, block until 20 so next start is 21. (+2 days)
+            const bufferedEnd = new Date(end);
+            bufferedEnd.setDate(bufferedEnd.getDate() + 2); 
+            
+            return {
+                from: start,
+                to: bufferedEnd
+            };
+        });
+
         fpInstances[prodId] = flatpickr(el, {
             mode: "range",
             minDate: "today",
             dateFormat: "Y-m-d",
+            disable: disableDates,
             onClose: function(selectedDates, dateStr, instance) {
                 if (selectedDates.length === 2) {
                     const start = instance.formatDate(selectedDates[0], "Y-m-d");
