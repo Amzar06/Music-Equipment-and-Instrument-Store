@@ -103,8 +103,8 @@ require_once('admin_header.php');
             
             <form action="admin_categories.php" method="POST">
                 <div style="margin-bottom: 24px;">
-                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Category Name *</label>
-                    <input type="text" name="category_name" required placeholder="e.g. Acoustic Guitars" 
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Category Name:</label>
+                    <input type="text" name="category_name" required placeholder="Acoustic Guitars..." 
                            style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; box-sizing: border-box;">
                 </div>
 

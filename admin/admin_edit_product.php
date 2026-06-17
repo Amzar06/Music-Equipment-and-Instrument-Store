@@ -3,52 +3,75 @@ session_start();
 if (!isset($_SESSION['staff_id'])) { header("Location: admin_login.php"); exit(); }
 require_once('../database.php');
 
-$page_title = "Manage Instrument";
+$page_title = "Edit Catalog Item";
 $active = "products";
 $hide_search = true;
 
 if (!isset($_GET['id'])) { header("Location: admin_products.php"); exit(); }
 $prod_id = intval($_GET['id']);
 
-// 1. Handle adding a specific Physical Asset (Serial Number & Wear Level)
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_asset'])) {
-    $serial = mysqli_real_escape_string($conn, trim($_POST['serial_number']));
-    $condition = mysqli_real_escape_string($conn, $_POST['condition_level']);
+// ==========================================
+// HANDLE PRODUCT DELETION (Safe Delete)
+// ==========================================
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_product'])) {
+    $delete_query = "DELETE FROM products WHERE prod_id = $prod_id";
     
-    if (!empty($serial)) {
-        $insert_asset = "INSERT INTO rental_inventory (prod_id, serial_number, condition_level, current_status) 
-                         VALUES ($prod_id, '$serial', '$condition', 'Available')";
-        if (mysqli_query($conn, $insert_asset)) {
-            $_SESSION['flash_message'] = "Physical asset added to rental stock.";
-            $_SESSION['flash_type'] = "success";
+    if (mysqli_query($conn, $delete_query)) {
+        $_SESSION['flash_message'] = "Item successfully deleted from catalog.";
+        $_SESSION['flash_type'] = "success";
+        header("Location: admin_products.php"); 
+        exit();
+    } else {
+        // Error 1451 means MySQL blocked it due to past sales/rentals
+        if (mysqli_errno($conn) == 1451) {
+            $_SESSION['flash_message'] = "Cannot delete: This item is linked to past sales/rentals. Please set stock to 0 to archive it instead.";
         } else {
-            $_SESSION['flash_message'] = "Error: Serial number might already exist.";
-            $_SESSION['flash_type'] = "error";
+            $_SESSION['flash_message'] = "Database Error: " . mysqli_error($conn);
         }
+        $_SESSION['flash_type'] = "error";
+        header("Location: admin_edit_product.php?id=$prod_id");
+        exit();
+    }
+}
+
+// ==========================================
+// HANDLE MASTER CATALOG UPDATES
+// ==========================================
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_product'])) {
+    $p_name = mysqli_real_escape_string($conn, trim($_POST['prod_name']));
+    $p_sale_price = floatval($_POST['prod_sale_price']);
+    $p_rental_price = floatval($_POST['prod_rental_price']);
+    $p_sale_qty = intval($_POST['prod_sale_qty']);
+    $p_rental_qty = intval($_POST['prod_rental_qty']);
+    $p_desc = mysqli_real_escape_string($conn, trim($_POST['prod_description']));
+
+    $update_query = "UPDATE products SET 
+                        prod_name = '$p_name',
+                        prod_sale_price = $p_sale_price,
+                        prod_rental_price = $p_rental_price,
+                        prod_sale_qty = $p_sale_qty,
+                        prod_rental_qty = $p_rental_qty,
+                        prod_description = '$p_desc'
+                     WHERE prod_id = $prod_id";
+
+    if (mysqli_query($conn, $update_query)) {
+        $_SESSION['flash_message'] = "Catalog details successfully updated!";
+        $_SESSION['flash_type'] = "success";
+    } else {
+        $_SESSION['flash_message'] = "Database Error: " . mysqli_error($conn);
+        $_SESSION['flash_type'] = "error";
     }
     header("Location: admin_edit_product.php?id=$prod_id");
     exit();
 }
 
-// 2. Handle Asset Removal/Retirement
-if (isset($_GET['retire_asset'])) {
-    $asset_id = intval($_GET['retire_asset']);
-    mysqli_query($conn, "UPDATE rental_inventory SET current_status = 'Retired' WHERE rental_item_id = $asset_id");
-    header("Location: admin_edit_product.php?id=$prod_id");
-    exit();
-}
-
-// Fetch Product Details
 $product_query = mysqli_query($conn, "SELECT * FROM products WHERE prod_id = $prod_id");
 $product = mysqli_fetch_assoc($product_query);
-
-// Fetch Physical Assets
-$assets_query = mysqli_query($conn, "SELECT * FROM rental_inventory WHERE prod_id = $prod_id AND current_status != 'Retired'");
 
 require_once('admin_header.php');
 ?>
 
-<div style="max-width: 1200px; margin: 0 auto; margin-top: 20px;">
+<div style="max-width: 800px; margin: 0 auto; margin-top: 20px;">
     
     <a href="admin_products.php" style="display: inline-flex; align-items: center; gap: 6px; color: #4b5563; text-decoration: none; font-size: 0.9rem; font-weight: 600; margin-bottom: 20px;">
         ← Back to Inventory
@@ -60,87 +83,108 @@ require_once('admin_header.php');
         </div>
     <?php endif; ?>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;">
+    <div style="background: white; padding: 32px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
         
-        <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
-            <h3 style="margin-top: 0; margin-bottom: 20px; color: #111827;">Catalog Details</h3>
-            <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 20px;">Update the general pricing and retail stock here. This affects the storefront display.</p>
+        <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+            <img src="../uploads/<?php echo $product['prod_image'] ?: 'default.jpg'; ?>" style="width: 100px; height: 100px; border-radius: 8px; object-fit: cover; border: 1px solid #d1d5db;">
+            <div>
+                <h2 style="margin: 0 0 8px 0; color: #111827;">Edit Item: <?php echo htmlspecialchars($product['prod_name']); ?></h2>
+                <span style="background: #e0e7ff; color: #4f46e5; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">Active in Catalog</span>
+            </div>
+        </div>
+
+        <form action="admin_edit_product.php?id=<?php echo $prod_id; ?>" method="POST">
             
-            <div style="background: #f9fafb; padding: 16px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 20px; display: flex; gap: 16px;">
-                <img src="../uploads/<?php echo $product['prod_image'] ?: 'default.jpg'; ?>" style="width: 80px; height: 80px; border-radius: 8px; object-fit: cover;">
-                <div>
-                    <h4 style="margin: 0 0 4px 0; color: #111827;"><?php echo htmlspecialchars($product['prod_name']); ?></h4>
-                    <span style="background: #e0e7ff; color: #4f46e5; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Active in Catalog</span>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">Product Name</label>
+                <input type="text" name="prod_name" value="<?php echo htmlspecialchars($product['prod_name']); ?>" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">Listing Mode</label>
+                <select id="listing_mode" onchange="toggleFields()" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem; background: #f8fafc; cursor: pointer;">
+                    <option value="hybrid">Hybrid (Available for Sale & Rent)</option>
+                    <option value="sale_only">Retail Only (Sale)</option>
+                    <option value="rent_only">Fleet Only (Rent)</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <h4 style="margin-top: 0; color: #0f172a; margin-bottom: 12px;">Retail Sales Data</h4>
+                    <label style="display: block; margin-bottom: 4px; font-size: 0.85rem; color: #64748b; font-weight: bold;">Sale Price (RM)</label>
+                    <input type="number" step="0.01" name="prod_sale_price" value="<?php echo $product['prod_sale_price']; ?>" required style="width: 100%; padding: 8px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                    
+                    <label style="display: block; margin-bottom: 4px; font-size: 0.85rem; color: #64748b; font-weight: bold;">Available Stock (Sales)</label>
+                    <input type="number" name="prod_sale_qty" value="<?php echo $product['prod_sale_qty']; ?>" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                </div>
+
+                <div style="background: #fffbeb; padding: 16px; border-radius: 8px; border: 1px solid #fef3c7;">
+                    <h4 style="margin-top: 0; color: #92400e; margin-bottom: 12px;">Rental Fleet Data</h4>
+                    <label style="display: block; margin-bottom: 4px; font-size: 0.85rem; color: #b45309; font-weight: bold;">Rental Rate (RM/Day)</label>
+                    <input type="number" step="0.01" name="prod_rental_price" value="<?php echo $product['prod_rental_price']; ?>" required style="width: 100%; padding: 8px; margin-bottom: 12px; border: 1px solid #fde68a; border-radius: 4px;">
+                    
+                    <label style="display: block; margin-bottom: 4px; font-size: 0.85rem; color: #b45309; font-weight: bold;">Available Stock (Rentals)</label>
+                    <input type="number" name="prod_rental_qty" value="<?php echo $product['prod_rental_qty']; ?>" required style="width: 100%; padding: 8px; border: 1px solid #fde68a; border-radius: 4px;">
                 </div>
             </div>
 
-            <button style="width: 100%; padding: 12px; background: #e5e7eb; color: #9ca3af; border: none; border-radius: 8px; font-weight: 600; cursor: not-allowed;">
-                [Catalog Edit Form Placeholder]
-            </button>
-        </div>
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #374151;">Description</label>
+                <textarea name="prod_description" rows="4" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit;"><?php echo htmlspecialchars($product['prod_description']); ?></textarea>
+            </div>
 
-        <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
-            <h3 style="margin-top: 0; margin-bottom: 20px; color: #111827;">Physical Rental Assets</h3>
-            <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 20px;">Track specific serial numbers and their damage/wear levels here.</p>
-            
-            <form action="admin_edit_product.php?id=<?php echo $prod_id; ?>" method="POST" style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 24px; display: flex; gap: 10px; align-items: flex-end;">
-                <div style="flex-grow: 1;">
-                    <label style="font-size: 0.75rem; font-weight: 600; color: #4b5563; display: block; margin-bottom: 4px;">Serial / Barcode *</label>
-                    <input type="text" name="serial_number" required placeholder="e.g. YAM-10492" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none;">
-                </div>
-                <div style="flex-grow: 1;">
-                    <label style="font-size: 0.75rem; font-weight: 600; color: #4b5563; display: block; margin-bottom: 4px;">Current Wear</label>
-                    <select name="condition_level" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; background: white;">
-                        <option value="Excellent">Excellent</option>
-                        <option value="Good">Good</option>
-                        <option value="Minor Wear">Minor Wear (Scratches)</option>
-                        <option value="Needs Repair">Needs Repair</option>
-                    </select>
-                </div>
-                <button type="submit" name="add_asset" style="background: #10b981; color: white; border: none; padding: 9px 16px; border-radius: 6px; font-weight: 600; cursor: pointer;">+ Add</button>
-            </form>
-
-            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #e5e7eb; color: #4b5563; text-align: left;">
-                        <th style="padding: 8px;">Serial Number</th>
-                        <th style="padding: 8px;">Condition</th>
-                        <th style="padding: 8px;">Status</th>
-                        <th style="padding: 8px; text-align: right;">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if(mysqli_num_rows($assets_query) > 0): ?>
-                        <?php while($asset = mysqli_fetch_assoc($assets_query)): ?>
-                        <tr style="border-bottom: 1px solid #f3f4f6;">
-                            <td style="padding: 12px 8px; font-weight: 600; color: #111827;"><?php echo htmlspecialchars($asset['serial_number']); ?></td>
-                            <td style="padding: 12px 8px;">
-                                <?php 
-                                    $cond = $asset['condition_level'];
-                                    $cond_color = ($cond == 'Excellent' || $cond == 'Good') ? '#059669' : (($cond == 'Minor Wear') ? '#d97706' : '#dc2626');
-                                ?>
-                                <span style="color: <?php echo $cond_color; ?>; font-weight: 600;"><?php echo htmlspecialchars($cond); ?></span>
-                            </td>
-                            <td style="padding: 12px 8px;">
-                                <span style="background: <?php echo ($asset['current_status'] == 'Available') ? '#d1fae5' : '#fef3c7'; ?>; color: <?php echo ($asset['current_status'] == 'Available') ? '#065f46' : '#92400e'; ?>; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">
-                                    <?php echo htmlspecialchars($asset['current_status']); ?>
-                                </span>
-                            </td>
-                            <td style="padding: 12px 8px; text-align: right;">
-                                <a href="admin_edit_product.php?id=<?php echo $prod_id; ?>&retire_asset=<?php echo $asset['rental_item_id']; ?>" 
-                                   style="color: #ef4444; text-decoration: none; font-weight: 600;"
-                                   onclick="return confirm('Retire this serial number from active circulation?')">Retire</a>
-                            </td>
-                        </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr><td colspan="4" style="text-align: center; padding: 20px; color: #9ca3af;">No physical assets recorded yet.</td></tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-
-        </div>
+            <div style="display: flex; gap: 12px; margin-top: 10px;">
+                <button type="submit" name="update_product" style="flex-grow: 1; padding: 14px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 1.05rem; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.backgroundColor='#1d4ed8'" onmouseout="this.style.backgroundColor='#2563eb'">
+                    Save Catalog Changes
+                </button>
+                
+                <button type="submit" name="delete_product" onclick="return confirm('Are you sure you want to permanently delete this item?');" style="padding: 14px 24px; background: #ef4444; color: white; border: none; border-radius: 8px; font-size: 1.05rem; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='#ef4444'">
+                    Delete Item
+                </button>
+            </div>
+        </form>
     </div>
 </div>
+
+<script>
+function toggleFields() {
+    const mode = document.getElementById('listing_mode').value;
+    
+    const salePrice = document.querySelector('input[name="prod_sale_price"]');
+    const saleQty = document.querySelector('input[name="prod_sale_qty"]');
+    const rentPrice = document.querySelector('input[name="prod_rental_price"]');
+    const rentQty = document.querySelector('input[name="prod_rental_qty"]');
+
+    salePrice.readOnly = false; salePrice.style.background = '#fff'; salePrice.style.opacity = '1';
+    saleQty.readOnly = false; saleQty.style.background = '#fff'; saleQty.style.opacity = '1';
+    rentPrice.readOnly = false; rentPrice.style.background = '#fff'; rentPrice.style.opacity = '1';
+    rentQty.readOnly = false; rentQty.style.background = '#fff'; rentQty.style.opacity = '1';
+
+    if (mode === 'sale_only') {
+        rentPrice.readOnly = true; rentPrice.value = 0; rentPrice.style.background = '#e5e7eb'; rentPrice.style.opacity = '0.6';
+        rentQty.readOnly = true; rentQty.value = 0; rentQty.style.background = '#e5e7eb'; rentQty.style.opacity = '0.6';
+    } else if (mode === 'rent_only') {
+        salePrice.readOnly = true; salePrice.value = 0; salePrice.style.background = '#e5e7eb'; salePrice.style.opacity = '0.6';
+        saleQty.readOnly = true; saleQty.value = 0; saleQty.style.background = '#e5e7eb'; saleQty.style.opacity = '0.6';
+    }
+}
+
+window.onload = function() {
+    const sPrice = parseFloat(document.querySelector('input[name="prod_sale_price"]').value) || 0;
+    const rPrice = parseFloat(document.querySelector('input[name="prod_rental_price"]').value) || 0;
+    const modeSelect = document.getElementById('listing_mode');
+    
+    if (sPrice > 0 && rPrice == 0) {
+        modeSelect.value = 'sale_only';
+    } else if (rPrice > 0 && sPrice == 0) {
+        modeSelect.value = 'rent_only';
+    } else {
+        modeSelect.value = 'hybrid';
+    }
+    
+    toggleFields();
+};
+</script>
 
 <?php require_once('admin_footer.php'); ?>
