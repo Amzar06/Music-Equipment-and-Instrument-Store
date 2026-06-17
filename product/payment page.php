@@ -173,8 +173,9 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 $order_total = 0;
                 foreach($purchase_items as $pi) $order_total += ($pi['price'] * $pi['quantity']);
                 
-                $ord = $conn->prepare("INSERT INTO orders (cust_id, address_id, total_amount, status) VALUES (?, ?, ?, 'Processing')");
-                $ord->bind_param("iid", $cust_id, $addr_id, $order_total);
+                $collection_method = ($delivery_type === 'delivery') ? 'Delivery' : 'Self-Pickup';
+                $ord = $conn->prepare("INSERT INTO orders (cust_id, address_id, total_amount, status, collection_method) VALUES (?, ?, ?, 'Processing', ?)");
+                $ord->bind_param("iids", $cust_id, $addr_id, $order_total, $collection_method);
                 if ($ord->execute()) {
                     $generated_order_id = $conn->insert_id;
                     $oi = $conn->prepare("INSERT INTO order_items (order_id, prod_id, order_qty, unit_price) VALUES (?, ?, ?, ?)");
