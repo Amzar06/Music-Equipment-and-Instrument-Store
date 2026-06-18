@@ -8,92 +8,123 @@ if (!isset($_SESSION['cust_id'])) {
 }
 $cust_id = $_SESSION['cust_id'];
 
+// Handle item quantity updates (inc/dec)
 if (isset($_GET['action']) && isset($_GET['item_id'])) {
-    $item_id = intval($_GET['item_id']);
-    $action = $_GET['action'];
+    $targetItem = (int)$_GET['item_id'];
+    $cmd = $_GET['action'];
     
-    if (isset($conn) && !$conn->connect_error) {
-        if ($action === 'inc') {
-            // Check stock before incrementing
-            $stock_chk = $conn->prepare("SELECT ci.quantity, p.prod_sale_qty FROM cart_items ci JOIN products p ON ci.prod_id = p.prod_id WHERE ci.cart_item_id = ?");
-            if ($stock_chk) {
-                $stock_chk->bind_param("i", $item_id);
-                $stock_chk->execute();
-                $s_res = $stock_chk->get_result()->fetch_assoc();
-                if ($s_res && $s_res['quantity'] < $s_res['prod_sale_qty']) {
-                    $conn->query("UPDATE cart_items SET quantity = quantity + 1 WHERE cart_item_id = $item_id");
+    // Make sure we have a connection before trying anything
+    if (isset($conn) && $conn->ping()) {
+        if ($cmd == 'inc') {
+            // Need to double check stock levels before we let them add more
+            $stockCheckQuery = $conn->prepare("SELECT ci.quantity, p.prod_sale_qty, p.prod_rental_qty, ci.start_date, ci.end_date, ci.prod_id 
+                                               FROM cart_items ci JOIN products p ON ci.prod_id = p.prod_id WHERE ci.cart_item_id = ?");
+            if ($stockCheckQuery) {
+                $stockCheckQuery->bind_param("i", $targetItem);
+                $stockCheckQuery->execute();
+                $stockData = $stockCheckQuery->get_result()->fetch_assoc();
+                
+                if ($stockData) {
+                    $canBump = false;
+                    if ($stockData['start_date'] && $stockData['end_date']) {
+                        // Rental check
+                        $checkDB = $conn->prepare("SELECT SUM(ri.rental_qty) as used FROM rental_items ri JOIN rentals r ON ri.rental_id = r.rental_id 
+                                                   WHERE ri.prod_id = ? AND r.status NOT IN ('Cancelled', 'Returned')
+                                                   AND ((? BETWEEN r.start_date AND DATE_ADD(r.end_date, INTERVAL 2 DAY))
+                                                        OR (? BETWEEN r.start_date AND DATE_ADD(r.end_date, INTERVAL 2 DAY))
+                                                        OR (r.start_date BETWEEN ? AND ?))");
+                        $checkDB->bind_param("issss", $stockData['prod_id'], $stockData['start_date'], $stockData['end_date'], $stockData['start_date'], $stockData['end_date']);
+                        $checkDB->execute();
+                        $usedCount = $checkDB->get_result()->fetch_assoc()['used'] ?? 0;
+                        if (($usedCount + $stockData['quantity']) < $stockData['prod_rental_qty']) {
+                            $canBump = true;
+                        }
+                    } else {
+                        // Sale check
+                        if ($stockData['quantity'] < $stockData['prod_sale_qty']) $canBump = true;
+                    }
+
+                    if ($canBump) {
+                        $conn->query("UPDATE cart_items SET quantity = quantity + 1 WHERE cart_item_id = $targetItem");
+                    }
                 }
-                $stock_chk->close();
+                $stockCheckQuery->close();
             }
-        } elseif ($action === 'dec') {
-            // Only decrement if current quantity is > 1
-            $conn->query("UPDATE cart_items SET quantity = IF(quantity > 1, quantity - 1, 1) WHERE cart_item_id = $item_id");
+        } elseif ($cmd == 'dec') {
+            // Drop it by one, but don't let it go below 1
+            $conn->query("UPDATE cart_items SET quantity = IF(quantity > 1, quantity - 1, 1) WHERE cart_item_id = $targetItem");
         }
-        header("Location: cart page.php");
-        exit();
+        
+        // Refresh to see changes
+        header("Location: cart page.php"); 
+        exit;
     }
 }
 
+// Removing an item from the cart
 if (isset($_GET['remove_id'])) {
-    $remove_id = intval($_GET['remove_id']);
+    $deleteId = (int)$_GET['remove_id'];
     if (isset($conn) && !$conn->connect_error) {
-        $del_query = $conn->prepare("
+        $removeStmt = $conn->prepare("
             DELETE ci FROM cart_items ci
             JOIN cart c ON ci.cart_id = c.cart_id
             WHERE ci.cart_item_id = ? AND c.cust_id = ?
         ");
-        if ($del_query) {
-            $del_query->bind_param("ii", $remove_id, $cust_id);
-            $del_query->execute();
-            $del_query->close();
+        if ($removeStmt) {
+            $removeStmt->bind_param("ii", $deleteId, $cust_id);
+            $removeStmt->execute();
+            $removeStmt->close();
         }
         header("Location: cart page.php");
-        exit();
+        exit;
     }
 }
 
 $cart_items = [];
 $total_price = 0.00;
-$db_error = null;
+$backendError = null;
 
+// Ensure DB is alive before fetching
 if (!isset($conn) || $conn->connect_error) {
-    $db_error = "Database connection failed";
+    $backendError = "Whoops, couldn't connect to the database.";
 } else {
-    $query = $conn->prepare("
-        SELECT ci.cart_item_id, p.prod_name, p.prod_sale_price, p.prod_rental_price, ci.quantity, p.prod_image, p.prod_sale_qty, ci.start_date, ci.end_date
+    $fetchCartSql = $conn->prepare("
+        SELECT ci.cart_item_id, p.prod_id, p.prod_name, p.prod_sale_price, p.prod_rental_price, ci.quantity, p.prod_image, p.prod_sale_qty, p.prod_rental_qty, ci.start_date, ci.end_date
         FROM cart_items ci
         JOIN cart c ON ci.cart_id = c.cart_id
         JOIN products p ON ci.prod_id = p.prod_id
         WHERE c.cust_id = ?
     ");
-    if (!$query) {
-        $db_error = "Query preparation failed: " . $conn->error;
+    
+    if (!$fetchCartSql) {
+        $backendError = "Problem with the query: " . $conn->error;
     } else {
-        $query->bind_param("i", $cust_id);
-        if (!$query->execute()) {
-            $db_error = "Query execution failed: " . $query->error;
+        $fetchCartSql->bind_param("i", $cust_id);
+        if (!$fetchCartSql->execute()) {
+            $backendError = "Could not run the query: " . $fetchCartSql->error;
         } else {
-            $result = $query->get_result();
-            while($row = $result->fetch_assoc()) {
-                if ($row['start_date'] && $row['end_date']) {
-                    // Rental item
-                    $start = new DateTime($row['start_date']);
-                    $end = new DateTime($row['end_date']);
-                    $days = $start->diff($end)->days;
-                    if ($days < 1) $days = 1;
-                    $row['price'] = $row['prod_rental_price'] * $days;
-                    $row['is_rental'] = true;
-                    $row['duration'] = $days;
+            $dataResult = $fetchCartSql->get_result();
+            while($itemRow = $dataResult->fetch_assoc()) {
+                // If it has dates, it's a rental item
+                if ($itemRow['start_date'] && $itemRow['end_date']) {
+                    $d1 = new DateTime($itemRow['start_date']);
+                    $d2 = new DateTime($itemRow['end_date']);
+                    $diffDays = $d1->diff($d2)->days;
+                    if ($diffDays < 1) $diffDays = 1;
+
+                    $itemRow['price'] = $itemRow['prod_rental_price'] * $diffDays;
+                    $itemRow['is_rental'] = true;
+                    $itemRow['duration'] = $diffDays;
                 } else {
-                    // Sale item
-                    $row['price'] = $row['prod_sale_price'];
-                    $row['is_rental'] = false;
+                    // Just a regular purchase
+                    $itemRow['price'] = $itemRow['prod_sale_price'];
+                    $itemRow['is_rental'] = false;
                 }
-                $cart_items[] = $row;
-                $total_price += ($row['price'] * ($row['quantity'] ?? 1));
+                $cart_items[] = $itemRow;
+                $total_price += ($itemRow['price'] * ($itemRow['quantity'] ?? 1));
             }
         }
-        $query->close();
+        $fetchCartSql->close();
     }
 }
 ?>
@@ -161,9 +192,16 @@ if (!isset($conn) || $conn->connect_error) {
 
 <div class="container pb-5">
     <div class="cart-card">
-        <?php if ($db_error): ?>
-            <div class="alert alert-danger">
-                <strong>Error:</strong> <?php echo htmlspecialchars($db_error); ?>
+        <?php if ($backendError || isset($_GET['error'])): ?>
+            <div class="alert alert-danger" style="border-radius: 10px;">
+                <strong>System Note:</strong> 
+                <?php 
+                    if (isset($_GET['error']) && $_GET['error'] === 'conflict') {
+                        echo "Whoops! The item '" . htmlspecialchars($_GET['name'] ?? 'Instrument') . "' is not available in the requested quantity for those dates. Someone else might have booked it or you requested more than our current stock.";
+                    } else {
+                        echo htmlspecialchars($backendError); 
+                    }
+                ?>
             </div>
         <?php endif; ?>
 

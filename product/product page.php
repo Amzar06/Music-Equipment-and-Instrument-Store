@@ -8,24 +8,24 @@ if (!isset($_SESSION['cust_id'])) {
 }
 $cust_id = $_SESSION['cust_id'];
 
-// Check if the user is logged in (for navbar dynamic profile display context)
-$is_logged_in = isset($_SESSION['cust_id']);
+// Quick check on login status
+$userHasSession = isset($_SESSION['cust_id']);
 
-// Fetch categories
-$categories = [];
+$catList = [];
 if (isset($conn)) {
-    $cat_query = $conn->query("SELECT * FROM categories");
-    if ($cat_query) {
-        while($row = $cat_query->fetch_assoc()) {
-            $categories[] = $row;
+    // Collect all departments/categories for the filter dropdown
+    $getTypes = $conn->query("SELECT * FROM categories");
+    if ($getTypes) {
+        while($catRow = $getTypes->fetch_assoc()) {
+            $catList[] = $catRow;
         }
     }
 }
 
-// Fetch products with their category names — only products available for sale
-$products = [];
+// Fetch instruments available for buying (ignore discontinued gear)
+$activeInstruments = [];
 if (isset($conn)) {
-    $prod_query = $conn->query("
+    $instrumentSql = $conn->query("
         SELECT p.*, c.category_name 
         FROM products p 
         LEFT JOIN categories c ON p.category_id = c.category_id
@@ -33,22 +33,22 @@ if (isset($conn)) {
           AND p.status != 'Discontinued'
         ORDER BY p.prod_id DESC
     ");
-    if ($prod_query) {
-        while($row = $prod_query->fetch_assoc()) {
-            $products[] = $row;
+    if ($instrumentSql) {
+        while($gear = $instrumentSql->fetch_assoc()) {
+            $activeInstruments[] = $gear;
         }
     }
 }
 
-// Fetch cart count
-$cart_count = 0;
-if (isset($conn) && $is_logged_in) {
-    $count_query = $conn->prepare("SELECT SUM(ci.quantity) as total FROM cart_items ci JOIN cart c ON ci.cart_id = c.cart_id WHERE c.cust_id = ?");
-    $count_query->bind_param("i", $cust_id);
-    $count_query->execute();
-    $count_res = $count_query->get_result()->fetch_assoc();
-    $cart_count = $count_res['total'] ?? 0;
-    $count_query->close();
+// See how many items are in the cart for the badge
+$nbItemsInCart = 0;
+if (isset($conn) && $userHasSession) {
+    $cartSubQuery = $conn->prepare("SELECT SUM(ci.quantity) as total FROM cart_items ci JOIN cart c ON ci.cart_id = c.cart_id WHERE c.cust_id = ?");
+    $cartSubQuery->bind_param("i", $cust_id);
+    $cartSubQuery->execute();
+    $subRes = $cartSubQuery->get_result()->fetch_assoc();
+    $nbItemsInCart = $subRes['total'] ?? 0;
+    $cartSubQuery->close();
 }
 ?>
 <!DOCTYPE html>
@@ -124,7 +124,7 @@ if (isset($conn) && $is_logged_in) {
                         <i class="fa-solid fa-circle-user"></i>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm mt-2" aria-labelledby="userMenu">
-                        <?php if ($is_logged_in): ?>
+                        <?php if ($userHasSession): ?>
                             <li class="px-3 py-1 text-muted small fw-bold text-uppercase">
                                 Hi, <?php echo htmlspecialchars($_SESSION['cust_name'] ?? 'Customer'); ?>
                             </li>
@@ -134,7 +134,7 @@ if (isset($conn) && $is_logged_in) {
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="../customer/logout_page.php" onclick="return confirmLogout(event);"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</a></li>
                         <?php else: ?>
-                            <li><a class="dropdown-item" href="cust login.php"><i class="fa-solid fa-right-to-bracket me-2"></i> Customer Login</a></li>
+                            <li><a class="dropdown-item" href="cust login.php"><i class="fa-solid fa-right-to-bracket me-2"></i> Login</a></li>
                             <li><a class="dropdown-item" href="../customer/register_page.php"><i class="fa-solid fa-user-plus me-2"></i> Create Account</a></li>
                         <?php endif; ?>
                     </ul>
@@ -157,9 +157,9 @@ if (isset($conn) && $is_logged_in) {
         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
             <a href="cart page.php" style="position: relative; padding: 10px 20px; background: #2563eb; color: white; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(37,99,235,0.3);">
                 🛒 View Cart
-                <?php if ($cart_count > 0): ?>
+                <?php if ($nbItemsInCart > 0): ?>
                     <span style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                        <?php echo $cart_count; ?>
+                        <?php echo $nbItemsInCart; ?>
                     </span>
                 <?php endif; ?>
             </a>
@@ -178,7 +178,7 @@ if (isset($conn) && $is_logged_in) {
         <label for="categoryFilter" style="font-weight: 600; color: var(--text-primary);">Sort by Category:</label>
         <select id="categoryFilter" style="padding: 10px 16px; font-size: 1rem; border-radius: 10px; border: 1.5px solid var(--card-border); background: #f8fafc; color: var(--text-primary); cursor: pointer;" onchange="filterCategory()">
             <option value="all">All Instruments</option>
-            <?php foreach ($categories as $cat): ?>
+            <?php foreach ($catList as $cat): ?>
                 <option value="<?php echo htmlspecialchars(strtolower($cat['category_name'])); ?>"><?php echo htmlspecialchars($cat['category_name']); ?></option>
             <?php endforeach; ?>
         </select>
@@ -191,12 +191,12 @@ if (isset($conn) && $is_logged_in) {
     </div>
 
     <div class="product-grid" id="productGrid">
-    <?php if (empty($products)): ?>
+    <?php if (empty($activeInstruments)): ?>
         <div style="text-align: center; color: var(--text-secondary); grid-column: 1 / -1; padding: 48px;">
             <h3>No products found.</h3>
         </div>
     <?php else: ?>
-        <?php foreach($products as $product): ?>
+        <?php foreach($activeInstruments as $product): ?>
             <div class="card" data-category="<?php echo htmlspecialchars(strtolower($product['category_name'])); ?>" onclick="toggleExpand(this)" style="cursor: pointer;">
                 <?php 
                     $is_out_of_stock = ($product['prod_sale_qty'] <= 0);
@@ -289,37 +289,39 @@ function openLightbox(event, imgSrc) {
     lightbox.style.display = 'flex';
 }
 
-function toggleExpand(card) {
-    const details = card.querySelector('.expanded-details');
-    const shortDesc = card.querySelector('.short-desc');
+function toggleExpand(cardElement) {
+    const detailBox = cardElement.querySelector('.expanded-details');
+    const briefDesc = cardElement.querySelector('.short-desc');
+    const toggleHint = cardElement.querySelector('.view-more-hint');
     
-    const hint = card.querySelector('.view-more-hint');
-    
-    if (details.style.display === 'none' || details.style.display === '') {
-        details.style.display = 'block';
-        details.style.maxHeight = '800px'; 
-        shortDesc.style.display = 'none';
-        hint.style.display = 'none';
-        card.style.transform = 'translateY(-4px)';
-        card.style.boxShadow = '0 12px 20px -5px rgba(0, 0, 0, 0.1)';
+    // Switch between short and full view
+    if (detailBox.style.display === 'none' || detailBox.style.display === '') {
+        detailBox.style.display = 'block';
+        detailBox.style.maxHeight = '800px'; 
+        briefDesc.style.display = 'none';
+        toggleHint.style.display = 'none';
+        cardElement.style.transform = 'translateY(-4px)';
+        cardElement.style.boxShadow = '0 12px 20px -5px rgba(0, 0, 0, 0.1)';
     } else {
-        details.style.display = 'none';
-        details.style.maxHeight = '0px';
-        shortDesc.style.display = '-webkit-box';
-        hint.style.display = 'block';
-        card.style.transform = 'none';
-        card.style.boxShadow = '';
+        detailBox.style.display = 'none';
+        detailBox.style.maxHeight = '0px';
+        briefDesc.style.display = '-webkit-box';
+        toggleHint.style.display = 'block';
+        cardElement.style.transform = 'none';
+        cardElement.style.boxShadow = '';
     }
 }
 
 function filterCategory() {
-    const selected = document.getElementById('categoryFilter').value;
-    const cards = document.querySelectorAll('.card');
-    cards.forEach(card => {
-        if (selected === 'all' || card.getAttribute('data-category') === selected) {
-            card.style.display = ''; 
+    const pickedType = document.getElementById('categoryFilter').value;
+    const allCards = document.querySelectorAll('.card');
+    
+    allCards.forEach(item => {
+        const itemType = item.getAttribute('data-category');
+        if (pickedType === 'all' || itemType === pickedType) {
+            item.style.display = ''; 
         } else {
-            card.style.display = 'none';
+            item.style.display = 'none';
         }
     });
 }

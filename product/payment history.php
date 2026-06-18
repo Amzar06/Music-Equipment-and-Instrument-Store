@@ -16,10 +16,31 @@ if (isset($_GET['action']) && $_GET['action'] === 'cancel' && isset($_GET['id'])
     $cancel_id = intval($_GET['id']);
     $cancel_type = $_GET['type'];
     
+    // First, let's restore the stock before we mark it cancelled
     if ($cancel_type === 'Order') {
+        // Restore Sale Qty
+        $getItems = $conn->prepare("SELECT prod_id, order_qty FROM order_items WHERE order_id = ?");
+        $getItems->bind_param("i", $cancel_id);
+        $getItems->execute();
+        $res = $getItems->get_result();
+        while($row = $res->fetch_assoc()) {
+            $conn->query("UPDATE products SET prod_sale_qty = prod_sale_qty + {$row['order_qty']}, status = 'Available' WHERE prod_id = {$row['prod_id']}");
+        }
+        $getItems->close();
+
         $stmt = $conn->prepare("UPDATE orders SET status = 'Cancelled' WHERE order_id = ? AND cust_id = ? AND status IN ('Pending', 'Processing')");
     } else {
-        $stmt = $conn->prepare("UPDATE rentals SET status = 'Cancelled' WHERE rental_id = ? AND cust_id = ? AND status = 'Pending'");
+        // Restore Rental Qty
+        $getRentalItems = $conn->prepare("SELECT prod_id, rental_qty FROM rental_items WHERE rental_id = ?");
+        $getRentalItems->bind_param("i", $cancel_id);
+        $getRentalItems->execute();
+        $res = $getRentalItems->get_result();
+        while($row = $res->fetch_assoc()) {
+            $conn->query("UPDATE products SET prod_rental_qty = prod_rental_qty + {$row['rental_qty']}, status = 'Available' WHERE prod_id = {$row['prod_id']}");
+        }
+        $getRentalItems->close();
+
+        $stmt = $conn->prepare("UPDATE rentals SET status = 'Cancelled' WHERE rental_id = ? AND cust_id = ? AND status IN ('Pending', 'Processing')");
     }
     
     if ($stmt) {
@@ -27,7 +48,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'cancel' && isset($_GET['id'])
         $stmt->execute();
         $stmt->close();
     }
-    header("Location: payment history.php");
+    header("Location: payment history.php?cancelled_ok=1");
     exit();
 }
 
@@ -185,6 +206,12 @@ if (isset($conn)) {
 
 <div class="container pb-5 mt-4">
     <div class="history-card">
+        <?php if (isset($_GET['cancelled_ok'])): ?>
+            <div style="background: #fef2f2; border: 1px solid #fee2e2; color: #991b1b; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+                <strong>Cancelled!</strong> Your transaction has been cancelled and the items have been returned to stock.
+            </div>
+        <?php endif; ?>
+
         <?php if (isset($_GET['return_success'])): ?>
             <div style="background: #d1fae5; border: 1px solid #a7f3d0; color: #065f46; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
                 <strong>Success!</strong> Your return request has been submitted and is under review.

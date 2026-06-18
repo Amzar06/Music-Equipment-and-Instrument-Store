@@ -7,19 +7,19 @@ if (!isset($_SESSION['cust_id'])) {
 }
 $cust_id = $_SESSION['cust_id'];
 
-$type = $_GET['type'] ?? '';
-$product_id = $_GET['product_id'] ?? 0;
-$start_date = $_GET['start_date'] ?? '';
-$end_date = $_GET['end_date'] ?? '';
-$selected_items = $_GET['selected_items'] ?? [];
-$days = 1;
+$targetType = $_GET['type'] ?? '';
+$pId = $_GET['product_id'] ?? 0;
+$rentStart = $_GET['start_date'] ?? '';
+$rentEnd = $_GET['end_date'] ?? '';
+$checkedOutItems = $_GET['selected_items'] ?? [];
+$rentalDuration = 1;
 
-if (!empty($start_date) && !empty($end_date)) {
-    $start = new DateTime($start_date);
-    $end = new DateTime($end_date);
-    $interval = $start->diff($end);
-    $days = $interval->days;
-    if ($days < 1) $days = 1;
+if (!empty($rentStart) && !empty($rentEnd)) {
+    $startDateObj = new DateTime($rentStart);
+    $endDateObj = new DateTime($rentEnd);
+    $diff = $startDateObj->diff($endDateObj);
+    $rentalDuration = $diff->days;
+    if ($rentalDuration < 1) $rentalDuration = 1;
 }
 
 $subtotal = 0;
@@ -74,20 +74,24 @@ if (isset($conn)) {
     $stmt_addr->close();
 }
 
-if ($type === 'rent' && isset($conn)) {
-    $stmt = $conn->prepare("SELECT prod_name, prod_rental_price FROM products WHERE prod_id = ?");
-    if ($stmt) {
-        $stmt->bind_param("i", $product_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        if ($row = $result->fetch_assoc()) {
-            $rent_price_per_day = floatval($row['prod_rental_price']);
-            $prod_name_display  = $row['prod_name'];
-            $subtotal = $days * $rent_price_per_day;
+if ($targetType === 'rent' && isset($conn)) {
+    // Single item direct rental
+    $getProdInfo = $conn->prepare("SELECT prod_name, prod_rental_price, prod_rental_qty FROM products WHERE prod_id = ?");
+    if ($getProdInfo) {
+        $getProdInfo->bind_param("i", $pId);
+        $getProdInfo->execute();
+        $prodRow = $getProdInfo->get_result()->fetch_assoc();
+        
+        if ($prodRow) {
+            $dailyRate = floatval($prodRow['prod_rental_price']);
+            $prod_name_display = $prodRow['prod_name'];
+            $maxUnits = (int)$prodRow['prod_rental_qty'];
+            $subtotal = $rentalDuration * $dailyRate;
 
-            // OVERLAP VALIDATION WITH 3-DAY BUFFER
-            $stmt_check = $conn->prepare("
-                SELECT r.start_date, r.end_date 
+            // Check if there's space for another rental during these dates
+            // (Including the 3-day maintenance window)
+            $checkUsage = $conn->prepare("
+                SELECT SUM(ri.rental_qty) as used
                 FROM rental_items ri 
                 JOIN rentals r ON ri.rental_id = r.rental_id 
                 WHERE ri.prod_id = ? 
@@ -98,52 +102,110 @@ if ($type === 'rent' && isset($conn)) {
                     (r.start_date BETWEEN ? AND ?)
                 )
             ");
-            $stmt_check->bind_param("isssss", $product_id, $start_date, $end_date, $start_date, $end_date);
-            $stmt_check->execute();
-            if ($stmt_check->get_result()->num_rows > 0) {
+            $checkUsage->bind_param("issss", $pId, $rentStart, $rentEnd, $rentStart, $rentEnd);
+            // Run the check - we sum up rental_qty for any active rental that overlaps
+            $checkUsage->execute();
+            $usageRes = $checkUsage->get_result()->fetch_assoc();
+            $alreadyBooked = $usageRes['used'] ?? 0;
+
+            if (($alreadyBooked + 1) > $maxUnits) {
                 header("Location: rent page.php?error=already_booked&name=" . urlencode($prod_name_display));
                 exit();
             }
-            $stmt_check->close();
+            $checkUsage->close();
         }
-        $stmt->close();
+        $getProdInfo->close();
     }
-} elseif ($type === 'buy' && $product_id > 0 && isset($conn)) {
-    $stmt = $conn->prepare("SELECT prod_name, prod_sale_price FROM products WHERE prod_id = ?");
-    if ($stmt) {
-        $stmt->bind_param("i", $product_id);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        if ($row = $res->fetch_assoc()) {
-            $subtotal = floatval($row['prod_sale_price']);
-            $prod_name_display = $row['prod_name'];
+} elseif ($targetType === 'buy' && $pId > 0 && isset($conn)) {
+    $buyQuery = $conn->prepare("SELECT prod_name, prod_sale_price FROM products WHERE prod_id = ?");
+    if ($buyQuery) {
+        $buyQuery->bind_param("i", $pId);
+        $buyQuery->execute();
+        $buyData = $buyQuery->get_result()->fetch_assoc();
+        if ($buyData) {
+            $subtotal = floatval($buyData['prod_sale_price']);
+            $prod_name_display = $buyData['prod_name'];
         }
-        $stmt->close();
+        $buyQuery->close();
     }
-} elseif (!empty($selected_items) && isset($conn)) {
-    $placeholders = implode(',', array_fill(0, count($selected_items), '?'));
-    $q = $conn->prepare("
-        SELECT p.prod_sale_price, p.prod_rental_price, ci.quantity, ci.start_date, ci.end_date 
+} elseif (!empty($checkedOutItems) && isset($conn)) {
+    // Multi-item cart checkout
+    $itemIds = implode(',', array_fill(0, count($checkedOutItems), '?'));
+    $cartQuery = $conn->prepare("
+        SELECT p.prod_id, p.prod_name, p.prod_sale_price, p.prod_rental_price, p.prod_rental_qty, 
+               ci.quantity, ci.start_date, ci.end_date 
         FROM cart_items ci 
         JOIN products p ON ci.prod_id = p.prod_id 
-        WHERE ci.cart_item_id IN ($placeholders)
+        WHERE ci.cart_item_id IN ($itemIds)
     ");
-    $types = str_repeat("i", count($selected_items));
-    $params = array_map('intval', $selected_items);
-    $q->bind_param($types, ...$params);
-    $q->execute();
-    $res = $q->get_result();
-    while($row = $res->fetch_assoc()) {
-        if ($row['start_date'] && $row['end_date']) {
-            $s = new DateTime($row['start_date']);
-            $e = new DateTime($row['end_date']);
-            $d = $s->diff($e)->days; if($d < 1) $d = 1;
-            $subtotal += ($row['prod_rental_price'] * $d * $row['quantity']);
+    
+    $valTypes = str_repeat("i", count($checkedOutItems));
+    $valParams = array_map('intval', $checkedOutItems);
+    $cartQuery->bind_param($valTypes, ...$valParams);
+    $cartQuery->execute();
+    $cartItemsRes = $cartQuery->get_result();
+    
+    $rentalsToVerify = [];
+
+    while($item = $cartItemsRes->fetch_assoc()) {
+        if ($item['start_date'] && $item['end_date']) {
+            // It's a rental
+            $sd = new DateTime($item['start_date']);
+            $ed = new DateTime($item['end_date']);
+            $dCount = $sd->diff($ed)->days; 
+            if($dCount < 1) $dCount = 1;
+            
+            $subtotal += ($item['prod_rental_price'] * $dCount * $item['quantity']);
+            
+            // Track total requested quantity per product/date to prevent over-booking
+            $rentalsToVerify[] = $item;
         } else {
-            $subtotal += ($row['prod_sale_price'] * $row['quantity']);
+            // Standard purchase
+            $subtotal += ($item['prod_sale_price'] * $item['quantity']);
         }
     }
-    $q->close();
+    $cartQuery->close();
+
+    // Verify all rentals in the cart selection don't exceed available stock
+    foreach ($rentalsToVerify as $req) {
+        $checkStock = $conn->prepare("
+            SELECT SUM(ri.rental_qty) as used
+            FROM rental_items ri 
+            JOIN rentals r ON ri.rental_id = r.rental_id 
+            WHERE ri.prod_id = ? 
+            AND r.status NOT IN ('Cancelled', 'Returned')
+            AND (
+                (? BETWEEN r.start_date AND DATE_ADD(r.end_date, INTERVAL 2 DAY)) OR
+                (? BETWEEN r.start_date AND DATE_ADD(r.end_date, INTERVAL 2 DAY)) OR
+                (r.start_date BETWEEN ? AND ?)
+            )
+        ");
+        $checkStock->bind_param("issss", $req['prod_id'], $req['start_date'], $req['end_date'], $req['start_date'], $req['end_date']);
+        $checkStock->execute();
+        $bookedSum = $checkStock->get_result()->fetch_assoc()['used'] ?? 0;
+        
+        // Also factor in OTHER items in the current checkout that might be the same product
+        $currentSelectionTotal = 0;
+        foreach ($rentalsToVerify as $other) {
+            if ($other['prod_id'] == $req['prod_id']) {
+                // Simple check: if dates cross over, we count them together
+                $s1 = $req['start_date']; $e1 = $req['end_date'];
+                $s2 = $other['start_date']; $e2 = $other['end_date'];
+                
+                // If S2 starts during R1, or E2 ends during R1, or R1 is inside R2... it's an overlap.
+                if (($s2 >= $s1 && $s2 <= $e1) || ($e2 >= $s1 && $e2 <= $e1) || ($s1 >= $s2 && $s1 <= $e2)) {
+                    $currentSelectionTotal += $other['quantity'];
+                }
+            }
+        }
+
+        // Final sanity check: combined total must stay under the stock limit
+        if (($bookedSum + $currentSelectionTotal) > $req['prod_rental_qty']) {
+            header("Location: cart page.php?error=conflict&name=" . urlencode($req['prod_name']));
+            exit();
+        }
+        $checkStock->close();
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -206,44 +268,44 @@ if ($type === 'rent' && isset($conn)) {
         <h3 style="font-weight: 800; color: #1e293b; margin-bottom: 8px;">Delivery Details</h3>
         <p style="color: #64748b; margin-bottom: 32px;">Please confirm where you'd like to receive your item.</p>
 
-    <?php if (($type === 'rent' || $type === 'buy') && $subtotal > 0): ?>
+    <?php if (($targetType === 'rent' || $targetType === 'buy') && $subtotal > 0): ?>
     <div style="margin-bottom: 30px; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px;">
         <div style="font-weight: 800; color: #1e293b; margin-bottom: 4px; font-size: 1.1rem;"><?php echo htmlspecialchars($prod_name_display); ?></div>
         <div style="font-size: 0.9rem; color: #64748b; font-weight: 600;">
-            <?php if ($type === 'rent'): ?>
-                📅 <?php echo htmlspecialchars($start_date); ?> to <?php echo htmlspecialchars($end_date); ?>
-                &nbsp;·&nbsp; <?php echo $days; ?> day(s) × RM <?php echo number_format($rent_price_per_day, 2); ?>
+            <?php if ($targetType === 'rent'): ?>
+                📅 <?php echo htmlspecialchars($rentStart); ?> to <?php echo htmlspecialchars($rentEnd); ?>
+                &nbsp;·&nbsp; <?php echo $rentalDuration; ?> day(s) × RM <?php echo number_format($dailyRate, 2); ?>
             <?php else: ?>
                 ⚡ Direct Purchase
             <?php endif; ?>
         </div>
         <div style="margin-top: 10px; font-weight: 800; color: #10b981; font-size: 1.25rem;">Subtotal: RM <?php echo number_format($subtotal, 2); ?></div>
     </div>
-    <?php elseif (!empty($selected_items) && $subtotal > 0): ?>
+    <?php elseif (!empty($checkedOutItems) && $subtotal > 0): ?>
     <div style="margin-bottom: 30px; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px;">
         <div style="font-weight: 800; color: #1e293b; margin-bottom: 4px; font-size: 1.1rem;">Selected Order Summary</div>
         <div style="font-size: 0.9rem; color: #64748b; font-weight: 600;">
-            🛒 <?php echo count($selected_items); ?> Item(s) selected from cart
+            🛒 <?php echo count($checkedOutItems); ?> Item(s) selected from cart
         </div>
         <div style="margin-top: 10px; font-weight: 800; color: #10b981; font-size: 1.25rem;">Subtotal: RM <?php echo number_format($subtotal, 2); ?></div>
     </div>
     <?php endif; ?>
 
     <form action="qr payment.php" method="GET" id="addressForm" onsubmit="return validateForm()">
-        <?php if ($type === 'rent' || $type === 'buy'): ?>
-            <input type="hidden" name="type"       value="<?php echo htmlspecialchars($type); ?>">
-            <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($product_id); ?>">
-            <?php if ($type === 'rent'): ?>
-                <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($start_date); ?>">
-                <input type="hidden" name="end_date"   value="<?php echo htmlspecialchars($end_date); ?>">
-                <input type="hidden" name="days"       value="<?php echo htmlspecialchars($days); ?>">
+        <?php if ($targetType === 'rent' || $targetType === 'buy'): ?>
+            <input type="hidden" name="type"       value="<?php echo htmlspecialchars($targetType); ?>">
+            <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($pId); ?>">
+            <?php if ($targetType === 'rent'): ?>
+                <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($rentStart); ?>">
+                <input type="hidden" name="end_date"   value="<?php echo htmlspecialchars($rentEnd); ?>">
+                <input type="hidden" name="days"       value="<?php echo htmlspecialchars($rentalDuration); ?>">
             <?php endif; ?>
             <input type="hidden" name="subtotal"   value="<?php echo htmlspecialchars($subtotal); ?>">
         <?php endif; ?>
 
-        <?php if (!empty($selected_items)): ?>
-            <?php foreach ($selected_items as $item_id): ?>
-                <input type="hidden" name="selected_items[]" value="<?php echo htmlspecialchars($item_id); ?>">
+        <?php if (!empty($checkedOutItems)): ?>
+            <?php foreach ($checkedOutItems as $id_val): ?>
+                <input type="hidden" name="selected_items[]" value="<?php echo htmlspecialchars($id_val); ?>">
             <?php endforeach; ?>
         <?php endif; ?>
 
@@ -379,8 +441,8 @@ if ($type === 'rent' && isset($conn)) {
         </div>
 
         <div style="display: flex; gap: 16px; margin-top: 16px;">
-            <a href="<?php echo $type === 'rent' ? 'rent page.php' : 'product page.php'; ?>" style="flex: 1; text-align: center; padding: 12px; border-radius: 8px; margin: 0; background: #f1f5f9; color: #475569;">Back</a>
-            <button type="submit" style="flex: 1; margin-top: 0;">Continue to Payment</button>
+            <a href="<?php echo $targetType === 'rent' ? 'rent page.php' : 'cart page.php'; ?>" style="flex: 1; text-align: center; padding: 12px; border-radius: 8px; margin: 0; background: #f1f5f9; color: #475569; text-decoration: none; font-weight: 600;">Back</a>
+            <button type="submit" style="flex: 1; margin-top: 0; border-radius: 10px; font-weight: 700;">Continue to Payment</button>
         </div>
     </form>
 </div>

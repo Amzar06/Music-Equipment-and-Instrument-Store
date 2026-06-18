@@ -20,75 +20,144 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prod_id'])) {
         exit;
     }
     
-    // Check if cart exists for user
-    $cart_query = $conn->prepare("SELECT cart_id FROM cart WHERE cust_id = ?");
-    $cart_query->bind_param("i", $cust_id);
-    $cart_query->execute();
-    $result = $cart_query->get_result();
+    // Check if the user already has an active cart record
+    $findCart = $conn->prepare("SELECT cart_id FROM cart WHERE cust_id = ?");
+    $findCart->bind_param("i", $cust_id);
+    $findCart->execute();
+    $cartRes = $findCart->get_result();
     
-    if ($result->num_rows > 0) {
-        $cart = $result->fetch_assoc();
-        $cart_id = $cart['cart_id'];
+    if ($cartRes->num_rows > 0) {
+        $cartData = $cartRes->fetch_assoc();
+        $cart_id = $cartData['cart_id'];
     } else {
-        $create_cart = $conn->prepare("INSERT INTO cart (cust_id) VALUES (?)");
-        $create_cart->bind_param("i", $cust_id);
-        $create_cart->execute();
-        $cart_id = $create_cart->insert_id;
-        $create_cart->close();
+        // No cart? Let's make one for them real quick
+        $newCart = $conn->prepare("INSERT INTO cart (cust_id) VALUES (?)");
+        $newCart->bind_param("i", $cust_id);
+        $newCart->execute();
+        $cart_id = $newCart->insert_id;
+        $newCart->close();
     }
-    $cart_query->close();
+    $findCart->close();
     
-    // For Buy items, check stock
+    // Logic for standard 'Buy' items
     if ($type === 'buy') {
-        $stock_query = $conn->prepare("SELECT prod_sale_qty, prod_name FROM products WHERE prod_id = ?");
-        $stock_query->bind_param("i", $prod_id);
-        $stock_query->execute();
-        $stock_res = $stock_query->get_result()->fetch_assoc();
-        $available_stock = $stock_res['prod_sale_qty'] ?? 0;
-        $prod_name = $stock_res['prod_name'] ?? 'Product';
-        $stock_query->close();
+        $checkInventory = $conn->prepare("SELECT prod_sale_qty, prod_name FROM products WHERE prod_id = ?");
+        $checkInventory->bind_param("i", $prod_id);
+        $checkInventory->execute();
+        $invRow = $checkInventory->get_result()->fetch_assoc();
+        
+        $stockLeft = $invRow ? (int)$invRow['prod_sale_qty'] : 0;
+        $itemName = $invRow ? $invRow['prod_name'] : 'Product';
+        $checkInventory->close();
 
-        $check_item = $conn->prepare("SELECT cart_item_id, quantity FROM cart_items WHERE cart_id = ? AND prod_id = ? AND start_date IS NULL");
-        $check_item->bind_param("ii", $cart_id, $prod_id);
-        $check_item->execute();
-        $item_result = $check_item->get_result();
+        // See if this item is already in their cart (non-rentals only)
+        $itemLookup = $conn->prepare("SELECT cart_item_id, quantity FROM cart_items WHERE cart_id = ? AND prod_id = ? AND start_date IS NULL");
+        $itemLookup->bind_param("ii", $cart_id, $prod_id);
+        $itemLookup->execute();
+        $lookupRes = $itemLookup->get_result();
 
-        if ($item_result->num_rows > 0) {
-            $item = $item_result->fetch_assoc();
-            $new_qty = $item['quantity'] + 1;
-            if ($new_qty > $available_stock) {
-                header("Location: product page.php?error=out_of_stock&name=" . urlencode($prod_name));
+        if ($lookupRes->num_rows > 0) {
+            $existingItem = $lookupRes->fetch_assoc();
+            $updatedQty = (int)$existingItem['quantity'] + 1;
+            
+            if ($updatedQty > $stockLeft) {
+                // Not enough stock for another one
+                header("Location: product page.php?error=out_of_stock&name=" . urlencode($itemName));
                 exit;
             }
-            $update_item = $conn->prepare("UPDATE cart_items SET quantity = ? WHERE cart_item_id = ?");
-            $update_item->bind_param("ii", $new_qty, $item['cart_item_id']);
-            $update_item->execute();
-            $update_item->close();
+            $updateStmt = $conn->prepare("UPDATE cart_items SET quantity = ? WHERE cart_item_id = ?");
+            $updateStmt->bind_param("ii", $updatedQty, $existingItem['cart_item_id']);
+            $updateStmt->execute();
+            $updateStmt->close();
         } else {
-            if ($available_stock < 1) {
-                header("Location: product page.php?error=out_of_stock&name=" . urlencode($prod_name));
+            if ($stockLeft < 1) {
+                header("Location: product page.php?error=out_of_stock&name=" . urlencode($itemName));
                 exit;
             }
-            $insert_item = $conn->prepare("INSERT INTO cart_items (cart_id, prod_id, quantity) VALUES (?, ?, 1)");
-            $insert_item->bind_param("ii", $cart_id, $prod_id);
-            $insert_item->execute();
-            $insert_item->close();
+            // Add a fresh entry
+            $addStmt = $conn->prepare("INSERT INTO cart_items (cart_id, prod_id, quantity) VALUES (?, ?, 1)");
+            $addStmt->bind_param("ii", $cart_id, $prod_id);
+            $addStmt->execute();
+            $addStmt->close();
         }
-        $check_item->close();
+        $itemLookup->close();
         header("Location: product page.php?added=" . urlencode($prod_id));
         exit;
     } else {
-        // For Rent items, ALWAYS add as separate item because dates might differ
-        // Check availability (optional but good)
-        $insert_item = $conn->prepare("INSERT INTO cart_items (cart_id, prod_id, quantity, start_date, end_date) VALUES (?, ?, 1, ?, ?)");
-        $insert_item->bind_param("iiss", $cart_id, $prod_id, $start_date, $end_date);
-        $insert_item->execute();
-        $insert_item->close();
+        // Rental items — we need to be careful not to over-book even at the cart stage
+        $getRentalStock = $conn->prepare("SELECT prod_rental_qty, prod_name FROM products WHERE prod_id = ?");
+        $getRentalStock->bind_param("i", $prod_id);
+        $getRentalStock->execute();
+        $rRow = $getRentalStock->get_result()->fetch_assoc();
+        
+        $rentalMax = (int)($rRow['prod_rental_qty'] ?? 0);
+        $gearName = $rRow['prod_name'] ?? 'Instrument';
+        $getRentalStock->close();
+
+        // 1. Check DB for already confirmed bookings
+        $checkDB = $conn->prepare("
+            SELECT SUM(ri.rental_qty) as used
+            FROM rental_items ri 
+            JOIN rentals r ON ri.rental_id = r.rental_id 
+            WHERE ri.prod_id = ? 
+            AND r.status NOT IN ('Cancelled', 'Returned')
+            AND (
+                (? BETWEEN r.start_date AND DATE_ADD(r.end_date, INTERVAL 2 DAY)) OR
+                (? BETWEEN r.start_date AND DATE_ADD(r.end_date, INTERVAL 2 DAY)) OR
+                (r.start_date BETWEEN ? AND ?)
+            )
+        ");
+        $checkDB->bind_param("issss", $prod_id, $start_date, $end_date, $start_date, $end_date);
+        $checkDB->execute();
+        $dbCount = $checkDB->get_result()->fetch_assoc()['used'] ?? 0;
+        $checkDB->close();
+
+        // 2. Check current cart items that might overlap
+        $checkCartItems = $conn->prepare("
+            SELECT SUM(quantity) as in_cart
+            FROM cart_items
+            WHERE cart_id = ? AND prod_id = ?
+            AND (
+                (? BETWEEN start_date AND end_date) OR
+                (? BETWEEN start_date AND end_date) OR
+                (start_date BETWEEN ? AND ?)
+            )
+        ");
+        $checkCartItems->bind_param("iissss", $cart_id, $prod_id, $start_date, $end_date, $start_date, $end_date);
+        $checkCartItems->execute();
+        $cartOverlapCount = $checkCartItems->get_result()->fetch_assoc()['in_cart'] ?? 0;
+        $checkCartItems->close();
+
+        if (($dbCount + $cartOverlapCount + 1) > $rentalMax) {
+            // No more room! Either fully booked or already in your cart
+            header("Location: rent page.php?error=already_booked&name=" . urlencode($gearName));
+            exit;
+        }
+
+        // Check if the EXACT same product and date range is already in the cart
+        $findExact = $conn->prepare("SELECT cart_item_id, quantity FROM cart_items WHERE cart_id = ? AND prod_id = ? AND start_date = ? AND end_date = ?");
+        $findExact->bind_param("iiss", $cart_id, $prod_id, $start_date, $end_date);
+        $findExact->execute();
+        $exactRes = $findExact->get_result();
+
+        if ($exactRes->num_rows > 0) {
+            // Already in cart for these dates - block it as requested
+            header("Location: rent page.php?error=already_in_cart&name=" . urlencode($gearName));
+            exit;
+        } else {
+            // Fresh entry for this specific range
+            $rentStmt = $conn->prepare("INSERT INTO cart_items (cart_id, prod_id, quantity, start_date, end_date) VALUES (?, ?, 1, ?, ?)");
+            $rentStmt->bind_param("iiss", $cart_id, $prod_id, $start_date, $end_date);
+            $rentStmt->execute();
+            $rentStmt->close();
+        }
+        $findExact->close();
         
         header("Location: rent page.php?added=" . urlencode($prod_id));
         exit;
     }
 } else {
+    // If they got here without a POST, just send them back home
     header("Location: product page.php");
     exit;
 }

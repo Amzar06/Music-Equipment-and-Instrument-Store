@@ -8,40 +8,40 @@ if (!isset($_SESSION['cust_id'])) {
 }
 $cust_id = $_SESSION['cust_id'];
 
-// Fetch all active rental date ranges to disable them in the picker
-$booked_dates = [];
+// Get all existing bookings so we can block those dates in the UI
+$bookedPeriods = [];
 if (isset($conn)) {
-    $res = $conn->query("
+    $bookingCheck = $conn->query("
         SELECT ri.prod_id, r.start_date, r.end_date 
         FROM rental_items ri 
         JOIN rentals r ON ri.rental_id = r.rental_id 
         WHERE r.status NOT IN ('Cancelled', 'Returned')
     ");
-    while($row = $res->fetch_assoc()) {
-        $pid = $row['prod_id'];
-        if (!isset($booked_dates[$pid])) $booked_dates[$pid] = [];
-        $booked_dates[$pid][] = [
-            'from' => $row['start_date'],
-            'to' => $row['end_date']
+    while($booking = $bookingCheck->fetch_assoc()) {
+        $p_id = $booking['prod_id'];
+        if (!isset($bookedPeriods[$p_id])) $bookedPeriods[$p_id] = [];
+        $bookedPeriods[$p_id][] = [
+            'from' => $booking['start_date'],
+            'to' => $booking['end_date']
         ];
     }
 }
 
-// Fetch categories
-$categories = [];
+// Fetch types/categories
+$typeList = [];
 if (isset($conn)) {
-    $cat_query = $conn->query("SELECT * FROM categories");
-    if ($cat_query) {
-        while($row = $cat_query->fetch_assoc()) {
-            $categories[] = $row;
+    $catRes = $conn->query("SELECT * FROM categories");
+    if ($catRes) {
+        while($c = $catRes->fetch_assoc()) {
+            $typeList[] = $c;
         }
     }
 }
 
-// Fetch products with their category names — only products available for rent
-$products = [];
+// Get gear available for rent
+$rentalGear = [];
 if (isset($conn)) {
-    $prod_query = $conn->query("
+    $rentalSql = $conn->query("
         SELECT p.*, c.category_name 
         FROM products p 
         LEFT JOIN categories c ON p.category_id = c.category_id
@@ -49,23 +49,23 @@ if (isset($conn)) {
           AND p.status != 'Discontinued'
         ORDER BY p.prod_id DESC
     ");
-    if ($prod_query) {
-        while($row = $prod_query->fetch_assoc()) {
-            $products[] = $row;
+    if ($rentalSql) {
+        while($item = $rentalSql->fetch_assoc()) {
+            $rentalGear[] = $item;
         }
     }
 }
 
-// Fetch cart count
-$is_logged_in = isset($_SESSION['cust_id']);
-$cart_count = 0;
-if (isset($conn) && $is_logged_in) {
-    $count_query = $conn->prepare("SELECT SUM(ci.quantity) as total FROM cart_items ci JOIN cart c ON ci.cart_id = c.cart_id WHERE c.cust_id = ?");
-    $count_query->bind_param("i", $cust_id);
-    $count_query->execute();
-    $count_res = $count_query->get_result()->fetch_assoc();
-    $cart_count = $count_res['total'] ?? 0;
-    $count_query->close();
+// Current cart status for the badge
+$userLoggedIn = isset($_SESSION['cust_id']);
+$itemsInCart = 0;
+if (isset($conn) && $userLoggedIn) {
+    $cartCountStmt = $conn->prepare("SELECT SUM(ci.quantity) as total FROM cart_items ci JOIN cart c ON ci.cart_id = c.cart_id WHERE c.cust_id = ?");
+    $cartCountStmt->bind_param("i", $cust_id);
+    $cartCountStmt->execute();
+    $countData = $cartCountStmt->get_result()->fetch_assoc();
+    $itemsInCart = $countData['total'] ?? 0;
+    $cartCountStmt->close();
 }
 
 // Rental limit (3 per week) removed per user request.
@@ -151,9 +151,9 @@ $next_rentable_date = null;
         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
             <a href="cart page.php" style="position: relative; padding: 10px 20px; background: #2563eb; color: white; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(37,99,235,0.3);">
                 🛒 View Cart
-                <?php if ($cart_count > 0): ?>
+                <?php if ($itemsInCart > 0): ?>
                     <span style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                        <?php echo $cart_count; ?>
+                        <?php echo $itemsInCart; ?>
                     </span>
                 <?php endif; ?>
             </a>
@@ -170,10 +170,10 @@ $next_rentable_date = null;
 
     <!-- Category Sort Section -->
     <div style="margin-bottom: 32px; display: flex; align-items: center; gap: 12px;">
-        <label for="categoryFilter" style="font-weight: 600; color: var(--text-primary);">Sort by Category:</label>
+        <label for="categoryFilter" style="font-weight: 600; color: var(--text-primary);">Filter Type:</label>
         <select id="categoryFilter" style="padding: 10px 16px; font-size: 1rem; border-radius: 10px; border: 1.5px solid var(--card-border); background: #f8fafc; color: var(--text-primary); cursor: pointer;" onchange="filterCategory()">
-            <option value="all">All Instruments</option>
-            <?php foreach ($categories as $cat): ?>
+            <option value="all">All Gear</option>
+            <?php foreach ($typeList as $cat): ?>
                 <option value="<?php echo htmlspecialchars(strtolower($cat['category_name'])); ?>"><?php echo htmlspecialchars($cat['category_name']); ?></option>
             <?php endforeach; ?>
         </select>
@@ -196,12 +196,12 @@ $next_rentable_date = null;
     </div>
 
     <div class="product-grid" id="productGrid">
-    <?php if (empty($products)): ?>
+    <?php if (empty($rentalGear)): ?>
         <div style="text-align: center; color: var(--text-secondary); grid-column: 1 / -1; padding: 48px;">
-            <h3>No products found.</h3>
+            <h3>Nothing available for rent right now.</h3>
         </div>
     <?php else: ?>
-        <?php foreach($products as $product): ?>
+        <?php foreach($rentalGear as $product): ?>
             <div class="card" data-category="<?php echo htmlspecialchars(strtolower($product['category_name'])); ?>" onclick="toggleExpand(this)" style="cursor: pointer;">
                 <?php if (!empty($product['prod_image'])): ?>
                     <div onclick="openLightbox(event, '../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>')" 
@@ -285,83 +285,78 @@ function openLightbox(event, imgSrc) {
     lightbox.style.display = 'flex';
 }
 
-function toggleExpand(card) {
-    const details = card.querySelector('.expanded-details');
-    const shortDesc = card.querySelector('.short-desc');
-    
-    const hint = card.querySelector('.view-more-hint');
+function toggleExpand(el) {
+    const details = el.querySelector('.expanded-details');
+    const intro = el.querySelector('.short-desc');
+    const moreBtn = el.querySelector('.view-more-hint');
     
     if (details.style.display === 'none' || details.style.display === '') {
         details.style.display = 'block';
         details.style.maxHeight = '800px'; 
-        shortDesc.style.display = 'none';
-        hint.style.display = 'none';
-        card.style.transform = 'translateY(-4px)';
-        card.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1)';
+        intro.style.display = 'none';
+        moreBtn.style.display = 'none';
+        el.style.transform = 'translateY(-4px)';
+        el.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1)';
     } else {
         details.style.display = 'none';
         details.style.maxHeight = '0px';
-        shortDesc.style.display = '-webkit-box';
-        hint.style.display = 'block';
-        card.style.transform = 'none';
-        card.style.boxShadow = '';
+        intro.style.display = '-webkit-box';
+        moreBtn.style.display = 'block';
+        el.style.transform = 'none';
+        el.style.boxShadow = '';
     }
 }
 
 let fpInstances = {};
 
-function validateRental(form) {
-    const prodId = form.querySelector('input[name="product_id"]').value;
-    const start = document.getElementById('start_date_' + prodId).value;
-    const end = document.getElementById('end_date_' + prodId).value;
+function validateRental(currentForm) {
+    const pId = currentForm.querySelector('input[name="prod_id"]').value;
+    const startVal = document.getElementById('start_date_' + pId).value;
+    const endVal = document.getElementById('end_date_' + pId).value;
     
-    if (!start || !end) {
-        alert("Please select your rental period first!");
-        // Auto-open the picker for the user
-        if (fpInstances[prodId]) {
-            fpInstances[prodId].open();
-            // Scroll to the picker if not in view
-            fpInstances[prodId].element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!startVal || !endVal) {
+        // Instead of just an alert, let's make it look like we are "asking"
+        alert("Wait! You haven't picked your rental dates yet. Please choose when you'd like the instrument.");
+        
+        if (fpInstances[pId]) {
+            fpInstances[pId].open();
+            fpInstances[pId].element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         return false;
     }
     return true;
 }
 
-const bookedDatesData = <?php echo json_encode($booked_dates); ?>;
+const bookedPeriodsJson = <?php echo json_encode($bookedPeriods); ?>;
 
 document.addEventListener('DOMContentLoaded', function() {
-    const pickers = document.querySelectorAll(".range-picker");
-    pickers.forEach(el => {
-        const prodId = el.getAttribute('data-prod-id');
-        const bookedForThisProd = bookedDatesData[prodId] || [];
+    const datePickers = document.querySelectorAll(".range-picker");
+    datePickers.forEach(picker => {
+        const pId = picker.getAttribute('data-prod-id');
+        const bookedForThisItem = bookedPeriodsJson[pId] || [];
         
-        // Convert to Flatpickr disable format
-        const disableDates = bookedForThisProd.map(range => {
-            const start = new Date(range.from);
-            const end = new Date(range.to);
-            // Add buffer: If end is 18, block until 20 so next start is 21. (+2 days)
-            const bufferedEnd = new Date(end);
-            bufferedEnd.setDate(bufferedEnd.getDate() + 2); 
+        const excludedDates = bookedForThisItem.map(range => {
+            const sDate = new Date(range.from);
+            const eDate = new Date(range.to);
+            // Maintenance buffer (+2 days)
+            const buffer = new Date(eDate);
+            buffer.setDate(buffer.getDate() + 2); 
             
-            return {
-                from: start,
-                to: bufferedEnd
-            };
+            return { from: sDate, to: buffer };
         });
 
-        fpInstances[prodId] = flatpickr(el, {
+        fpInstances[pId] = flatpickr(picker, {
             mode: "range",
             minDate: "today",
             dateFormat: "Y-m-d",
-            disable: disableDates,
+            disable: excludedDates,
             onClose: function(selectedDates, dateStr, instance) {
                 if (selectedDates.length === 2) {
-                    const start = instance.formatDate(selectedDates[0], "Y-m-d");
-                    const end = instance.formatDate(selectedDates[1], "Y-m-d");
+                    const s = instance.formatDate(selectedDates[0], "Y-m-d");
+                    const e = instance.formatDate(selectedDates[1], "Y-m-d");
                     
-                    document.getElementById('start_date_' + prodId).value = start;
-                    document.getElementById('end_date_' + prodId).value = end;
+                    document.getElementById('start_date_' + pId).value = s;
+                    document.getElementById('end_date_' + pId).value = e;
                 }
             }
         });
@@ -369,13 +364,13 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function filterCategory() {
-    const selected = document.getElementById('categoryFilter').value;
-    const cards = document.querySelectorAll('.card');
-    cards.forEach(card => {
-        if (selected === 'all' || card.getAttribute('data-category') === selected) {
-            card.style.display = ''; 
+    const chosen = document.getElementById('categoryFilter').value;
+    const allItems = document.querySelectorAll('.card');
+    allItems.forEach(item => {
+        if (chosen === 'all' || item.getAttribute('data-category') === chosen) {
+            item.style.display = ''; 
         } else {
-            card.style.display = 'none';
+            item.style.display = 'none';
         }
     });
 }
