@@ -9,20 +9,23 @@ require_once('../database.php');
 $page_title = "Dashboard";
 $active = "dashboard";
 
-// ==========================================
-// 1. FETCHING METRICS (Including the missing active/pending lines)
-// ==========================================
+
+// fetching statistics
+
 $total_products  = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM products"))['total'];
 $total_orders    = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM orders"))['total'];
-$pending_orders  = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM orders WHERE status = 'Pending'"))['total'];
+
+// FIXED: Now counts both 'Pending' and 'Processing' orders
+$pending_orders  = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM orders WHERE status IN ('Pending', 'Processing')"))['total'];
+
 $total_rentals   = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM rentals"))['total'];
 $active_rentals  = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM rentals WHERE status = 'Active'"))['total'];
 $total_customers = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM customers"))['total'];
 
-// ==========================================
-// 2. FETCHING RECENT ACTIVITY 
-// ==========================================
-// Fetching 5 most recent orders
+// Fetching recent activities
+
+// Fetching 5 recent sales
+
 $recent_orders = mysqli_query($conn, "
     SELECT o.order_id, c.cust_name, o.total_amount, o.status 
     FROM orders o 
@@ -30,7 +33,8 @@ $recent_orders = mysqli_query($conn, "
     ORDER BY o.order_date DESC LIMIT 5
 ");
 
-// Fetching 5 most recent rentals (This was missing)
+// Fetching 5 recent rentals
+
 $recent_rentals = mysqli_query($conn, "
     SELECT r.rental_id, c.cust_name, r.end_date, r.status 
     FROM rentals r 
@@ -39,6 +43,7 @@ $recent_rentals = mysqli_query($conn, "
 ");
 
 // Load the layout frame
+
 require_once('admin_header.php');
 ?>
 
@@ -51,7 +56,7 @@ require_once('admin_header.php');
         <span>Total Orders</span>
         <h3><?php echo $total_orders; ?></h3>
         <div style="font-size: 0.85rem; color: #ef4444; font-weight: 500; margin-top: 4px;">
-            <?php echo $pending_orders; ?> pending processing
+            <?php echo $pending_orders; ?> processing
         </div>
     </div>
     <div class="stat-card">
@@ -145,4 +150,4 @@ require_once('admin_header.php');
 
 </div>
 
-<?php require_once('admin_footer.php'); ?> 
+<?php require_once('admin_footer.php'); ?>

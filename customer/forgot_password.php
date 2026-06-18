@@ -5,9 +5,6 @@ include '../database.php';
 $message = "";
 $message_type = ""; 
 
-// =========================================================================
-// SINGLE STEP PROCESS: VALIDATE EVERYTHING AND REDIRECT TO LOGIN ON SUCCESS
-// =========================================================================
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_email'])) {
     $email = trim($_POST['email']);
     $security_question = $_POST['security_question'] ?? '';

@@ -60,8 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // HASHING THE PASSWORD
                 $hashed_password = password_hash($password, PASSWORD_BCRYPT);
                 
-                // HASHING THE SECURITY ANSWER
-                // Standardize to lowercase before hashing to prevent simple case mismatch failures later
                 $processed_answer = strtolower($security_answer);
                 $hashed_security_answer = password_hash($processed_answer, PASSWORD_BCRYPT);
 
@@ -90,14 +88,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="customer.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* CSS to position the eye icon inside the input field natively */
         .password-container {
             position: relative;
             width: 100%;
         }
         .password-container input {
             width: 100%;
-            padding-right: 40px; /* Leave space for the icon so text doesn't overlap */
+            padding-right: 40px; 
             box-sizing: border-box;
         }
         .toggle-password {
@@ -118,7 +115,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-bottom: 15px;
             display: block;
         }
-        /* Style consistency helper for selects */
         .form-select {
             width: 100%; 
             padding: 10px; 

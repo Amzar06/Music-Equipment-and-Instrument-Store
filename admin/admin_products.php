@@ -9,9 +9,9 @@ require_once('../database.php');
 $page_title = "Inventory Management";
 $active = "products";
 
-// ==========================================
-// FLASH MESSAGE LOGIC
-// ==========================================
+
+// Flash message logic
+
 $message = ""; $message_type = "";
 if (isset($_SESSION['flash_message'])) {
     $message = $_SESSION['flash_message'];
@@ -20,9 +20,9 @@ if (isset($_SESSION['flash_message'])) {
     unset($_SESSION['flash_type']);
 }
 
-// ==========================================
-// 1. HANDLE SOFT DELETE
-// ==========================================
+
+// Handle delete
+
 if (isset($_GET['delete_id'])) {
     $delete_id = intval($_GET['delete_id']);
     $delete_query = "UPDATE products SET status = 'Discontinued' WHERE prod_id = $delete_id";
@@ -37,9 +37,9 @@ if (isset($_GET['delete_id'])) {
     exit();
 }
 
-// ==========================================
-// 2. HANDLE ADD PRODUCT
-// ==========================================
+
+// handle add product
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
     $prod_name        = mysqli_real_escape_string($conn, $_POST['prod_name']);
     $category_id      = intval($_POST['category_id']);
@@ -95,9 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
     exit();
 }
 
-// ==========================================
-// 3. FETCH DATA 
-// ==========================================
+
+// fetch data
+
 $categories_result = mysqli_query($conn, "SELECT * FROM categories ORDER BY category_name ASC");
 
 $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['search']) : '';
@@ -210,15 +210,15 @@ require_once('admin_header.php');
                 <input type="file" name="prod_image" accept="image/*" style="font-size: 0.9rem;">
             </div>
 
-            <button type="submit" name="add_product" style="width: 100%; padding: 12px; background: #111827; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Save to Inventory</button>
+            <button type="submit" name="add_product" style="width: 100%; padding: 12px; background: #111827; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Save Product</button>
         </form>
     </div>
 
     <div style="background: white; padding: 24px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
         
         <div style="display: flex; gap: 16px; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px;">
-            <a href="admin_products.php?view=sale" style="padding-bottom: 12px; font-weight: 700; font-size: 1.1rem; color: <?php echo ($view == 'sale') ? '#4f46e5' : '#6b7280'; ?>; border-bottom: 3px solid <?php echo ($view == 'sale') ? '#4f46e5' : 'transparent'; ?>; text-decoration: none;">Retail Stock (For Sale)</a>
-            <a href="admin_products.php?view=rent" style="padding-bottom: 12px; font-weight: 700; font-size: 1.1rem; color: <?php echo ($view == 'rent') ? '#10b981' : '#6b7280'; ?>; border-bottom: 3px solid <?php echo ($view == 'rent') ? '#10b981' : 'transparent'; ?>; text-decoration: none;">Rental Assets</a>
+            <a href="admin_products.php?view=sale" style="padding-bottom: 12px; font-weight: 700; font-size: 1.1rem; color: <?php echo ($view == 'sale') ? '#4f46e5' : '#6b7280'; ?>; border-bottom: 3px solid <?php echo ($view == 'sale') ? '#4f46e5' : 'transparent'; ?>; text-decoration: none;">Sale Products</a>
+            <a href="admin_products.php?view=rent" style="padding-bottom: 12px; font-weight: 700; font-size: 1.1rem; color: <?php echo ($view == 'rent') ? '#10b981' : '#6b7280'; ?>; border-bottom: 3px solid <?php echo ($view == 'rent') ? '#10b981' : 'transparent'; ?>; text-decoration: none;">Rent Products</a>
         </div>
         
         <div style="background: #f9fafb; border: 1px solid #e5e7eb; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
@@ -300,8 +300,12 @@ require_once('admin_header.php');
     function toggleStock(type) {
         const checkbox = document.getElementById('for_' + type);
         const container = document.getElementById('stock_' + type + '_container');
-        const priceInput = document.getElementById('prod_' + type + '_price');
-        const qtyInput = document.getElementById('prod_' + type + '_qty');
+        
+        // Use '_rental_' for rent type to match the HTML ID, otherwise use '_sale_'
+        const inputSuffix = (type === 'rent') ? 'rental' : 'sale';
+        
+        const priceInput = document.getElementById('prod_' + inputSuffix + '_price');
+        const qtyInput = document.getElementById('prod_' + inputSuffix + '_qty');
         
         if (checkbox.checked) {
             container.style.display = 'block';
@@ -326,7 +330,6 @@ require_once('admin_header.php');
         }
     }
 
-    // This forces the script to sync with the checkboxes the moment the page loads!
     window.onload = function() {
         toggleStock('sale');
         toggleStock('rent');

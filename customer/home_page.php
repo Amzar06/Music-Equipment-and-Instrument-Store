@@ -2,7 +2,6 @@
 session_start();
 include '../database.php';
 
-// Check if the user is logged in
 $is_logged_in = isset($_SESSION['cust_id']);
 ?>
 <!DOCTYPE html>

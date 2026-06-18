@@ -22,11 +22,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cust_state = $_POST['cust_state'] ?? '';
     $cust_postcode = $_POST['cust_postcode'] ?? '';
     
-    // =========================================================================
-    // MALAYSIAN PHONE NUMBER VALIDATION CODE
-    // =========================================================================
-    // Pattern checks: Must start with +60, followed by a valid prefix (e.g., mobile 10-19, landlines 3-9) 
-    // and total length between 9 to 11 digits after country code.
     $my_phone_pattern = '/^\+60(1[0-9]|3|4|5|6|7|8|9)[0-9]{7,8}$/';
 
     if (empty($cust_phone_number)) {

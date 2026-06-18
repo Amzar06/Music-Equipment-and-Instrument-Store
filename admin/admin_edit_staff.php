@@ -5,9 +5,9 @@ if (!isset($_SESSION['staff_id'])) {
     exit();
 }
 
-// ==========================================
-// STRICT SUPERADMIN SECURITY LOCK
-// ==========================================
+
+//Superadmin security
+
 if (!isset($_SESSION['staff_role']) || $_SESSION['staff_role'] !== 'Administrator') {
     $_SESSION['flash_message'] = "Access Denied: Only Administrators can edit staff accounts.";
     $_SESSION['flash_type'] = "error";
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_staff'])) {
     if (!empty($staff_name) && !empty($staff_email)) {
         
         // Excludes password, security_question, and security_answer.
-        // Those belong to the user's private admin_profile.php now.
+
         $update_query = "UPDATE staff SET 
                          staff_name = '$staff_name', 
                          staff_email = '$staff_email', 
@@ -103,45 +103,35 @@ require_once('admin_header.php');
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
                 <div>
-                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Full Name *</label>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Full Name:</label>
                     <input type="text" name="staff_name" required value="<?php echo htmlspecialchars($staff['staff_name']); ?>" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; box-sizing: border-box;">
-                </div>
-                <div>
-                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Email Address *</label>
-                    <input type="email" name="staff_email" required value="<?php echo htmlspecialchars($staff['staff_email']); ?>" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
             <div style="margin-bottom: 16px;">
-                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Phone Number</label>
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Phone Number:</label>
                 <input type="text" name="staff_phone_number" value="<?php echo htmlspecialchars($staff['staff_phone_number']); ?>" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; box-sizing: border-box;">
             </div>
 
             <div style="margin-bottom: 20px;">
-                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Home Address</label>
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Home Address:</label>
                 <textarea name="staff_address" rows="3" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-family: inherit; outline: none; box-sizing: border-box; resize: vertical;"><?php echo htmlspecialchars($staff['staff_address']); ?></textarea>
-            </div>
-
-            <div style="padding: 12px 16px; background: #f3f4f6; border-left: 4px solid #6b7280; border-radius: 4px; margin-bottom: 24px;">
-                <p style="margin: 0; font-size: 0.85rem; color: #4b5563; font-weight: 500;">
-                    🔒 <strong>Security Notice:</strong> To maintain strict data privacy, Superadmins cannot view or change staff passwords or security questions. Staff must utilize the Account Recovery portal if they lose access.
-                </p>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
                 <div>
-                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">System Role</label>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Role:</label>
                     <select name="staff_role" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: white; outline: none; box-sizing: border-box;">
                         <option value="Staff" <?php echo ($staff['staff_role'] == 'Staff') ? 'selected' : ''; ?>>Staff</option>
                         <option value="Administrator" <?php echo ($staff['staff_role'] == 'Administrator') ? 'selected' : ''; ?>>Administrator (Superadmin)</option>
                     </select>
                 </div>
                 <div>
-                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Account Status</label>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Account Status:</label>
                     <select name="status" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: white; outline: none; box-sizing: border-box;">
                         <option value="Active" <?php echo ($staff['status'] == 'Active') ? 'selected' : ''; ?>>Active</option>
                         <option value="Suspended" <?php echo ($staff['status'] == 'Suspended') ? 'selected' : ''; ?>>Suspended</option>
-                        <option value="Inactive" <?php echo ($staff['status'] == 'Inactive') ? 'selected' : ''; ?>>Inactive (Revoked)</option>
+                        <option value="Inactive" <?php echo ($staff['status'] == 'Inactive') ? 'selected' : ''; ?>>Inactive</option>
                     </select>
                 </div>
             </div>
