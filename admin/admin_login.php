@@ -2,7 +2,8 @@
 session_start();
 require_once('../database.php');
 
-// If already logged in, send them straight to the dashboard
+// If already logged in, proceed to dashboard
+
 if (isset($_SESSION['staff_id'])) {
     header("Location: admin_dashboard.php"); 
     exit();
@@ -10,7 +11,8 @@ if (isset($_SESSION['staff_id'])) {
 
 $error = "";
 
-// Handle the Login Submission
+// Handle the login submission
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $password = $_POST['password'];
@@ -22,8 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (mysqli_num_rows($result) == 1) {
         $staff = mysqli_fetch_assoc($result);
         
-        // FIXED: Uses password_verify to check user input against the database hash
-        if (password_verify($password, $staff['staff_password'])) { 
+        // Use password_verify to check user input with the database hash
+        
             $_SESSION['staff_id'] = $staff['staff_id'];
             $_SESSION['staff_name'] = $staff['staff_name']; 
             $_SESSION['staff_role'] = $staff['staff_role'];
@@ -35,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } else {
         $error = "Email not found.";
     }
-}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">

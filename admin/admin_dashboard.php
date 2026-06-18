@@ -9,9 +9,9 @@ require_once('../database.php');
 $page_title = "Dashboard";
 $active = "dashboard";
 
-// ==========================================
-// 1. FETCHING METRICS
-// ==========================================
+
+// fetching statistics
+
 $total_products  = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM products"))['total'];
 $total_orders    = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM orders"))['total'];
 
@@ -22,10 +22,10 @@ $total_rentals   = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS to
 $active_rentals  = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM rentals WHERE status = 'Active'"))['total'];
 $total_customers = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM customers"))['total'];
 
-// ==========================================
-// 2. FETCHING RECENT ACTIVITY 
-// ==========================================
-// Fetching 5 most recent orders
+// Fetching recent activities
+
+// Fetching 5 recent sales
+
 $recent_orders = mysqli_query($conn, "
     SELECT o.order_id, c.cust_name, o.total_amount, o.status 
     FROM orders o 
@@ -33,7 +33,8 @@ $recent_orders = mysqli_query($conn, "
     ORDER BY o.order_date DESC LIMIT 5
 ");
 
-// Fetching 5 most recent rentals
+// Fetching 5 recent rentals
+
 $recent_rentals = mysqli_query($conn, "
     SELECT r.rental_id, c.cust_name, r.end_date, r.status 
     FROM rentals r 
@@ -42,6 +43,7 @@ $recent_rentals = mysqli_query($conn, "
 ");
 
 // Load the layout frame
+
 require_once('admin_header.php');
 ?>
 

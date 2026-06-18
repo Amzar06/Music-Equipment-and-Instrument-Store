@@ -9,9 +9,8 @@ require_once('../database.php');
 $page_title = "Manage Categories";
 $active = "categories";
 
-// ==========================================
-// FLASH MESSAGE LOGIC
-// ==========================================
+// Flash meesage logic
+
 $message = "";
 $message_type = "";
 if (isset($_SESSION['flash_message'])) {
@@ -21,14 +20,15 @@ if (isset($_SESSION['flash_message'])) {
     unset($_SESSION['flash_type']);
 }
 
-// ==========================================
-// 1. ADD NEW CATEGORY
-// ==========================================
+
+// Add new category
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_category'])) {
     $category_name = mysqli_real_escape_string($conn, trim($_POST['category_name']));
     
     if (!empty($category_name)) {
-        // Check if category already exists
+        // Check if category exists
+
         $check = mysqli_query($conn, "SELECT * FROM categories WHERE category_name = '$category_name'");
         if (mysqli_num_rows($check) > 0) {
             $_SESSION['flash_message'] = "Category '$category_name' already exists.";
@@ -47,9 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_category'])) {
     exit();
 }
 
-// ==========================================
-// 2. DELETE CATEGORY
-// ==========================================
+// Delete category
+
 if (isset($_GET['delete_id'])) {
     $delete_id = intval($_GET['delete_id']);
     
@@ -72,17 +71,35 @@ if (isset($_GET['delete_id'])) {
     exit();
 }
 
-// ==========================================
-// 3. FETCH CATEGORIES
-// ==========================================
-$search = isset($_GET['search']) ? mysqli_real_escape_string($conn, trim($_GET['search'])) : '';
-$where_clause = "";
 
+// Search & sort logic
+
+$search = isset($_GET['search']) ? mysqli_real_escape_string($conn, trim($_GET['search'])) : '';
+$sort_by = isset($_GET['sort_by']) ? trim($_GET['sort_by']) : 'newest';
+
+$where_clause = "";
 if (!empty($search)) {
     $where_clause = "WHERE category_name LIKE '%$search%'";
 }
 
-$categories_query = "SELECT * FROM categories $where_clause ORDER BY category_name ASC";
+// Determine order
+switch ($sort_by) {
+    case 'oldest':
+        $order_clause = "ORDER BY category_id ASC";
+        break;
+    case 'alpha_az':
+        $order_clause = "ORDER BY category_name ASC";
+        break;
+    case 'alpha_za':
+        $order_clause = "ORDER BY category_name DESC";
+        break;
+    case 'newest':
+    default:
+        $order_clause = "ORDER BY category_id DESC";
+        break;
+}
+
+$categories_query = "SELECT * FROM categories $where_clause $order_clause";
 $categories_result = mysqli_query($conn, $categories_query);
 
 require_once('admin_header.php');
@@ -119,6 +136,23 @@ require_once('admin_header.php');
         <div style="background: white; padding: 24px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
             <h3 style="margin-top: 0; margin-bottom: 20px; font-weight: 700; color: #111827; font-size: 1.25rem;">Active Categories</h3>
             
+            <form action="admin_categories.php" method="GET" style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+                <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search categories..." 
+                       style="flex-grow: 1; min-width: 200px; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; font-size: 0.95rem;">
+                
+                <select name="sort_by" style="padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; background: #fff; font-size: 0.95rem; cursor: pointer;">
+                    <option value="newest" <?php echo ($sort_by == 'newest') ? 'selected' : ''; ?>>Newest First</option>
+                    <option value="oldest" <?php echo ($sort_by == 'oldest') ? 'selected' : ''; ?>>Oldest First</option>
+                    <option value="alpha_az" <?php echo ($sort_by == 'alpha_az') ? 'selected' : ''; ?>>Alphabetical A-Z</option>
+                    <option value="alpha_za" <?php echo ($sort_by == 'alpha_za') ? 'selected' : ''; ?>>Alphabetical Z-A</option>
+                </select>
+                
+                <button type="submit" style="padding: 10px 20px; background: #374151; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;"
+                        onmouseover="this.style.backgroundColor='#1f2937'" onmouseout="this.style.backgroundColor='#374151'">
+                    Apply
+                </button>
+            </form>
+
             <?php if(!empty($search)): ?>
                 <div style="margin-bottom: 16px; font-size: 0.85rem; color: #4b5563;">
                     Showing results for: <strong>"<?php echo htmlspecialchars($search); ?>"</strong>
@@ -145,7 +179,7 @@ require_once('admin_header.php');
                                     <a href="admin_categories.php?delete_id=<?php echo $row['category_id']; ?>" 
                                        style="color: #ef4444; text-decoration: none; font-size: 0.85rem; font-weight: 600; padding: 6px 12px; border-radius: 6px; background: #fee2e2; transition: 0.2s; display: inline-block;"
                                        onclick="return confirm('Are you sure you want to delete <?php echo addslashes($row['category_name']); ?>? You cannot delete categories that contain products.')">
-                                       Delete
+                                        Delete
                                     </a>
                                 </td>
                             </tr>

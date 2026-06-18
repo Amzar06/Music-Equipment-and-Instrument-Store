@@ -12,17 +12,19 @@ $active = "returns";
 
 $message = ""; $message_type = "";
 
-// ==========================================
-// THE AUTO-TRACKING RETURN LOGIC
-// ==========================================
-// Check if EITHER button was clicked by looking for 'return_action'
+
+// Auto tracking logic
+
+// Check if either button was clicked by looking for 'return_action'
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['return_action'])) {
     $rental_item_id = intval($_POST['rental_item_id']);
     $return_condition = mysqli_real_escape_string($conn, trim($_POST['return_condition']));
-    $action = $_POST['return_action']; // Will be 'restock' or 'writeoff'
+    $action = $_POST['return_action']; // Will be 'restock' or 'discard'
 
     if (!empty($return_condition)) {
-        // 1. Find out which product this is and how many were rented
+        // Find out which product and how many are rented
+
         $check_query = "SELECT prod_id, rental_qty FROM rental_items WHERE rental_item_id = $rental_item_id";
         $check_result = mysqli_query($conn, $check_query);
         
@@ -30,14 +32,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['return_action'])) {
             $p_id = $row['prod_id'];
             $qty_to_return = $row['rental_qty'];
 
-            // 2. Mark the specific rental transaction as 'Returned' with the condition notes
+            // Mark the specific rental transaction as 'Returned' with the notes
+
             $update_item = "UPDATE rental_items 
                             SET return_status = 'Returned', return_condition = '$return_condition' 
                             WHERE rental_item_id = $rental_item_id";
             
-            // 3. Execute logic based on which button was clicked
+            // Execute logic based on which button was clicked
+
             if ($action === 'restock') {
-                // Auto-Restock: Add the quantity back into the RENTAL catalog
+                // Auto restock item is quality is good
+
                 $restock_product = "UPDATE products 
                                     SET prod_rental_qty = prod_rental_qty + $qty_to_return 
                                     WHERE prod_id = $p_id";
@@ -68,6 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['return_action'])) {
 }
 
 // Fetch all items currently rented 'Out' by joining tables
+
 $pending_query = "SELECT ri.*, p.prod_name, r.created_at as rent_date 
                   FROM rental_items ri 
                   JOIN products p ON ri.prod_id = p.prod_id 

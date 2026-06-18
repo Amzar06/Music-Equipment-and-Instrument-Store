@@ -36,7 +36,8 @@ if (isset($_GET['delete_id'])) {
     exit();
 }
 
-// HANDLE ADD STAFF
+// Handle adding staff
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_staff'])) {
     $staff_name    = mysqli_real_escape_string($conn, trim($_POST['staff_name']));
     $staff_email   = mysqli_real_escape_string($conn, trim($_POST['staff_email']));
@@ -64,7 +65,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_staff'])) {
     exit();
 }
 
-// FETCH DATA
+// Fetch data
+
 $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, trim($_GET['search'])) : '';
 $sort = isset($_GET['sort']) ? $_GET['sort'] : 'name_asc';
 

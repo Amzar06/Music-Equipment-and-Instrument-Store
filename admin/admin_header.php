@@ -21,10 +21,7 @@
         <li><a href="admin_rental_list.php" class="<?php echo ($active == 'rentals') ? 'active' : ''; ?>">Rentals</a></li>
         <li><a href="manage_customer.php" class="<?php echo ($active == 'customers') ? 'active' : ''; ?>">Customers</a></li>
         
-        <?php 
-        // We keep the exact database name 'Administrator' here so your permissions don't break!
-        if (isset($_SESSION['staff_role']) && $_SESSION['staff_role'] === 'Administrator'): 
-        ?>
+        <?php if (isset($_SESSION['staff_role']) && $_SESSION['staff_role'] === 'Administrator'): ?>
             <li><a href="manage_admin.php" class="<?php echo ($active == 'staff') ? 'active' : ''; ?>">Staff</a></li>
             <li><a href="admin_report.php" class="<?php echo ($active == 'reports') ? 'active' : ''; ?>">Reports</a></li>
         <?php endif; ?>
@@ -43,28 +40,23 @@
         </div>
 
         <?php if (!isset($hide_search) || !$hide_search): ?>
-            <div style="width: 100%; max-width: 400px; margin: 0 20px;">
-                </div>
+            <div style="width: 100%; max-width: 400px; margin: 0 20px;"></div>
         <?php else: ?>
             <div style="width: 100%; max-width: 400px; margin: 0 20px;"></div>
         <?php endif; ?>
 
         <div class="admin-profile" style="display: flex; align-items: center; gap: 15px;">
-            <span class="status-pill completed" style="text-transform: uppercase; letter-spacing: 1px; padding: 6px 12px; font-size: 0.75rem;">
+            <span style="text-transform: uppercase; letter-spacing: 1px; padding: 6px 12px; font-size: 0.75rem; background-color: #d1fae5; color: #065f46; border-radius: 12px; font-weight: 600;">
                 <?php 
-                    // This maps the UI display names without touching your database
                     $db_role = $_SESSION['staff_role'] ?? 'staff';
-                    if ($db_role === 'Administrator') {
-                        echo 'SUPERADMIN';
-                    } else {
-                        echo 'ADMIN';
-                    }
+                    echo ($db_role === 'Administrator') ? 'SUPERADMIN' : 'ADMIN';
                 ?>
             </span>
             
             <a href="admin_profile.php" 
-               style="font-weight: 600; color: #111827; text-decoration: none; border-bottom: 2px solid transparent; transition: 0.2s;"
-               onmouseover="this.style.borderBottom='2px solid #4f46e5'" onmouseout="this.style.borderBottom='2px solid transparent'">
+               style="font-weight: 600; color: #111827; text-decoration: none; padding: 6px 14px; background-color: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 20px; transition: all 0.2s;"
+               onmouseover="this.style.backgroundColor='#e5e7eb'; this.style.borderColor='#d1d5db';" 
+               onmouseout="this.style.backgroundColor='#f3f4f6'; this.style.borderColor='#e5e7eb';">
                <?php echo htmlspecialchars($_SESSION['staff_name'] ?? 'Staff'); ?>
             </a>
         </div>

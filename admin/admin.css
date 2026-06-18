@@ -23,7 +23,7 @@ body {
     display: flex;
 }
 
-/* Sidebar Navigation */
+/* Sidebar navigation */
 .sidebar {
     width: var(--sidebar-width);
     background-color: var(--sidebar-bg);
@@ -69,7 +69,7 @@ body {
     color: var(--sidebar-hover);
 }
 
-/* Main Content Area */
+/* Main content area */
 .main-content {
     margin-left: 0;
     width: 100%;
@@ -84,7 +84,7 @@ body {
     }
 }
 
-/* Header Section */
+/* Header section */
 header {
     display: flex;
     flex-wrap: wrap;
@@ -99,7 +99,8 @@ header {
     font-weight: 700;
 }
 
-/* Dashboard Stats Cards */
+/* Dashboard stat cards */
+
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -127,7 +128,8 @@ header {
     margin: 8px 0;
 }
 
-/* Data Tables */
+/* Data tables */
+
 .table-container {
     background: var(--white);
     border-radius: 12px;

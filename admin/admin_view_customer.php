@@ -10,7 +10,8 @@ require_once('../database.php');
 $page_title = "Customer Profile";
 $active = "customers"; 
 
-// 1. Get the Customer ID from the URL
+//Get the customer id from the url
+
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     $_SESSION['flash_message'] = "No customer selected.";
     $_SESSION['flash_type'] = "error";
@@ -20,7 +21,8 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $cust_id = intval($_GET['id']);
 
-// 2. Fetch Customer Details
+// Fetch customer details
+
 $customer_query = "SELECT * FROM customers WHERE cust_id = $cust_id";
 $customer_result = mysqli_query($conn, $customer_query);
 
@@ -32,7 +34,8 @@ if (mysqli_num_rows($customer_result) == 0) {
 }
 $customer = mysqli_fetch_assoc($customer_result);
 
-// 3. Handle Admin Actions (Suspend/Blacklist)
+//Handle admin actions for Suspend/Blacklist
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
     $new_status = mysqli_real_escape_string($conn, $_POST['new_status']);
     $update_query = "UPDATE customers SET status = '$new_status' WHERE cust_id = $cust_id";
@@ -40,7 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
     if (mysqli_query($conn, $update_query)) {
         $_SESSION['flash_message'] = "Customer account status updated to $new_status.";
         $_SESSION['flash_type'] = "success";
-        // Refresh page to show new status
+        // Refresh page to show the new status
+
         header("Location: admin_view_customer.php?id=$cust_id");
         exit();
     }

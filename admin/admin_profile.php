@@ -19,10 +19,10 @@ $staff = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM staff WHERE staff
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
     $staff_name = mysqli_real_escape_string($conn, trim($_POST['staff_name']));
     
-    // Fixed: Removed staff_phone_number and staff_address to prevent undefined array key warnings
     $update_query = "UPDATE staff SET staff_name = '$staff_name'";
 
-    // Update Security if provided
+    // Update security if provided
+    
     if (!empty($_POST['security_question']) && !empty($_POST['security_answer'])) {
         $sq = mysqli_real_escape_string($conn, $_POST['security_question']);
         $sa = password_hash(strtolower(trim($_POST['security_answer'])), PASSWORD_DEFAULT);
@@ -50,21 +50,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
 require_once('admin_header.php');
 ?>
 
-<div style="display: flex; justify-content: flex-end; padding: 10px 20px;">
-    <div class="admin-profile" style="display: flex; align-items: center; gap: 15px;">
-        <span class="status-pill completed" style="text-transform: uppercase; letter-spacing: 1px; padding: 6px 12px; font-size: 0.75rem;">
-            <?php echo (isset($_SESSION['staff_role']) && $_SESSION['staff_role'] === 'Administrator') ? 'SUPERADMIN' : 'ADMIN'; ?>
-        </span>
-        
-        <a href="admin_profile.php" 
-           style="font-weight: 600; color: #111827; text-decoration: none; padding: 6px 14px; background-color: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 20px; transition: all 0.2s;"
-           onmouseover="this.style.backgroundColor='#e5e7eb'; this.style.borderColor='#d1d5db'; this.style.textDecoration='underline';" 
-           onmouseout="this.style.backgroundColor='#f3f4f6'; this.style.borderColor='#e5e7eb'; this.style.textDecoration='none';">
-           <?php echo htmlspecialchars($_SESSION['staff_name'] ?? 'Staff'); ?>
-        </a>
-    </div>
-</div>
-
 <div style="max-width: 700px; margin: 0 auto; margin-top: 20px;">
     
     <?php if (!empty($message)): ?>
@@ -79,35 +64,42 @@ require_once('admin_header.php');
         </div>
     <?php endif; ?>
         
-    <form action="admin_profile.php" method="POST">
-        <div style="margin-bottom: 16px;">
-            <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Full Name</label>
-            <input type="text" name="staff_name" required value="<?php echo htmlspecialchars($staff['staff_name'] ?? ''); ?>" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px;">
-        </div>
+    <div style="background: white; padding: 30px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <h3 style="margin-top: 0; font-size: 1.5rem; color: #111827;">My Profile</h3>
+        <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 24px;">Manage your info and account recovery settings.</p>
 
-        <h4 style="margin: 24px 0 16px 0;">Security</h4>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-            <div>
-                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Security Question:</label>
-                <select name="security_question" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px;">
-                    <option value="">-- Select Question --</option>
-                    <option value="What was the name of your first pet?" <?php echo (isset($staff['security_question']) && $staff['security_question'] == 'What was the name of your first pet?') ? 'selected' : ''; ?>>What was the name of your first pet?</option>
-                    <option value="What city were you born in?" <?php echo (isset($staff['security_question']) && $staff['security_question'] == 'What city were you born in?') ? 'selected' : ''; ?>>What city were you born in?</option>
-                </select>
+        <form action="admin_profile.php" method="POST">
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #111827;">Full Name</label>
+                <input type="text" name="staff_name" required value="<?php echo htmlspecialchars($staff['staff_name'] ?? ''); ?>" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; box-sizing: border-box;">
             </div>
-            <div>
-                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Answer:</label>
-                <input type="text" name="security_answer" placeholder="Enter new answer..." style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px;">
+
+            <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; color: #111827;">Security</h4>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #111827;">Security Question:</label>
+                    <select name="security_question" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; box-sizing: border-box;">
+                        <option value="">-- Select Question --</option>
+                        <option value="What was the name of your first pet?" <?php echo (isset($staff['security_question']) && $staff['security_question'] == 'What was the name of your first pet?') ? 'selected' : ''; ?>>What was the name of your first pet?</option>
+                        <option value="What city were you born in?" <?php echo (isset($staff['security_question']) && $staff['security_question'] == 'What city were you born in?') ? 'selected' : ''; ?>>What city were you born in?</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #111827;">Answer:</label>
+                    <input type="text" name="security_answer" placeholder="Enter new answer..." style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; box-sizing: border-box;">
+                </div>
             </div>
-        </div>
 
-        <div style="margin-bottom: 24px;">
-            <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Change Password:</label>
-            <input type="password" name="new_password" placeholder="Leave blank to keep current..." style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px;">
-        </div>
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #111827;">Change Password:</label>
+                <input type="password" name="new_password" placeholder="Leave blank to keep current..." style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; box-sizing: border-box;">
+            </div>
 
-        <button type="submit" name="update_profile" style="width: 100%; padding: 12px; background: #4f46e5; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Save Changes</button>
-    </form>
+            <button type="submit" name="update_profile" style="width: 100%; padding: 12px; background: #4f46e5; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;" onmouseover="this.style.backgroundColor='#4338ca'" onmouseout="this.style.backgroundColor='#4f46e5'">Save Changes</button>
+        </form>
+    </div>
 </div>
 
 <?php require_once('admin_footer.php'); ?>

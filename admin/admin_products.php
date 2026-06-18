@@ -9,9 +9,9 @@ require_once('../database.php');
 $page_title = "Inventory Management";
 $active = "products";
 
-// ==========================================
-// FLASH MESSAGE LOGIC
-// ==========================================
+
+// Flash message logic
+
 $message = ""; $message_type = "";
 if (isset($_SESSION['flash_message'])) {
     $message = $_SESSION['flash_message'];
@@ -20,9 +20,9 @@ if (isset($_SESSION['flash_message'])) {
     unset($_SESSION['flash_type']);
 }
 
-// ==========================================
-// 1. HANDLE SOFT DELETE
-// ==========================================
+
+// Handle delete
+
 if (isset($_GET['delete_id'])) {
     $delete_id = intval($_GET['delete_id']);
     $delete_query = "UPDATE products SET status = 'Discontinued' WHERE prod_id = $delete_id";
@@ -37,9 +37,9 @@ if (isset($_GET['delete_id'])) {
     exit();
 }
 
-// ==========================================
-// 2. HANDLE ADD PRODUCT
-// ==========================================
+
+// handle add product
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
     $prod_name        = mysqli_real_escape_string($conn, $_POST['prod_name']);
     $category_id      = intval($_POST['category_id']);
@@ -95,9 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
     exit();
 }
 
-// ==========================================
-// 3. FETCH DATA 
-// ==========================================
+
+// fetch data
+
 $categories_result = mysqli_query($conn, "SELECT * FROM categories ORDER BY category_name ASC");
 
 $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['search']) : '';

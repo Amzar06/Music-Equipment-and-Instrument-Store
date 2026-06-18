@@ -6,16 +6,17 @@ require_once('../database.php');
 $page_title = "Rental Management";
 $active = "rentals";
 
-// ==========================================
-// HANDLE STATUS UPDATES
-// ==========================================
+
+// Handle status update
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_rental_status'])) {
     $rental_id = intval($_POST['rental_id']);
     $new_status = mysqli_real_escape_string($conn, $_POST['new_status']);
     
     $update_query = "UPDATE rentals SET status = '$new_status' WHERE rental_id = $rental_id";
     
-    // If status is Active, we should also make sure items are marked as 'Out'
+    // If status is Active, update all associated rental_items to 'Out' if they are still 'Pending'
+
     if ($new_status === 'Active') {
         mysqli_query($conn, "UPDATE rental_items SET return_status = 'Out' WHERE rental_id = $rental_id AND return_status = 'Pending'");
     }
@@ -27,13 +28,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_rental_status']
         $_SESSION['flash_message'] = "Error updating rental: " . mysqli_error($conn);
         $_SESSION['flash_type'] = "error";
     }
-    header("Location: admin_rental_list.php");
+
+    // Capture context to prevent filtering reset upon update
+
+    $search_param = isset($_POST['redirect_search']) ? $_POST['redirect_search'] : '';
+    $sort_param = isset($_POST['redirect_sort']) ? $_POST['redirect_sort'] : 'newest';
+    header("Location: admin_rental_list.php?search=" . urlencode($search_param) . "&sort_by=" . urlencode($sort_param));
     exit();
 }
 
-// ==========================================
-// FETCH RENTALS + CUSTOMER DATA + ADDRESS DATA
-// ==========================================
+// Search & sort coding
+
+$search = isset($_GET['search']) ? mysqli_real_escape_string($conn, trim($_GET['search'])) : '';
+$sort_by = isset($_GET['sort_by']) ? trim($_GET['sort_by']) : 'newest';
+
+$where_clause = "";
+if (!empty($search)) {
+    $where_clause = "WHERE (c.cust_name LIKE '%$search%' OR r.rental_id LIKE '%$search%' OR r.status LIKE '%$search%')";
+}
+
+switch ($sort_by) {
+    case 'oldest':
+        $order_clause = "ORDER BY r.created_at ASC";
+        break;
+    case 'amount_high':
+        $order_clause = "ORDER BY r.total_amount DESC";
+        break;
+    case 'amount_low':
+        $order_clause = "ORDER BY r.total_amount ASC";
+        break;
+    case 'newest':
+    default:
+        $order_clause = "ORDER BY r.created_at DESC";
+        break;
+}
+
+// Fetch rentals, customer & address
+
 $query = "SELECT r.*, 
                  c.cust_name, c.cust_email, c.cust_phone_number,
                  a.full_name AS ship_name, a.phone_number AS ship_phone, 
@@ -41,7 +72,8 @@ $query = "SELECT r.*,
           FROM rentals r 
           JOIN customers c ON r.cust_id = c.cust_id 
           LEFT JOIN addresses a ON r.address_id = a.address_id
-          ORDER BY r.created_at DESC";
+          $where_clause
+          $order_clause";
 $result = mysqli_query($conn, $query);
 
 require_once('admin_header.php');
@@ -57,6 +89,30 @@ require_once('admin_header.php');
 
     <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb;">
         <h3 style="margin-top: 0; margin-bottom: 20px; font-weight: 700; color: #111827; font-size: 1.25rem;">All Customer Rentals</h3>
+
+        <form action="admin_rental_list.php" method="GET" style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+            <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search by Rental ID, Customer or Status..." 
+                   style="flex-grow: 1; min-width: 250px; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; font-size: 0.95rem;">
+            
+            <select name="sort_by" style="padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; background: #fff; font-size: 0.95rem; cursor: pointer;">
+                <option value="newest" <?php echo ($sort_by == 'newest') ? 'selected' : ''; ?>>Newest First</option>
+                <option value="oldest" <?php echo ($sort_by == 'oldest') ? 'selected' : ''; ?>>Oldest First</option>
+                <option value="amount_high" <?php echo ($sort_by == 'amount_high') ? 'selected' : ''; ?>>Amount: High to Low</option>
+                <option value="amount_low" <?php echo ($sort_by == 'amount_low') ? 'selected' : ''; ?>>Amount: Low to High</option>
+            </select>
+            
+            <button type="submit" style="padding: 10px 20px; background: #374151; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;"
+                    onmouseover="this.style.backgroundColor='#1f2937'" onmouseout="this.style.backgroundColor='#374151'">
+                Apply
+            </button>
+        </form>
+
+        <?php if(!empty($search)): ?>
+            <div style="margin-bottom: 16px; font-size: 0.85rem; color: #4b5563;">
+                Showing results for: <strong>"<?php echo htmlspecialchars($search); ?>"</strong>
+                <a href="admin_rental_list.php" style="color: #ef4444; text-decoration: none; font-weight: 600; margin-left: 10px;">Clear</a>
+            </div>
+        <?php endif; ?>
 
         <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; text-align: left;">
@@ -80,7 +136,7 @@ require_once('admin_header.php');
                             elseif ($status == 'Active') { $bg = '#dbeafe'; $txt = '#1e40af'; }
                             elseif ($status == 'Returned' || $status == 'Completed') { $bg = '#d1fae5'; $txt = '#065f46'; }
                             elseif ($status == 'Cancelled' || $status == 'Overdue') { $bg = '#fee2e2'; $txt = '#991b1b'; }
-                            else { $bg = '#e5e7eb'; $txt = '#374151'; $status = 'Unknown'; } // Catch-all for blank statuses
+                            else { $bg = '#e5e7eb'; $txt = '#374151'; $status = 'Unknown'; }
                         ?>
                         
                         <tr style="border-bottom: 1px solid #f3f4f6; transition: background 0.2s;" id="row-<?php echo $rental_id; ?>">
@@ -161,11 +217,13 @@ require_once('admin_header.php');
                                         <h4 style="margin: 0 0 12px 0; color: #111827; font-size: 0.95rem; border-bottom: 1px solid #d1d5db; padding-bottom: 8px;">Update Rental Status</h4>
                                         <form action="admin_rental_list.php" method="POST" style="display: flex; flex-direction: column; gap: 10px;">
                                             <input type="hidden" name="rental_id" value="<?php echo $rental_id; ?>">
+                                            <input type="hidden" name="redirect_search" value="<?php echo htmlspecialchars($search); ?>">
+                                            <input type="hidden" name="redirect_sort" value="<?php echo htmlspecialchars($sort_by); ?>">
                                             <select name="new_status" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.85rem; outline: none;">
                                                 <option value="Pending" <?php echo ($status == 'Pending') ? 'selected' : ''; ?>>Pending</option>
                                                 <option value="Processing" <?php echo ($status == 'Processing') ? 'selected' : ''; ?>>Processing</option>
                                                 <option value="Active" <?php echo ($status == 'Active') ? 'selected' : ''; ?>>Active</option>
-                                                <option value="Returned" <?php echo ($status == 'Returned' || $status == 'Unknown') ? 'selected' : ''; ?>>Returned</option>
+                                                <option value="Returned" <?php echo ($status == 'Returned') ? 'selected' : ''; ?>>Returned</option>
                                                 <option value="Overdue" <?php echo ($status == 'Overdue') ? 'selected' : ''; ?>>Overdue</option>
                                                 <option value="Cancelled" <?php echo ($status == 'Cancelled') ? 'selected' : ''; ?>>Cancelled</option>
                                             </select>

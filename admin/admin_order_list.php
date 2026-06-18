@@ -26,13 +26,42 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_order_status'])
         $_SESSION['flash_message'] = "Error updating order: " . mysqli_error($conn);
         $_SESSION['flash_type'] = "error";
     }
-    header("Location: admin_order_list.php");
+    
+    // Redirect back to admin_order_list.php preserving search/sort context
+    $search_param = isset($_POST['redirect_search']) ? $_POST['redirect_search'] : '';
+    $sort_param = isset($_POST['redirect_sort']) ? $_POST['redirect_sort'] : 'newest';
+    header("Location: admin_order_list.php?search=" . urlencode($search_param) . "&sort_by=" . urlencode($sort_param));
     exit();
 }
 
 // ==========================================
-// FETCH ORDERS + CUSTOMER DATA + ADDRESS DATA
+// SEARCH AND SORT LOGIC
 // ==========================================
+$search = isset($_GET['search']) ? mysqli_real_escape_string($conn, trim($_GET['search'])) : '';
+$sort_by = isset($_GET['sort_by']) ? trim($_GET['sort_by']) : 'newest';
+
+$where_clause = "";
+if (!empty($search)) {
+    $where_clause = "WHERE (c.cust_name LIKE '%$search%' OR o.order_id LIKE '%$search%' OR o.status LIKE '%$search%')";
+}
+
+switch ($sort_by) {
+    case 'oldest':
+        $order_clause = "ORDER BY o.order_date ASC";
+        break;
+    case 'amount_high':
+        $order_clause = "ORDER BY o.total_amount DESC";
+        break;
+    case 'amount_low':
+        $order_clause = "ORDER BY o.total_amount ASC";
+        break;
+    case 'newest':
+    default:
+        $order_clause = "ORDER BY o.order_date DESC";
+        break;
+}
+
+// Fetch orders, customer data, address data
 $query = "SELECT o.*, 
                  c.cust_name, c.cust_email, c.cust_phone_number,
                  a.full_name AS ship_name, a.phone_number AS ship_phone, 
@@ -40,7 +69,8 @@ $query = "SELECT o.*,
           FROM orders o 
           JOIN customers c ON o.cust_id = c.cust_id 
           LEFT JOIN addresses a ON o.address_id = a.address_id
-          ORDER BY o.order_date DESC";
+          $where_clause
+          $order_clause";
 $result = mysqli_query($conn, $query);
 
 require_once('admin_header.php');
@@ -56,6 +86,30 @@ require_once('admin_header.php');
 
     <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb;">
         <h3 style="margin-top: 0; margin-bottom: 20px; font-weight: 700; color: #111827; font-size: 1.25rem;">Order Management</h3>
+
+        <form action="admin_order_list.php" method="GET" style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+            <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search by Order ID, Customer or Status..." 
+                   style="flex-grow: 1; min-width: 250px; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; font-size: 0.95rem;">
+            
+            <select name="sort_by" style="padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; background: #fff; font-size: 0.95rem; cursor: pointer;">
+                <option value="newest" <?php echo ($sort_by == 'newest') ? 'selected' : ''; ?>>Newest First</option>
+                <option value="oldest" <?php echo ($sort_by == 'oldest') ? 'selected' : ''; ?>>Oldest First</option>
+                <option value="amount_high" <?php echo ($sort_by == 'amount_high') ? 'selected' : ''; ?>>Amount: High to Low</option>
+                <option value="amount_low" <?php echo ($sort_by == 'amount_low') ? 'selected' : ''; ?>>Amount: Low to High</option>
+            </select>
+            
+            <button type="submit" style="padding: 10px 20px; background: #374151; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;"
+                    onmouseover="this.style.backgroundColor='#1f2937'" onmouseout="this.style.backgroundColor='#374151'">
+                Apply
+            </button>
+        </form>
+
+        <?php if(!empty($search)): ?>
+            <div style="margin-bottom: 16px; font-size: 0.85rem; color: #4b5563;">
+                Showing results for: <strong>"<?php echo htmlspecialchars($search); ?>"</strong>
+                <a href="admin_order_list.php" style="color: #ef4444; text-decoration: none; font-weight: 600; margin-left: 10px;">Clear</a>
+            </div>
+        <?php endif; ?>
 
         <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; text-align: left;">
@@ -107,7 +161,6 @@ require_once('admin_header.php');
                                         <div style="font-size: 0.85rem; color: #4b5563; line-height: 1.6;">
                                             
                                             <?php 
-                                            // Safely check method, defaulting to Self-Pickup if empty
                                             $method = !empty($row['collection_method']) ? trim($row['collection_method']) : 'Self-Pickup'; 
                                             $is_delivery = (strtolower($method) === 'delivery');
                                             ?>
@@ -180,6 +233,9 @@ require_once('admin_header.php');
                                         <h4 style="margin: 0 0 12px 0; color: #111827; font-size: 0.95rem; border-bottom: 1px solid #d1d5db; padding-bottom: 8px;">Update Order Status</h4>
                                         <form action="admin_order_list.php" method="POST" style="display: flex; flex-direction: column; gap: 10px;">
                                             <input type="hidden" name="order_id" value="<?php echo $order_id; ?>">
+                                            <input type="hidden" name="redirect_search" value="<?php echo htmlspecialchars($search); ?>">
+                                            <input type="hidden" name="redirect_sort" value="<?php echo htmlspecialchars($sort_by); ?>">
+                                            
                                             <select name="new_status" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.85rem; outline: none;">
                                                 <option value="Processing" <?php echo ($status == 'Processing') ? 'selected' : ''; ?>>Processing</option>
                                                 <option value="Shipped" <?php echo ($status == 'Shipped') ? 'selected' : ''; ?>>Shipped</option>
@@ -191,14 +247,13 @@ require_once('admin_header.php');
                                         </form>
 
                                         <?php 
-                                        // Check for Return Request
                                         $ret_query = mysqli_query($conn, "SELECT * FROM product_returns WHERE order_id = $order_id LIMIT 1");
                                         if (mysqli_num_rows($ret_query) > 0): 
                                             $ret_req = mysqli_fetch_assoc($ret_query);
                                         ?>
                                             <div style="margin-top: 20px; padding: 15px; background: #fff7ed; border: 1px solid #ffedd5; border-radius: 10px;">
                                                 <h5 style="color: #9a3412; font-size: 0.85rem; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-                                                    <i class="fa-solid fa-rotate-left"></i> Return Request
+                                                    Return Request
                                                 </h5>
                                                 <p style="font-size: 0.8rem; margin-bottom: 8px;"><strong>Reason:</strong> <?php echo htmlspecialchars($ret_req['reason']); ?></p>
                                                 <p style="font-size: 0.8rem; margin-bottom: 10px; color: #4b5563;"><strong>Details:</strong> <?php echo nl2br(htmlspecialchars($ret_req['details'])); ?></p>
@@ -217,7 +272,7 @@ require_once('admin_header.php');
                         </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
-                        <tr><td colspan="6" style="text-align: center; padding: 40px; color: #9ca3af;">No orders found.</td></tr>
+                        <tr><td colspan="6" style="text-align: center; padding: 40px; color: #9ca3af;">No orders found matching the criteria.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>

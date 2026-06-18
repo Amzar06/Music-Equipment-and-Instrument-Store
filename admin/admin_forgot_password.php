@@ -8,7 +8,8 @@ $success = "";
 $user_email = "";
 $security_question = "";
 
-// STEP 1: Verify Email
+// Verify the email
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_email'])) {
     $user_email = mysqli_real_escape_string($conn, trim($_POST['email']));
     
@@ -29,7 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_email'])) {
     }
 }
 
-// STEP 2: Verify Answer & Reset Password
+//Verify answer & Reset the password
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset_password'])) {
     $user_email = $_SESSION['recovery_email'];
     $answer_attempt = strtolower(trim($_POST['security_answer']));

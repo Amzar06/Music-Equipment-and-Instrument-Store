@@ -5,9 +5,9 @@ if (!isset($_SESSION['staff_id'])) {
     exit();
 }
 
-// ==========================================
-// STRICT SUPERADMIN SECURITY LOCK
-// ==========================================
+
+//Superadmin security
+
 if (!isset($_SESSION['staff_role']) || $_SESSION['staff_role'] !== 'Administrator') {
     $_SESSION['flash_message'] = "Access Denied: Only Administrators can edit staff accounts.";
     $_SESSION['flash_type'] = "error";
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_staff'])) {
     if (!empty($staff_name) && !empty($staff_email)) {
         
         // Excludes password, security_question, and security_answer.
-        // Those belong to the user's private admin_profile.php now.
+
         $update_query = "UPDATE staff SET 
                          staff_name = '$staff_name', 
                          staff_email = '$staff_email', 
