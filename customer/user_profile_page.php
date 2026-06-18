@@ -21,7 +21,7 @@ $user_data = [
     'cust_postcode' => 'N/A'
 ];
 
-$orders = []; // Array to store order history
+$orders = []; 
 
 if (isset($conn)) {
     // 1. Fetch Customer Information

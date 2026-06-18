@@ -19,7 +19,6 @@ session_destroy();
   <title>Logout</title>
   <link rel="stylesheet" href="customer.css">
   <style>
-      /* Layout container to align buttons side-by-side */
       .button-group {
           display: flex;
           gap: 12px;
@@ -38,7 +37,6 @@ session_destroy();
           cursor: pointer;
           box-sizing: border-box;
       }
-      /* Alternative styling style for the secondary "Home" action */
       .btn-secondary {
           background-color: #64748b;
           color: white;
