@@ -4,9 +4,8 @@ include '../database.php';
 
 $message = "";
 $message_type = ""; 
-$step = 1; // Step 1: Enter Email | Step 2: Enter Code & New Password
+$step = 1; 
 
-// STEP 1: CUSTOMER SUBMITS THEIR EMAIL
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_email'])) {
     $email = trim($_POST['email']);
 
@@ -26,8 +25,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_email'])) {
 
                 if ($result->num_rows > 0) {
                     $user = $result->fetch_assoc();
-                    
-                    // Generate a random secure 6-digit verification code
                     $verification_code = rand(100000, 999999);
                     
                     // Store details securely in the session state
@@ -37,7 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_email'])) {
 
                     $message = "Verification code generated! Please check the simulator box below.";
                     $message_type = "success";
-                    $step = 2; // Advance to verification entry screen
+                    $step = 2; 
                 } else {
                     $message = "This email address is not registered in our system.";
                     $message_type = "danger";
@@ -48,7 +45,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_email'])) {
     }
 }
 
-// STEP 2: CUSTOMER SUBMITS CODE AND NEW PASSWORD
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_reset'])) {
     $entered_code = trim($_POST['verification_code']);
     $new_password = $_POST['new_password'];
@@ -75,7 +71,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_reset'])) {
         $step = 2;
     } else {
         if (isset($conn)) {
-            // SECURE UPDATE: Converting plain text into a strong cryptographic hash
             $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
             
             $update_stmt = $conn->prepare("UPDATE customers SET cust_password = ? WHERE cust_id = ?");
@@ -158,7 +153,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_reset'])) {
                     <input type="hidden" name="submit_email" value="1">
                     <div class="mb-4">
                         <label for="emailInput" class="form-label">Registered Email Address</label>
-                        <input type="email" name="email" id="emailInput" class="form-control" placeholder="e.g., amzar06@gmail.com" required>
+                        <input type="email" name="email" id="emailInput" class="form-control" placeholder="e.g., abc@gmail.com" required>
                     </div>
                     <button type="submit" class="btn btn-submit w-100 mb-3">
                         Request Verification Code <i class="fa-solid fa-arrow-right ms-1"></i>
