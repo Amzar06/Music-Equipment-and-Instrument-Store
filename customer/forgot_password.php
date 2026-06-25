@@ -4,6 +4,7 @@ include '../database.php';
 
 $message = "";
 $message_type = ""; 
+$success = false; // Flag to track successful password change
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_email'])) {
     $email = trim($_POST['email']);
@@ -55,9 +56,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_email'])) {
                             $update_stmt->bind_param("si", $hashed_password, $user['cust_id']);
                             
                             if ($update_stmt->execute()) {
-                                // Redirect straight to the customer login page upon successful update
-                                header("Location: /Music-Equipment-and-Instrument-Store/product/cust login.php");
-                                exit();
+                                // Set success flag to true instead of doing an immediate PHP redirect
+                                $success = true;
                             } else {
                                 $message = "Database error. Failed to save password mapping.";
                                 $message_type = "danger";
@@ -211,5 +211,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_email'])) {
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <?php if ($success): ?>
+    <script>
+        alert("Your password has been updated successfully!");
+        window.location.href = "/Music-Equipment-and-Instrument-Store/product/cust login.php";
+    </script>
+    <?php endif; ?>
+
 </body>
 </html>
