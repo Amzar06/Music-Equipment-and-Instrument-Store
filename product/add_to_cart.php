@@ -94,41 +94,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prod_id'])) {
         $gearName = $rRow['prod_name'] ?? 'Instrument';
         $getRentalStock->close();
 
-        // 1. Check DB for already confirmed bookings
+        // 1. Fetch all overlapping booked items (including 2-day buffer)
         $checkDB = $conn->prepare("
-            SELECT SUM(ri.rental_qty) as used
+            SELECT r.start_date, r.end_date, ri.rental_qty
             FROM rental_items ri 
             JOIN rentals r ON ri.rental_id = r.rental_id 
             WHERE ri.prod_id = ? 
             AND r.status NOT IN ('Cancelled', 'Returned')
-            AND (
-                (? BETWEEN r.start_date AND DATE_ADD(r.end_date, INTERVAL 2 DAY)) OR
-                (? BETWEEN r.start_date AND DATE_ADD(r.end_date, INTERVAL 2 DAY)) OR
-                (r.start_date BETWEEN ? AND ?)
-            )
+            AND r.start_date <= DATE_ADD(?, INTERVAL 2 DAY)
+            AND DATE_ADD(r.end_date, INTERVAL 2 DAY) >= ?
         ");
-        $checkDB->bind_param("issss", $prod_id, $start_date, $end_date, $start_date, $end_date);
+        $checkDB->bind_param("iss", $prod_id, $end_date, $start_date);
         $checkDB->execute();
-        $dbCount = $checkDB->get_result()->fetch_assoc()['used'] ?? 0;
+        $dbRes = $checkDB->get_result();
+        $dbRentals = [];
+        while($row = $dbRes->fetch_assoc()) {
+            $dbRentals[] = $row;
+        }
         $checkDB->close();
 
-        // 2. Check current cart items that might overlap
+        // 2. Fetch all overlapping cart items (including 2-day buffer)
         $checkCartItems = $conn->prepare("
-            SELECT SUM(quantity) as in_cart
+            SELECT start_date, end_date, quantity
             FROM cart_items
             WHERE cart_id = ? AND prod_id = ?
-            AND (
-                (? BETWEEN start_date AND end_date) OR
-                (? BETWEEN start_date AND end_date) OR
-                (start_date BETWEEN ? AND ?)
-            )
+            AND start_date IS NOT NULL
+            AND end_date IS NOT NULL
+            AND start_date <= DATE_ADD(?, INTERVAL 2 DAY)
+            AND DATE_ADD(end_date, INTERVAL 2 DAY) >= ?
         ");
-        $checkCartItems->bind_param("iissss", $cart_id, $prod_id, $start_date, $end_date, $start_date, $end_date);
+        $checkCartItems->bind_param("iiss", $cart_id, $prod_id, $end_date, $start_date);
         $checkCartItems->execute();
-        $cartOverlapCount = $checkCartItems->get_result()->fetch_assoc()['in_cart'] ?? 0;
+        $cartRes = $checkCartItems->get_result();
+        $cartRentals = [];
+        while($row = $cartRes->fetch_assoc()) {
+            $cartRentals[] = $row;
+        }
         $checkCartItems->close();
 
-        if (($dbCount + $cartOverlapCount + 1) > $rentalMax) {
+        // 3. Day-by-day capacity validation
+        $conflict = false;
+        $start_ts = strtotime($start_date);
+        $end_ts = strtotime($end_date);
+        
+        for ($ts = $start_ts; $ts <= ($end_ts + 2 * 24 * 60 * 60); $ts += 24 * 60 * 60) {
+            $activeCount = 0;
+            
+            // SUM active bookings from DB
+            foreach ($dbRentals as $rental) {
+                $r_start = strtotime($rental['start_date']);
+                $r_end_buf = strtotime($rental['end_date']) + 2 * 24 * 60 * 60;
+                if ($ts >= $r_start && $ts <= $r_end_buf) {
+                    $activeCount += (int)$rental['rental_qty'];
+                }
+            }
+            
+            // SUM active bookings from Cart
+            foreach ($cartRentals as $rental) {
+                $c_start = strtotime($rental['start_date']);
+                $c_end_buf = strtotime($rental['end_date']) + 2 * 24 * 60 * 60;
+                if ($ts >= $c_start && $ts <= $c_end_buf) {
+                    $activeCount += (int)$rental['quantity'];
+                }
+            }
+            
+            if (($activeCount + 1) > $rentalMax) {
+                $conflict = true;
+                break;
+            }
+        }
+
+        if ($conflict) {
             // No more room! Either fully booked or already in your cart
             header("Location: rent page.php?error=already_booked&name=" . urlencode($gearName));
             exit;

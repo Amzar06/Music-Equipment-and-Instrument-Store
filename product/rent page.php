@@ -12,7 +12,7 @@ $cust_id = $_SESSION['cust_id'];
 $bookedPeriods = [];
 if (isset($conn)) {
     $bookingCheck = $conn->query("
-        SELECT ri.prod_id, r.start_date, r.end_date 
+        SELECT ri.prod_id, r.start_date, r.end_date, ri.rental_qty 
         FROM rental_items ri 
         JOIN rentals r ON ri.rental_id = r.rental_id 
         WHERE r.status NOT IN ('Cancelled', 'Returned')
@@ -22,7 +22,8 @@ if (isset($conn)) {
         if (!isset($bookedPeriods[$p_id])) $bookedPeriods[$p_id] = [];
         $bookedPeriods[$p_id][] = [
             'from' => $booking['start_date'],
-            'to' => $booking['end_date']
+            'to' => $booking['end_date'],
+            'qty' => (int)$booking['rental_qty']
         ];
     }
 }
@@ -256,6 +257,7 @@ $next_rentable_date = null;
                                 <label style="display:block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 6px;">Select Rental Period <span style="color: #ef4444;">*</span></label>
                                 <input type="text" class="range-picker" placeholder="<?php echo !$rent_btn_disabled ? 'Choose dates..' : $btn_text; ?>" readonly 
                                        data-prod-id="<?php echo $product['prod_id']; ?>"
+                                       data-stock="<?php echo htmlspecialchars($product['prod_rental_qty']); ?>"
                                        <?php echo $rent_btn_disabled ? 'disabled' : ''; ?>
                                        style="padding: 12px; font-size: 0.95rem; background: <?php echo !$rent_btn_disabled ? 'white' : '#f1f5f9'; ?>; cursor: <?php echo !$rent_btn_disabled ? 'pointer' : 'not-allowed'; ?>; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%;">
                             </div>
@@ -333,23 +335,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const datePickers = document.querySelectorAll(".range-picker");
     datePickers.forEach(picker => {
         const pId = picker.getAttribute('data-prod-id');
+        const stockLimit = parseInt(picker.getAttribute('data-stock') || '1');
         const bookedForThisItem = bookedPeriodsJson[pId] || [];
         
-        const excludedDates = bookedForThisItem.map(range => {
-            const sDate = new Date(range.from);
-            const eDate = new Date(range.to);
-            // Maintenance buffer (+2 days)
-            const buffer = new Date(eDate);
-            buffer.setDate(buffer.getDate() + 2); 
-            
-            return { from: sDate, to: buffer };
-        });
-
         fpInstances[pId] = flatpickr(picker, {
             mode: "range",
             minDate: "today",
             dateFormat: "Y-m-d",
-            disable: excludedDates,
+            disable: [
+                function(date) {
+                    const checkDate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+                    let activeBookings = 0;
+                    for (const range of bookedForThisItem) {
+                        const [fY, fM, fD] = range.from.split('-');
+                        const start = new Date(fY, fM - 1, fD, 0, 0, 0, 0);
+                        
+                        const [tY, tM, tD] = range.to.split('-');
+                        const end = new Date(tY, tM - 1, tD, 23, 59, 59, 999);
+                        end.setDate(end.getDate() + 2); // 2-day buffer
+                        
+                        if (checkDate >= start && checkDate <= end) {
+                            activeBookings += range.qty;
+                        }
+                    }
+                    return activeBookings >= stockLimit;
+                }
+            ],
             onClose: function(selectedDates, dateStr, instance) {
                 if (selectedDates.length === 2) {
                     const s = instance.formatDate(selectedDates[0], "Y-m-d");
