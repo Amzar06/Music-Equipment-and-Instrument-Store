@@ -87,7 +87,7 @@ $next_rentable_date = null;
     <style>
         .flatpickr-calendar { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 12px; }
         .flatpickr-day.selected { background: #2563eb !important; border-color: #2563eb !important; }
-        
+
         /* Lightbox Styles */
         #lightbox {
             display: none;
@@ -106,17 +106,26 @@ $next_rentable_date = null;
             box-shadow: 0 0 40px rgba(0,0,0,0.5);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        /* Profile Icon Dropdown */
+        .user-dropdown-toggle {
+            color: rgba(255, 255, 255, 0.85) !important;
+            font-size: 1.35rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .user-dropdown-toggle:hover {
+            color: #20c997 !important;
+        }
+        .dropdown-menu-end {
+            right: 0;
+            left: auto;
+        }
     </style>
 </head>
-<!-- Add Bootstrap & FontAwesome -->
+<!-- Bootstrap & FontAwesome -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-    .navbar-custom { background-color: #0d3b8e; padding: 12px 0; }
-    .navbar-brand, .navbar-nav .nav-link { color: white !important; }
-    .nav-link:hover { opacity: 0.8; }
-    .container-nav { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
-</style>
 
 <body>
 
@@ -127,12 +136,31 @@ $next_rentable_date = null;
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navLogged">
-            <ul class="navbar-nav ms-auto" style="gap: 15px;">
+            <ul class="navbar-nav ms-auto align-items-center" style="gap: 15px;">
                 <li class="nav-item"><a class="nav-link" href="../customer/home_page.php">Home</a></li>
                 <li class="nav-item"><a class="nav-link active" href="product page.php">Products</a></li>
                 <li class="nav-item"><a class="nav-link" href="payment history.php">My Orders</a></li>
-                <li class="nav-item"><a class="nav-link" href="../customer/user_profile_page.php">Profile</a></li>
-                <li class="nav-item"><a class="nav-link" href="../customer/logout_page.php">Logout</a></li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle user-dropdown-toggle" id="userMenuRent" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-circle-user"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm mt-2" aria-labelledby="userMenuRent">
+                        <?php if ($userLoggedIn): ?>
+                            <li class="px-3 py-1 text-muted small fw-bold text-uppercase">
+                                Hi, <?php echo htmlspecialchars($_SESSION['cust_name'] ?? 'Customer'); ?>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="../customer/user_profile_page.php"><i class="fa-regular fa-id-card me-2"></i> My Profile</a></li>
+                            <li><a class="dropdown-item" href="payment history.php"><i class="fa-solid fa-clock-history me-2"></i> Orders</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="../customer/logout_page.php" onclick="return confirmLogout(event);"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</a></li>
+                        <?php else: ?>
+                            <li><a class="dropdown-item" href="cust login.php"><i class="fa-solid fa-right-to-bracket me-2"></i> Login</a></li>
+                            <li><a class="dropdown-item" href="../customer/register_page.php"><i class="fa-solid fa-user-plus me-2"></i> Create Account</a></li>
+                        <?php endif; ?>
+                    </ul>
+                </li>
             </ul>
         </div>
     </div>
@@ -278,7 +306,17 @@ $next_rentable_date = null;
 
 <!-- Flatpickr JS -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+function confirmLogout(event) {
+    const confirmed = confirm("Are you sure you want to log out of your account?");
+    if (!confirmed) {
+        event.preventDefault();
+        return false;
+    }
+    return true;
+}
+
 function openLightbox(event, imgSrc) {
     event.stopPropagation();
     const lightbox = document.getElementById('lightbox');
