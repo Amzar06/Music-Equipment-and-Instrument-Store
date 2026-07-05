@@ -143,19 +143,19 @@ $is_logged_in = isset($_SESSION['cust_id']);
         <div class="col-md-4 text-center">
             <img src="https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&w=600&q=80" class="product-img" alt="Acoustic Guitar">
             <h5 class="mt-3">Acoustic Guitar</h5>
-            <a href="../product/product page.php" class="btn btn-primary px-4 mt-2 text-white">View</a>
+            <a href="../product/product page.php?category=guitar+and+basses" class="btn btn-primary px-4 mt-2 text-white">View</a>
         </div>
 
         <div class="col-md-4 text-center">
             <img src="https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?auto=format&fit=crop&w=600&q=80" class="product-img" alt="Digital Piano">
             <h5 class="mt-3">Digital Piano</h5>
-            <a href="../product/product page.php" class="btn btn-primary px-4 mt-2 text-white">View</a>
+            <a href="../product/product page.php?category=keyboard+and+pianos" class="btn btn-primary px-4 mt-2 text-white">View</a>
         </div>
 
         <div class="col-md-4 text-center">
             <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQiLvcVnuRu_HM5vcZU2K6q89uJuTWaib2Ykt8xEz_7ySjfc5j6eGBALIQxmGdc" class="product-img" alt="Drum Set">
             <h5 class="mt-3">Drum Set</h5>
-            <a href="../product/product page.php" class="btn btn-primary px-4 mt-2 text-white">View</a>
+            <a href="../product/product page.php?category=drums+%26+percussion" class="btn btn-primary px-4 mt-2 text-white">View</a>
         </div>
     </div>
 </section>
@@ -164,23 +164,38 @@ $is_logged_in = isset($_SESSION['cust_id']);
     <h2 class="mb-4">Shop By Category</h2>
     <div class="row g-3">
         <div class="col-md-3">
-            <a href="../product/product page.php?category=guitar" class="btn btn-outline-dark category-btn">
-                🎸 Guitars
+            <a href="../product/product page.php?category=guitar+and+basses" class="btn btn-outline-dark category-btn">
+                🎸 Guitar and Basses
             </a>
         </div>
         <div class="col-md-3">
-            <a href="../product/product page.php?category=piano" class="btn btn-outline-dark category-btn">
-                🎹 Pianos
+            <a href="../product/product page.php?category=keyboard+and+pianos" class="btn btn-outline-dark category-btn">
+                🎹 Keyboard and Pianos
             </a>
         </div>
         <div class="col-md-3">
-            <a href="../product/product page.php?category=drum" class="btn btn-outline-dark category-btn">
-                🥁 Drums
+            <a href="../product/product page.php?category=drums+%26+percussion" class="btn btn-outline-dark category-btn">
+                🥁 Drums &amp; Percussion
             </a>
         </div>
         <div class="col-md-3">
-            <a href="../product/product page.php?category=violin" class="btn btn-outline-dark category-btn">
-                🎻 Violins
+            <a href="../product/product page.php?category=orchestral+strings" class="btn btn-outline-dark category-btn">
+                🎻 Orchestral Strings
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="../product/product page.php?category=brass" class="btn btn-outline-dark category-btn">
+                🎺 Brass
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="../product/product page.php?category=woodwinds" class="btn btn-outline-dark category-btn">
+                🎷 Woodwinds
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="../product/product page.php?category=pro+audio+%26+studio+gear" class="btn btn-outline-dark category-btn">
+                🎚️ Pro Audio &amp; Studio Gear
             </a>
         </div>
     </div>
