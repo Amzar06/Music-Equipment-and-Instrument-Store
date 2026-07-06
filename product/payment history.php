@@ -62,17 +62,20 @@ if (isset($conn)) {
                    (SELECT p.prod_name FROM order_items oi JOIN products p ON oi.prod_id = p.prod_id WHERE oi.order_id = o.order_id LIMIT 1) as prod_name,
                    (SELECT p.prod_image FROM order_items oi JOIN products p ON oi.prod_id = p.prod_id WHERE oi.order_id = o.order_id LIMIT 1) as prod_image,
                    (SELECT SUM(oi.order_qty) FROM order_items oi WHERE oi.order_id = o.order_id) as total_qty,
-                   NULL as start_date, NULL as end_date, o.delivered_at
+                   NULL as start_date, NULL as end_date, o.delivered_at,
+                   0 as return_pending
             FROM orders o
             LEFT JOIN addresses a ON o.address_id = a.address_id
             WHERE o.cust_id = ?
             
             UNION ALL
-                        SELECT 'Rental' as type, r.rental_id as id, r.total_amount, r.status, r.created_at as date, a.street, a.city, a.state, a.postcode,
+
+            SELECT 'Rental' as type, r.rental_id as id, r.total_amount, r.status, r.created_at as date, a.street, a.city, a.state, a.postcode,
                    (SELECT p.prod_name FROM rental_items ri JOIN products p ON ri.prod_id = p.prod_id WHERE ri.rental_id = r.rental_id LIMIT 1) as prod_name,
                    (SELECT p.prod_image FROM rental_items ri JOIN products p ON ri.prod_id = p.prod_id WHERE ri.rental_id = r.rental_id LIMIT 1) as prod_image,
                    (SELECT SUM(ri.rental_qty) FROM rental_items ri WHERE ri.rental_id = r.rental_id) as total_qty,
-                   r.start_date, r.end_date, NULL as delivered_at
+                   r.start_date, r.end_date, NULL as delivered_at,
+                   (SELECT COUNT(*) FROM rental_items ri WHERE ri.rental_id = r.rental_id AND ri.return_status = 'Returned') as return_pending
             FROM rentals r
             LEFT JOIN addresses a ON r.address_id = a.address_id
             WHERE r.cust_id = ?
@@ -289,7 +292,8 @@ if (isset($conn)) {
 
                                     <?php 
                                         $s = strtolower($order['status'] ?? '');
-                                        if (in_array($s, ['pending', 'processing'])): 
+                                        $has_return_pending = !empty($order['return_pending']) && intval($order['return_pending']) > 0;
+                                        if (in_array($s, ['pending', 'processing']) && !$has_return_pending): 
                                     ?>
                                         <a href="?action=cancel&id=<?php echo $order['id']; ?>&type=<?php echo $order['type']; ?>" 
                                            onclick="return confirm('Are you sure you want to cancel?')"

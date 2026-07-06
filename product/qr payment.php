@@ -291,6 +291,9 @@ $payment_method = $_GET['payment_method'] ?? 'card';
             <input type="hidden" name="start_date"   value="<?php echo htmlspecialchars($start_date); ?>">
             <input type="hidden" name="end_date"     value="<?php echo htmlspecialchars($end_date); ?>">
             <input type="hidden" name="days"         value="<?php echo htmlspecialchars($days); ?>">
+        <?php elseif (isset($_GET['type']) && $_GET['type'] === 'buy'): ?>
+            <input type="hidden" name="type"         value="buy">
+            <input type="hidden" name="product_id"   value="<?php echo htmlspecialchars($product_id); ?>">
         <?php endif; ?>
         <input type="hidden" name="delivery_type"    value="<?php echo htmlspecialchars($delivery_type); ?>">
         <input type="hidden" name="full_name"        value="<?php echo htmlspecialchars($display_name); ?>">
