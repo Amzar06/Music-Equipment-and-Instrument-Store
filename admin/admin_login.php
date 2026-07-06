@@ -22,23 +22,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $result = mysqli_query($conn, $query);
 
     if (mysqli_num_rows($result) == 1) {
-        $staff = mysqli_fetch_assoc($result);
-        
-        // Use password_verify to check user input with the database hash
-        
-            $_SESSION['staff_id'] = $staff['staff_id'];
-            $_SESSION['staff_name'] = $staff['staff_name']; 
-            $_SESSION['staff_role'] = $staff['staff_role'];
-            header("Location: admin_dashboard.php");
-            exit();
-        } else {
-            $error = "Invalid password.";
-        }
-    } else {
-        $error = "Email not found.";
-    }
+    $staff = mysqli_fetch_assoc($result);
 
+    if (password_verify($password, $staff['staff_password'])) {
+        $_SESSION['staff_id'] = $staff['staff_id'];
+        $_SESSION['staff_name'] = $staff['staff_name'];
+        $_SESSION['staff_role'] = $staff['staff_role'];
+        header("Location: admin_dashboard.php");
+        exit();
+    } else {
+        $error = "Invalid password.";
+    }
+} else {
+    $error = "Email not found.";
+}
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

@@ -54,10 +54,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['return_action'])) {
                     $message = "Database Error: " . mysqli_error($conn);
                     $message_type = "error";
                 }
-            } elseif ($action === 'writeoff') {
-                // Write-Off: Only update the transaction, DO NOT restock the product
+            } elseif ($action === 'discard') {
+                // Discard: Only update the transaction, DO NOT restock the product
                 if (mysqli_query($conn, $update_item)) {
-                    $message = "Item transaction closed. Item was written off and NOT added back to inventory.";
+                    $message = "Item transaction closed. Item was discarded and NOT added back to inventory.";
                     // Using success type so it shows green, but clear messaging
                     $message_type = "success"; 
                 } else {
@@ -138,10 +138,10 @@ require_once('admin_header.php');
                                     Restock
                                 </button>
 
-                                <button type="submit" name="return_action" value="writeoff" title="Item is damaged. Do NOT add to stock."
+                                <button type="submit" name="return_action" value="discard" title="Item is damaged. Do NOT add to stock."
                                         style="padding: 10px; background: #ef4444; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap;" 
                                         onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='#ef4444'">
-                                    Repair
+                                    Discard
                                 </button>
                             </form>
                         </td>
