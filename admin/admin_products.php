@@ -98,24 +98,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
 
 // fetch data
 
+// Fetch categories for both the add-product form and the filter dropdown
 $categories_result = mysqli_query($conn, "SELECT * FROM categories ORDER BY category_name ASC");
+$all_categories = [];
+while ($cat_row = mysqli_fetch_assoc($categories_result)) {
+    $all_categories[] = $cat_row;
+}
 
-$search = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['search']) : '';
-$sort = isset($_GET['sort']) ? $_GET['sort'] : 'newest';
-$view = isset($_GET['view']) ? $_GET['view'] : 'sale'; 
+$search      = isset($_GET['search'])      ? mysqli_real_escape_string($conn, $_GET['search']) : '';
+$sort        = isset($_GET['sort'])        ? $_GET['sort'] : 'newest';
+$filter_cat  = isset($_GET['filter_cat']) ? intval($_GET['filter_cat']) : 0;
+$view        = isset($_GET['view'])        ? $_GET['view'] : 'sale';
 
 $where_clause = "WHERE p.status != 'Discontinued'";
 if (!empty($search)) {
     $where_clause .= " AND (p.prod_name LIKE '%$search%' OR c.category_name LIKE '%$search%')";
 }
+if ($filter_cat > 0) {
+    $where_clause .= " AND p.category_id = $filter_cat";
+}
 
 $sale_where = $where_clause . " AND p.prod_sale_price > 0";
 $rent_where = $where_clause . " AND p.prod_rental_price > 0";
 
-if ($sort == 'name_asc') $order_clause = "ORDER BY p.prod_name ASC";
+if ($sort == 'name_asc')   $order_clause = "ORDER BY p.prod_name ASC";
 elseif ($sort == 'name_desc') $order_clause = "ORDER BY p.prod_name DESC";
 elseif ($sort == 'price_high') $order_clause = "ORDER BY p.prod_sale_price DESC";
-elseif ($sort == 'price_low') $order_clause = "ORDER BY p.prod_sale_price ASC";
+elseif ($sort == 'price_low')  $order_clause = "ORDER BY p.prod_sale_price ASC";
 else $order_clause = "ORDER BY p.prod_id DESC";
 
 $sale_query = "SELECT p.*, c.category_name FROM products p JOIN categories c ON p.category_id = c.category_id $sale_where $order_clause";
@@ -148,9 +157,9 @@ require_once('admin_header.php');
                 <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4b5563;">Category:</label>
                 <select name="category_id" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: white; outline: none;">
                     <option value="">-- Select Category --</option>
-                    <?php while($cat = mysqli_fetch_assoc($categories_result)): ?>
+                    <?php foreach($all_categories as $cat): ?>
                         <option value="<?php echo $cat['category_id']; ?>"><?php echo htmlspecialchars($cat['category_name']); ?></option>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                 </select>
             </div>
 
@@ -222,16 +231,26 @@ require_once('admin_header.php');
         </div>
         
         <div style="background: #f9fafb; border: 1px solid #e5e7eb; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-            <form action="admin_products.php" method="GET" style="display: flex; gap: 12px; align-items: center;">
+            <form action="admin_products.php" method="GET" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
                 <input type="hidden" name="view" value="<?php echo htmlspecialchars($view); ?>">
-                <input type="text" name="search" placeholder="Search..." value="<?php echo htmlspecialchars($search); ?>" style="flex-grow: 1; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; outline: none;">
+                <input type="text" name="search" placeholder="Search products..." value="<?php echo htmlspecialchars($search); ?>" style="flex-grow: 1; min-width: 160px; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; outline: none;">
+                <select name="filter_cat" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; min-width: 180px;">
+                    <option value="0">All Categories</option>
+                    <?php foreach($all_categories as $cat): ?>
+                        <option value="<?php echo $cat['category_id']; ?>" <?php echo ($filter_cat == $cat['category_id']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($cat['category_name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
                 <select name="sort" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; outline: none;">
                     <option value="newest" <?php echo ($sort == 'newest') ? 'selected' : ''; ?>>Newest First</option>
                     <option value="name_asc" <?php echo ($sort == 'name_asc') ? 'selected' : ''; ?>>Name (A-Z)</option>
+                    <option value="name_desc" <?php echo ($sort == 'name_desc') ? 'selected' : ''; ?>>Name (Z-A)</option>
                     <option value="price_high" <?php echo ($sort == 'price_high') ? 'selected' : ''; ?>>Highest Price</option>
+                    <option value="price_low" <?php echo ($sort == 'price_low') ? 'selected' : ''; ?>>Lowest Price</option>
                 </select>
-                <button type="submit" style="padding: 10px 20px; background: #374151; color: white; border: none; border-radius: 6px; cursor: pointer;">Apply</button>
-                <?php if(!empty($search) || $sort != 'newest'): ?>
+                <button type="submit" style="padding: 10px 20px; background: #374151; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Apply</button>
+                <?php if(!empty($search) || $sort != 'newest' || $filter_cat > 0): ?>
                     <a href="admin_products.php?view=<?php echo $view; ?>" style="color: #ef4444; font-weight: 600; text-decoration: none;">Clear</a>
                 <?php endif; ?>
             </form>

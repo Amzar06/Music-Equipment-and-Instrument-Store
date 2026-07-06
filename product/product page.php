@@ -176,10 +176,14 @@ if (isset($conn) && $userHasSession) {
 
     <div style="margin-bottom: 32px; display: flex; align-items: center; gap: 12px;">
         <label for="categoryFilter" style="font-weight: 600; color: var(--text-primary);">Sort by Category:</label>
+        <?php $preselect_cat = strtolower(trim($_GET['category'] ?? '')); ?>
         <select id="categoryFilter" style="padding: 10px 16px; font-size: 1rem; border-radius: 10px; border: 1.5px solid var(--card-border); background: #f8fafc; color: var(--text-primary); cursor: pointer;" onchange="filterCategory()">
-            <option value="all">All Instruments</option>
-            <?php foreach ($catList as $cat): ?>
-                <option value="<?php echo htmlspecialchars(strtolower($cat['category_name'])); ?>"><?php echo htmlspecialchars($cat['category_name']); ?></option>
+            <option value="all" <?php echo (empty($preselect_cat)) ? 'selected' : ''; ?>>All Instruments</option>
+            <?php foreach ($catList as $cat): 
+                $catVal = strtolower($cat['category_name']);
+                $isSelected = (!empty($preselect_cat) && $catVal === $preselect_cat) ? 'selected' : '';
+            ?>
+                <option value="<?php echo htmlspecialchars($catVal); ?>" <?php echo $isSelected; ?>><?php echo htmlspecialchars($cat['category_name']); ?></option>
             <?php endforeach; ?>
         </select>
 
@@ -211,6 +215,10 @@ if (isset($conn) && $userHasSession) {
                                 Out of Stock
                             </div>
                         <?php endif; ?>
+                        <div style="position: absolute; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.5); color: white; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; transition: background 0.2s;" title="Maximize image"
+                             onmouseover="this.style.background='rgba(0,0,0,0.8)'" onmouseout="this.style.background='rgba(0,0,0,0.5)'">
+                            <i class="fa-solid fa-expand"></i>
+                        </div>
                     </div>
                 <?php else: ?>
                     <div style="position: relative;">
@@ -325,6 +333,14 @@ function filterCategory() {
         }
     });
 }
+
+// Auto-filter on page load if a category was passed via URL
+document.addEventListener('DOMContentLoaded', function() {
+    const selectedVal = document.getElementById('categoryFilter').value;
+    if (selectedVal && selectedVal !== 'all') {
+        filterCategory();
+    }
+});
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

@@ -8,7 +8,7 @@ if (!isset($_SESSION['cust_id'])) {
 $cust_id = $_SESSION['cust_id'];
 
 $targetType = $_GET['type'] ?? '';
-$pId = $_GET['product_id'] ?? 0;
+$pId = intval($_GET['product_id'] ?? $_GET['prod_id'] ?? 0);
 $rentStart = $_GET['start_date'] ?? '';
 $rentEnd = $_GET['end_date'] ?? '';
 $checkedOutItems = $_GET['selected_items'] ?? [];
@@ -88,31 +88,49 @@ if ($targetType === 'rent' && isset($conn)) {
             $maxUnits = (int)$prodRow['prod_rental_qty'];
             $subtotal = $rentalDuration * $dailyRate;
 
-            // Check if there's space for another rental during these dates
-            // (Including the 3-day maintenance window)
+            // 1. Fetch all overlapping booked items (including 2-day buffer)
             $checkUsage = $conn->prepare("
-                SELECT SUM(ri.rental_qty) as used
+                SELECT r.start_date, r.end_date, ri.rental_qty
                 FROM rental_items ri 
                 JOIN rentals r ON ri.rental_id = r.rental_id 
                 WHERE ri.prod_id = ? 
                 AND r.status NOT IN ('Cancelled', 'Returned')
-                AND (
-                    (? BETWEEN r.start_date AND DATE_ADD(r.end_date, INTERVAL 2 DAY)) OR
-                    (? BETWEEN r.start_date AND DATE_ADD(r.end_date, INTERVAL 2 DAY)) OR
-                    (r.start_date BETWEEN ? AND ?)
-                )
+                AND r.start_date <= DATE_ADD(?, INTERVAL 2 DAY)
+                AND DATE_ADD(r.end_date, INTERVAL 2 DAY) >= ?
             ");
-            $checkUsage->bind_param("issss", $pId, $rentStart, $rentEnd, $rentStart, $rentEnd);
-            // Run the check - we sum up rental_qty for any active rental that overlaps
+            $checkUsage->bind_param("iss", $pId, $rentEnd, $rentStart);
             $checkUsage->execute();
-            $usageRes = $checkUsage->get_result()->fetch_assoc();
-            $alreadyBooked = $usageRes['used'] ?? 0;
+            $usageRes = $checkUsage->get_result();
+            $dbRentals = [];
+            while ($row = $usageRes->fetch_assoc()) {
+                $dbRentals[] = $row;
+            }
+            $checkUsage->close();
 
-            if (($alreadyBooked + 1) > $maxUnits) {
+            // 2. Day-by-day capacity validation for the new rental request
+            $conflict = false;
+            $start_ts = strtotime($rentStart);
+            $end_ts = strtotime($rentEnd);
+            
+            for ($ts = $start_ts; $ts <= ($end_ts + 2 * 24 * 60 * 60); $ts += 24 * 60 * 60) {
+                $activeCount = 0;
+                foreach ($dbRentals as $rental) {
+                    $r_start = strtotime($rental['start_date']);
+                    $r_end_buf = strtotime($rental['end_date']) + 2 * 24 * 60 * 60;
+                    if ($ts >= $r_start && $ts <= $r_end_buf) {
+                        $activeCount += (int)$rental['rental_qty'];
+                    }
+                }
+                if (($activeCount + 1) > $maxUnits) {
+                    $conflict = true;
+                    break;
+                }
+            }
+
+            if ($conflict) {
                 header("Location: rent page.php?error=already_booked&name=" . urlencode($prod_name_display));
                 exit();
             }
-            $checkUsage->close();
         }
         $getProdInfo->close();
     }
@@ -168,43 +186,68 @@ if ($targetType === 'rent' && isset($conn)) {
 
     // Verify all rentals in the cart selection don't exceed available stock
     foreach ($rentalsToVerify as $req) {
+        $pId = $req['prod_id'];
+        $maxStock = (int)$req['prod_rental_qty'];
+        $req_start = $req['start_date'];
+        $req_end = $req['end_date'];
+
+        // 1. Fetch overlapping active rentals from DB
         $checkStock = $conn->prepare("
-            SELECT SUM(ri.rental_qty) as used
+            SELECT r.start_date, r.end_date, ri.rental_qty
             FROM rental_items ri 
             JOIN rentals r ON ri.rental_id = r.rental_id 
             WHERE ri.prod_id = ? 
             AND r.status NOT IN ('Cancelled', 'Returned')
-            AND (
-                (? BETWEEN r.start_date AND DATE_ADD(r.end_date, INTERVAL 2 DAY)) OR
-                (? BETWEEN r.start_date AND DATE_ADD(r.end_date, INTERVAL 2 DAY)) OR
-                (r.start_date BETWEEN ? AND ?)
-            )
+            AND r.start_date <= DATE_ADD(?, INTERVAL 2 DAY)
+            AND DATE_ADD(r.end_date, INTERVAL 2 DAY) >= ?
         ");
-        $checkStock->bind_param("issss", $req['prod_id'], $req['start_date'], $req['end_date'], $req['start_date'], $req['end_date']);
+        $checkStock->bind_param("iss", $pId, $req_end, $req_start);
         $checkStock->execute();
-        $bookedSum = $checkStock->get_result()->fetch_assoc()['used'] ?? 0;
+        $dbRes = $checkStock->get_result();
+        $dbRentals = [];
+        while ($row = $dbRes->fetch_assoc()) {
+            $dbRentals[] = $row;
+        }
+        $checkStock->close();
+
+        // 2. Day-by-day capacity validation
+        $conflict = false;
+        $start_ts = strtotime($req_start);
+        $end_ts = strtotime($req_end);
         
-        // Also factor in OTHER items in the current checkout that might be the same product
-        $currentSelectionTotal = 0;
-        foreach ($rentalsToVerify as $other) {
-            if ($other['prod_id'] == $req['prod_id']) {
-                // Simple check: if dates cross over, we count them together
-                $s1 = $req['start_date']; $e1 = $req['end_date'];
-                $s2 = $other['start_date']; $e2 = $other['end_date'];
-                
-                // If S2 starts during R1, or E2 ends during R1, or R1 is inside R2... it's an overlap.
-                if (($s2 >= $s1 && $s2 <= $e1) || ($e2 >= $s1 && $e2 <= $e1) || ($s1 >= $s2 && $s1 <= $e2)) {
-                    $currentSelectionTotal += $other['quantity'];
+        for ($ts = $start_ts; $ts <= ($end_ts + 2 * 24 * 60 * 60); $ts += 24 * 60 * 60) {
+            $activeCount = 0;
+            
+            // Count database active rentals on this day
+            foreach ($dbRentals as $rental) {
+                $r_start = strtotime($rental['start_date']);
+                $r_end_buf = strtotime($rental['end_date']) + 2 * 24 * 60 * 60;
+                if ($ts >= $r_start && $ts <= $r_end_buf) {
+                    $activeCount += (int)$rental['rental_qty'];
                 }
+            }
+            
+            // Count other items in the current selection of the same product on this day
+            foreach ($rentalsToVerify as $selected) {
+                if ($selected['prod_id'] == $pId) {
+                    $s_start = strtotime($selected['start_date']);
+                    $s_end_buf = strtotime($selected['end_date']) + 2 * 24 * 60 * 60;
+                    if ($ts >= $s_start && $ts <= $s_end_buf) {
+                        $activeCount += (int)$selected['quantity'];
+                    }
+                }
+            }
+            
+            if ($activeCount > $maxStock) {
+                $conflict = true;
+                break;
             }
         }
 
-        // Final sanity check: combined total must stay under the stock limit
-        if (($bookedSum + $currentSelectionTotal) > $req['prod_rental_qty']) {
+        if ($conflict) {
             header("Location: cart page.php?error=conflict&name=" . urlencode($req['prod_name']));
             exit();
         }
-        $checkStock->close();
     }
 }
 ?>

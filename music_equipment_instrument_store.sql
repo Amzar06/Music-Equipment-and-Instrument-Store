@@ -83,9 +83,13 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`category_id`, `category_name`) VALUES
-(3, 'Pianos'),
-(4, 'Flutes'),
-(5, 'Acoustic Guitars');
+(1, 'Pro Audio & Studio Gear'),
+(2, 'Orchestral Strings'),
+(3, 'Brass'),
+(4, 'Woodwinds'),
+(5, 'Keyboard and Pianos'),
+(6, 'Drums & Percussion'),
+(7, 'Guitar and Basses');
 
 -- --------------------------------------------------------
 
