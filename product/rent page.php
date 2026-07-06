@@ -275,7 +275,7 @@ $next_rentable_date = null;
                             $is_out_of_stock = ($product['prod_rental_qty'] <= 0);
                             $rent_btn_disabled = !$can_rent || $is_out_of_stock;
                             $btn_text = 'Rent Now';
-                            if ($is_out_of_stock) $btn_text = 'Out of Stock';
+                            if ($is_out_of_stock) $btn_text = 'Not Available';
                             elseif (!$can_rent) $btn_text = 'Restriction Active';
                         ?>
                         <form action="add_to_cart.php" method="POST" class="rent-form" onsubmit="return validateRental(this)" style="display: flex; flex-direction: column; gap: 8px;">
