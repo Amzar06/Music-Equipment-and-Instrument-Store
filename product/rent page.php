@@ -233,9 +233,14 @@ $next_rentable_date = null;
         <?php foreach($rentalGear as $product): ?>
             <div class="card" data-category="<?php echo htmlspecialchars(strtolower($product['category_name'])); ?>" onclick="toggleExpand(this)" style="cursor: pointer;">
                 <?php if (!empty($product['prod_image'])): ?>
-                    <div onclick="openLightbox(event, '../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>')" 
-                         style="width: 100%; height: 180px; background-size: cover; background-position: center; background-image: url('../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>'); border-radius: 10px; margin-bottom: 16px; transition: transform 0.3s;"
-                         onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                    <div style="position: relative;" onclick="openLightbox(event, '../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>')">
+                        <div style="width: 100%; height: 180px; background-size: cover; background-position: center; background-image: url('../uploads/<?php echo htmlspecialchars($product['prod_image']); ?>'); border-radius: 10px; margin-bottom: 16px; transition: transform 0.3s;"
+                             onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        </div>
+                        <div style="position: absolute; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.5); color: white; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; transition: background 0.2s;" title="Maximize image"
+                             onmouseover="this.style.background='rgba(0,0,0,0.8)'" onmouseout="this.style.background='rgba(0,0,0,0.5)'">
+                            <i class="fa-solid fa-expand"></i>
+                        </div>
                     </div>
                 <?php else: ?>
                     <div style="width: 100%; height: 180px; background-color: #f1f5f9; border-radius: 10px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; color: #94a3b8; border: 2px dashed #e2e8f0;">[ No Image ]</div>
