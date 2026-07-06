@@ -176,11 +176,11 @@ require_once('admin_header.php');
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                 <div>
                                     <label style="font-size: 0.75rem; color: #6b7280; display: block; margin-bottom: 4px;">Sale Price (RM):</label>
-                                    <input type="number" step="0.01" name="prod_sale_price" id="prod_sale_price" placeholder="0.00" readonly style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; background: #f3f4f6;">
+                                    <input type="number" min="0" step="0.01" name="prod_sale_price" id="prod_sale_price" placeholder="0.00" readonly style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; background: #f3f4f6;">
                                 </div>
                                 <div>
                                     <label style="font-size: 0.75rem; color: #6b7280; display: block; margin-bottom: 4px;">Sale Quantity:</label>
-                                    <input type="number" name="prod_sale_qty" id="prod_sale_qty" placeholder="1" readonly style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; background: #f3f4f6;">
+                                    <input type="number" min="0" name="prod_sale_qty" id="prod_sale_qty" placeholder="1" readonly style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; background: #f3f4f6;">
                                 </div>
                             </div>
                         </div>
@@ -196,12 +196,12 @@ require_once('admin_header.php');
                         <div id="stock_rent_container" style="display: none; padding-left: 24px;">
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                 <div>
-                                    <label style="font-size: 0.75rem; color: #6b7280; display: block; margin-bottom: 4px;">Rental Price/Day (RM):</label>
-                                    <input type="number" step="0.01" name="prod_rental_price" id="prod_rental_price" placeholder="0.00" readonly style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; background: #f3f4f6;">
+                                    <label style="font-size: 0.75rem; color: #6b7280; display: block; margin-bottom: 4px;">Price/day (RM):</label>
+                                    <input type="number" min="0" step="0.01" name="prod_rental_price" id="prod_rental_price" placeholder="0.00" readonly style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; background: #f3f4f6;">
                                 </div>
                                 <div>
                                     <label style="font-size: 0.75rem; color: #6b7280; display: block; margin-bottom: 4px;">Rental Quantity:</label>
-                                    <input type="number" name="prod_rental_qty" id="prod_rental_qty" placeholder="1" readonly style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; background: #f3f4f6;">
+                                    <input type="number" min="0" name="prod_rental_qty" id="prod_rental_qty" placeholder="1" readonly style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; background: #f3f4f6;">
                                 </div>
                             </div>
                         </div>

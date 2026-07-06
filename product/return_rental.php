@@ -67,6 +67,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_return'])) {
     $upd = $conn->prepare("UPDATE rentals SET status = 'Processing' WHERE rental_id = ?");
     $upd->bind_param("i", $rental_id);
     if ($upd->execute()) {
+        // Mark all rental items as returned so cancel button is hidden
+        $upd_items = $conn->prepare("UPDATE rental_items SET return_status = 'Returned' WHERE rental_id = ?");
+        $upd_items->bind_param("i", $rental_id);
+        $upd_items->execute();
+        $upd_items->close();
+
         header("Location: payment history.php?return_success=rental");
         exit();
     }

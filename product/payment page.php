@@ -145,16 +145,16 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($existing_address_id !== 'new' && $existing_address_id !== 'reg') {
                 $addr_id = intval($existing_address_id);
             } elseif ($existing_address_id === 'reg') {
-                $stmt_cust = $conn->prepare("SELECT cust_name, cust_address FROM customers WHERE cust_id = ?");
+                $stmt_cust = $conn->prepare("SELECT cust_name, cust_street, cust_city, cust_state, cust_postcode FROM customers WHERE cust_id = ?");
                 $stmt_cust->bind_param("i", $cust_id);
                 $stmt_cust->execute();
                 $cust_info = $stmt_cust->get_result()->fetch_assoc();
                 $stmt_cust->close();
                 $reg_name    = $cust_info['cust_name']    ?? 'Customer';
-                $reg_street  = $cust_info['cust_address'] ?? '';
-                $reg_city    = '';
-                $reg_state   = '';
-                $reg_postcode= '';
+                $reg_street  = $cust_info['cust_street']  ?? '';
+                $reg_city    = $cust_info['cust_city']    ?? '';
+                $reg_state   = $cust_info['cust_state']   ?? '';
+                $reg_postcode= $cust_info['cust_postcode']  ?? '';
                 $addr = $conn->prepare("INSERT INTO addresses (cust_id, full_name, street, city, state, postcode) VALUES (?, ?, ?, ?, ?, ?)");
                 $addr->bind_param("isssss", $cust_id, $reg_name, $reg_street, $reg_city, $reg_state, $reg_postcode);
                 $addr->execute();
@@ -261,11 +261,18 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pay_stmt->execute();
             }
             foreach ($generated_rental_ids as $r_id) {
-                // Here we need the total per rental group. For simplicity, we can do more work, but let's assume we have it.
-                // Actually let's just record one consolidated payment if preferred, or multiple.
-                // Database schema for payments usually has one order_id OR one rental_id.
-                // We'll insert one payment per generated ID.
+                $stmt_amt = $conn->prepare("SELECT total_amount FROM rentals WHERE rental_id = ?");
+                $stmt_amt->bind_param("i", $r_id);
+                $stmt_amt->execute();
+                $r_amt_row = $stmt_amt->get_result()->fetch_assoc();
+                $stmt_amt->close();
+                $r_amount = floatval($r_amt_row['total_amount'] ?? 0);
+                
+                $null_order = null;
+                $pay_stmt->bind_param("iiidss", $cust_id, $null_order, $r_id, $r_amount, $payment_method, $payment_status);
+                $pay_stmt->execute();
             }
+            $pay_stmt->close();
 
             // 4. Clear Cart
             if ($is_rent === false) {
@@ -297,20 +304,55 @@ if (isset($conn) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <title>Payment Status</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+        .success-card {
+            background: white;
+            padding: 48px 32px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08), 0 8px 20px -6px rgba(0,0,0,0.05);
+            max-width: 550px;
+            width: 90%;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .success-card h2 {
+            background: none !important;
+            -webkit-background-clip: initial !important;
+            background-clip: initial !important;
+            -webkit-text-fill-color: initial !important;
+            color: #1e293b !important;
+            font-size: 2rem;
+            margin-top: 8px;
+            margin-bottom: 16px;
+            font-weight: 700;
+        }
+    </style>
 </head>
 <body>
 
-<div class="container text-center">
+<div class="success-card">
     <?php if ($db_error): ?>
         <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 16px; border-radius: 8px; margin-bottom: 16px; text-align: left;">
             <strong>Error:</strong> <?php echo htmlspecialchars($db_error); ?>
         </div>
     <?php endif; ?>
     
-    <div style="font-size: 4rem; color: var(--success); margin-bottom: 16px;">✓</div>
+    <div style="font-size: 4.5rem; color: #10b981; margin-bottom: 8px; line-height: 1;">✓</div>
     <h2>Receipt Submitted!</h2>
-    <p class="mb-4">Your payment receipt has been received and will be verified by an admin shortly.<br>Once verified, your order will be processed for delivery.</p>
-    <a href="payment history.php" style="padding: 12px 24px; background: var(--accent); color: white; border-radius: 8px; display: inline-block;">View Order History</a>
+    <p class="mb-4" style="color: #64748b; font-size: 1rem; line-height: 1.6; margin-bottom: 24px;">Your payment receipt has been received and will be verified by an admin shortly.<br>Once verified, your order will be processed for delivery.</p>
+    <a href="payment history.php" style="padding: 12px 28px; background: #2563eb; color: white; border-radius: 10px; display: inline-block; font-weight: 700; text-decoration: none; margin-top: 0; box-shadow: 0 4px 12px rgba(37,99,235,0.2); transition: all 0.2s;" onmouseover="this.style.background='#1d4ed8'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#2563eb'; this.style.transform='translateY(0)'">View Order History</a>
 </div>
 
 </body>

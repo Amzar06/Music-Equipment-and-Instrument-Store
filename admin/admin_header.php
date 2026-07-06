@@ -1,3 +1,9 @@
+<?php
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +13,14 @@
     <link rel="stylesheet" href="admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https... ">
+    <script>
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) {
+            window.location.reload(); 
+        }
+    });
+    </script>
 </head>
 <body>
 
