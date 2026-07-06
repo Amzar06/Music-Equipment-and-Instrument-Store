@@ -1,4 +1,5 @@
 <?php
+mysqli_report(MYSQLI_REPORT_OFF);
 $host = "localhost";
 $user = "root";
 $password = "";
