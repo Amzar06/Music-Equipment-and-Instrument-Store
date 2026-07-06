@@ -49,24 +49,33 @@ if (isset($conn)) {
     }
     $stmt_cust->close();
 
-    // 2. Fetch recent addresses
-    $stmt_addr = $conn->prepare("SELECT * FROM addresses WHERE cust_id = ? ORDER BY created_at DESC");
+    // 2. Fetch recent addresses (ensure street name is not empty)
+    $stmt_addr = $conn->prepare("SELECT * FROM addresses WHERE cust_id = ? AND street IS NOT NULL AND TRIM(street) != '' ORDER BY created_at DESC");
     $stmt_addr->bind_param("i", $cust_id);
     $stmt_addr->execute();
     $res_addr = $stmt_addr->get_result();
-    $primary = !empty($existing_addresses) ? $existing_addresses[0] : null;
     while ($row = $res_addr->fetch_assoc()) {
-        if (count($existing_addresses) >= 4) break;
-        if ($primary) {
-            $is_same = (
-                trim($row['full_name']) == trim($primary['full_name']) &&
-                trim($row['street'])    == trim($primary['street'])    &&
-                trim($row['city'])      == trim($primary['city'])      &&
-                trim($row['state'])     == trim($primary['state'])     &&
-                trim($row['postcode'])  == trim($primary['postcode'])
-            );
-            if ($is_same) continue;
+        if (count($existing_addresses) >= 8) break;
+        
+        // De-duplicate against all already listed addresses
+        $is_duplicate = false;
+        foreach ($existing_addresses as $existing) {
+            if (
+                trim($row['full_name']) === trim($existing['full_name']) &&
+                trim($row['street'])    === trim($existing['street'])    &&
+                trim($row['city'])      === trim($existing['city'])      &&
+                trim($row['state'])     === trim($existing['state'])     &&
+                trim($row['postcode'])  === trim($existing['postcode'])
+            ) {
+                $is_duplicate = true;
+                break;
+            }
         }
+        
+        if ($is_duplicate) {
+            continue;
+        }
+
         $row['is_reg'] = false;
         $row['label']  = "Created Address: " . $row['street'] . " (" . $row['full_name'] . ")";
         $existing_addresses[] = $row;
