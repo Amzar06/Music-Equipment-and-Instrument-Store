@@ -142,7 +142,7 @@ $is_logged_in = isset($_SESSION['cust_id']);
     <div class="row g-4">
         <div class="col-md-4 text-center">
             <img src="https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&w=600&q=80" class="product-img" alt="Acoustic Guitar">
-            <h5 class="mt-3">Acoustic Guitar</h5>
+            <h5 class="mt-3">Guitars</h5>
             <a href="../product/product page.php?category=guitar+and+basses" class="btn btn-primary px-4 mt-2 text-white">View</a>
         </div>
 
