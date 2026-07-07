@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_staff'])) {
 $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, trim($_GET['search'])) : '';
 $sort = isset($_GET['sort']) ? $_GET['sort'] : 'name_asc';
 
-$where_clause = "WHERE status NOT IN('Inactive', 'Unavailable')";
+$where_clause = "WHERE status NOT IN!= 'Inactive'";
 if (!empty($search)) $where_clause .= " AND (staff_name LIKE '%$search%' OR staff_email LIKE '%$search%')";
 $order_clause = ($sort == 'name_desc') ? "ORDER BY staff_name DESC" : (($sort == 'role_admin') ? "ORDER BY FIELD(staff_role, 'Administrator', 'Staff'), staff_name ASC" : "ORDER BY staff_name ASC");
 
