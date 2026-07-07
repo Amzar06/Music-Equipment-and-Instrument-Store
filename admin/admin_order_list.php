@@ -157,13 +157,13 @@ require_once('admin_header.php');
                             </td>
                         </tr>
                         
-                        < !-- expandable details row -->
+                        <!-- expandable details row -->
 
                         <tr id="details-<?php echo $order_id; ?>" style="display: none; background: #f8fafc; border-bottom: 2px solid #e5e7eb;">
                             <td colspan="6" style="padding: 0;">
                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; padding: 24px; border-left: 4px solid #4f46e5;">
                                     
-                                     < !-- customer & delivery method -->
+                                     <!-- customer & delivery method -->
 
                                     <div>
                                         <h4 style="margin: 0 0 12px 0; color: #111827; font-size: 0.95rem; border-bottom: 1px solid #d1d5db; padding-bottom: 8px;">Customer & Fulfillment</h4>
