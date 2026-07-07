@@ -150,7 +150,7 @@ require_once('admin_header.php');
                             </td>
                             <td style="padding: 16px; text-align: right;">
 
-                            <!-- togle hidden details row
+                            <!-- togle hidden details row -->
                                 <button onclick="toggleDetails(<?php echo $order_id; ?>)" style="background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 6px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">
                                     View Details ⮟
                                 </button>
@@ -297,7 +297,7 @@ require_once('admin_header.php');
 <script>
 
     //show or hide details row
-    
+
 function toggleDetails(id) {
     var detailsRow = document.getElementById('details-' + id);
     var mainRow = document.getElementById('row-' + id);

@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_product'])) {
     $p_sale_price   = isset($_POST['prod_sale_price']) ? floatval($_POST['prod_sale_price']) : 0;
     $p_sale_qty     = isset($_POST['prod_sale_qty']) ? intval($_POST['prod_sale_qty']) : 0;
     $p_rental_price = isset($_POST['prod_rental_price']) ? floatval($_POST['prod_rental_price']) : 0;
-    $p_rental_qty   = isset($_POST['prod_rental_qty']) ? intval($_POST['prod_rental_qty']) : 0;
+    $p_rental_qty   = 1;
 
     $update_query = "UPDATE products SET 
                         prod_name = '$p_name',
@@ -129,7 +129,8 @@ require_once('admin_header.php');
                     <input type="number" step="0.01" name="prod_rental_price" value="<?php echo $product['prod_rental_price']; ?>" <?php echo $is_rent_allowed ? 'required' : 'disabled'; ?> style="width: 100%; padding: 8px; margin-bottom: 12px; border: 1px solid #fde68a; border-radius: 4px; background: <?php echo $is_rent_allowed ? '#fff' : '#e5e7eb'; ?>;">
                     
                     <label style="display: block; margin-bottom: 4px; font-size: 0.85rem; color: #b45309; font-weight: bold;">Available Stock (Rentals)</label>
-                    <input type="number" name="prod_rental_qty" value="<?php echo $product['prod_rental_qty']; ?>" <?php echo $is_rent_allowed ? 'required' : 'disabled'; ?> style="width: 100%; padding: 8px; border: 1px solid #fde68a; border-radius: 4px; background: <?php echo $is_rent_allowed ? '#fff' : '#e5e7eb'; ?>;">
+                    <input type="number" name="prod_rental_qty" value="1" max="1" min="1" readonly style="width: 100%; padding: 8px; border: 1px solid #fde68a; border-radius: 4px; background: #e5e7eb;">
+                    <small style="color: #9ca3af; font-size: 0.75rem;">Rental quantity is fixed at 1 per item.</small>
                 </div>
             </div>
 
