@@ -47,7 +47,7 @@ $recent_rentals = mysqli_query($conn, "
 require_once('admin_header.php');
 ?>
 
-//stat cards 
+<!--stat cards -->
 
 <div class="stats-grid">
     <div class="stat-card">
@@ -74,7 +74,8 @@ require_once('admin_header.php');
     </div>
 </div>
 
-// recent sales + rentals
+<!-- recent sales + rentals -->
+ 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
     
     <div class="table-container" style="margin-top: 0;">

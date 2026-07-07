@@ -53,7 +53,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
 
     $prod_sale_qty = 0;
     $prod_rental_qty = 0;
-    $prod_deposit = 0.00; // Default fallback for deposit
 
     if ($product_type === 'sale' || $product_type === 'both') {
         $prod_sale_qty = intval(preg_replace('/[^0-9]/', '', $_POST['prod_sale_qty'] ?? 0));
@@ -61,8 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
     if ($product_type === 'rent' || $product_type === 'both') {
         // Enforce rental quantity to exactly 1 on the server side
         $prod_rental_qty = 1;
-        // Capture the new deposit value from the form
-        $prod_deposit = !empty($_POST['prod_deposit']) ? floatval($_POST['prod_deposit']) : 0.00;
     }
     
     $prod_sale_price   = isset($_POST['for_sale']) ? floatval($_POST['prod_sale_price']) : 0;
@@ -82,8 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
             $_SESSION['flash_type'] = "error";
         } else {
             // Updated INSERT statement to include prod_deposit
-            $insert_query = "INSERT INTO products (prod_name, category_id, staff_id, prod_description, prod_sale_price, prod_rental_price, prod_sale_qty, prod_rental_qty, prod_deposit, prod_image, status) "
-                          . "VALUES ('$prod_name', $category_id, $staff_id, '$prod_description', $prod_sale_price, $prod_rental_price, $prod_sale_qty, $prod_rental_qty, $prod_deposit, '$image_name', 'Available')";
+            $insert_query = "INSERT INTO products (prod_name, category_id, staff_id, prod_description, prod_sale_price, prod_rental_price, prod_sale_qty, prod_rental_qty, prod_image, status) "
+                          . "VALUES ('$prod_name', $category_id, $staff_id, '$prod_description', $prod_sale_price, $prod_rental_price, $prod_sale_qty, $prod_rental_qty, '$image_name', 'Available')";
             
             if (mysqli_query($conn, $insert_query)) {
                 $_SESSION['flash_message'] = "New instrument added to inventory successfully!";
@@ -207,11 +204,6 @@ require_once('admin_header.php');
     </div>
     <input type="hidden" name="prod_rental_qty" id="prod_rental_qty" value="1">
  </div>
-                            <!-- Deposit Amount Input Container -->
-                            <div style="margin-top: 12px;">
-                                <label style="font-size: 0.75rem; color: #6b7280; display: block; margin-bottom: 4px;">Deposit Amount (RM):</label>
-                                <input type="number" min="0" step="0.01" name="prod_deposit" id="prod_deposit" placeholder="0.00" readonly style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; background: #f3f4f6;">
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -332,7 +324,6 @@ require_once('admin_header.php');
         
         const priceInput = document.getElementById('prod_' + inputSuffix + '_price');
         const qtyInput = document.getElementById('prod_' + inputSuffix + '_qty');
-        const depositInput = document.getElementById('prod_deposit'); // Selected deposit field
         
         if (checkbox.checked) {
             container.style.display = 'block';
@@ -346,12 +337,6 @@ require_once('admin_header.php');
                 qtyInput.style.background = '#f3f4f6';
                 qtyInput.value = '1';
                 
-                // Enable deposit field when rent checkbox is checked
-                if (depositInput) {
-                    depositInput.readOnly = false;
-                    depositInput.style.background = '#ffffff';
-                    depositInput.setAttribute('required', 'true');
-                }
             } else {
                 qtyInput.readOnly = false;
                 qtyInput.style.background = '#ffffff';
@@ -368,14 +353,6 @@ require_once('admin_header.php');
             qtyInput.style.background = '#f3f4f6';
             qtyInput.removeAttribute('required');
             qtyInput.value = '';
-
-            // Clean and disable deposit field if unchecked
-            if (type === 'rent' && depositInput) {
-                depositInput.readOnly = true;
-                depositInput.style.background = '#f3f4f6';
-                depositInput.removeAttribute('required');
-                depositInput.value = '';
-            }
         }
     }
 
