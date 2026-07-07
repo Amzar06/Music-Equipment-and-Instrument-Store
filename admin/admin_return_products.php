@@ -12,53 +12,43 @@ $active = "returns";
 
 $message = ""; $message_type = "";
 
-
-// Auto tracking logic
-
 // Check if either button was clicked by looking for 'return_action'
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['return_action'])) {
     $rental_item_id = intval($_POST['rental_item_id']);
     $return_condition = mysqli_real_escape_string($conn, trim($_POST['return_condition']));
-    $action = $_POST['return_action']; // Will be 'restock' or 'discard'
+    $action = $_POST['return_action']; // Will be 'available' or 'unavailable'
 
     if (!empty($return_condition)) {
-        // Find out which product and how many are rented
-
-        $check_query = "SELECT prod_id, rental_qty FROM rental_items WHERE rental_item_id = $rental_item_id";
+        // Find out which product is being returned
+        $check_query = "SELECT prod_id FROM rental_items WHERE rental_item_id = $rental_item_id";
         $check_result = mysqli_query($conn, $check_query);
         
         if ($row = mysqli_fetch_assoc($check_result)) {
             $p_id = $row['prod_id'];
-            $qty_to_return = $row['rental_qty'];
 
-            // Mark the specific rental transaction as 'Returned' with the notes
-
+            // Mark the specific rental transaction item as 'Returned'
             $update_item = "UPDATE rental_items 
                             SET return_status = 'Returned', return_condition = '$return_condition' 
                             WHERE rental_item_id = $rental_item_id";
             
-            // Execute logic based on which button was clicked
+            // Execute logic based on item status selection
+            if ($action === 'available') {
+                // Set product status to Available for immediate re-rental
+                $status_product = "UPDATE products SET status = 'Available' WHERE prod_id = $p_id";
 
-            if ($action === 'restock') {
-                // Auto restock item is quality is good
-
-                $restock_product = "UPDATE products 
-                                    SET prod_rental_qty = prod_rental_qty + $qty_to_return 
-                                    WHERE prod_id = $p_id";
-
-                if (mysqli_query($conn, $update_item) && mysqli_query($conn, $restock_product)) {
-                    $message = "Item successfully returned and rental inventory auto-restocked (+{$qty_to_return}).";
+                if (mysqli_query($conn, $update_item) && mysqli_query($conn, $status_product)) {
+                    $message = "Item successfully returned. Product status is now set to 🟢 Available.";
                     $message_type = "success";
                 } else {
                     $message = "Database Error: " . mysqli_error($conn);
                     $message_type = "error";
                 }
-            } elseif ($action === 'discard') {
-                // Discard: Only update the transaction, DO NOT restock the product
-                if (mysqli_query($conn, $update_item)) {
-                    $message = "Item transaction closed. Item was discarded and NOT added back to inventory.";
-                    // Using success type so it shows green, but clear messaging
+            } elseif ($action === 'unavailable') {
+                // Set product status to Unavailable (needs repairs / maintenance)
+                $status_product = "UPDATE products SET status = 'Unavailable' WHERE prod_id = $p_id";
+
+                if (mysqli_query($conn, $update_item) && mysqli_query($conn, $status_product)) {
+                    $message = "Item returned. Product status has been flagged as 🔴 Unavailable for maintenance.";
                     $message_type = "success"; 
                 } else {
                     $message = "Database Error: " . mysqli_error($conn);
@@ -73,7 +63,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['return_action'])) {
 }
 
 // Fetch all items currently rented 'Out' by joining tables
-
 $pending_query = "SELECT ri.*, p.prod_name, r.created_at as rent_date 
                   FROM rental_items ri 
                   JOIN products p ON ri.prod_id = p.prod_id 
@@ -89,7 +78,7 @@ require_once('admin_header.php');
     
     <div style="margin-bottom: 24px;">
         <h2 style="margin: 0; color: #111827;">Process Returns</h2>
-        <p style="color: #6b7280; font-size: 0.95rem; margin-top: 6px;">Item Condition</p>
+        <p style="color: #6b7280; font-size: 0.95rem; margin-top: 6px;">Manage item inspection notes and incoming operational availability status.</p>
     </div>
 
     <?php if (!empty($message)): ?>
@@ -104,8 +93,8 @@ require_once('admin_header.php');
                 <tr>
                     <th style="padding: 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase;">Transaction ID</th>
                     <th style="padding: 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase;">Product Detail</th>
-                    <th style="padding: 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase;">Quantity</th>
-                    <th style="padding: 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase; width: 45%;">Inspection & Return</th>
+                    <th style="padding: 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase; text-align: center;">Qty</th>
+                    <th style="padding: 16px; color: #4b5563; font-size: 0.85rem; text-transform: uppercase; width: 45%;">Inspection & Set Status</th>
                 </tr>
             </thead>
             <tbody>
@@ -121,7 +110,7 @@ require_once('admin_header.php');
                             <span style="font-size: 0.85rem; color: #6b7280;">Rented on: <?php echo date('M d, Y', strtotime($item['rent_date'])); ?></span>
                         </td>
                         <td style="padding: 16px; text-align: center;">
-                            <span style="background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.85rem;">
+                            <span style="background: #f3f4f6; color: #374151; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.85rem;">
                                 <?php echo $item['rental_qty']; ?>
                             </span>
                         </td>
@@ -129,19 +118,19 @@ require_once('admin_header.php');
                             <form action="" method="POST" style="display: flex; gap: 8px;">
                                 <input type="hidden" name="rental_item_id" value="<?php echo $item['rental_item_id']; ?>">
                                 
-                                <input type="text" name="return_condition" placeholder="Condition (Broken String)..." required 
+                                <input type="text" name="return_condition" placeholder="Condition (e.g., Perfect, Scratched)..." required 
                                        style="flex-grow: 1; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; font-size: 0.9rem; min-width: 150px;">
                                 
-                                <button type="submit" name="return_action" value="restock" title="Item is good. Add back to stock."
+                                <button type="submit" name="return_action" value="available" title="Item is ready to rent out again immediately."
                                         style="padding: 10px; background: #10b981; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap;" 
                                         onmouseover="this.style.backgroundColor='#059669'" onmouseout="this.style.backgroundColor='#10b981'">
-                                    Restock
+                                    Available
                                 </button>
 
-                                <button type="submit" name="return_action" value="discard" title="Item is damaged. Do NOT add to stock."
-                                        style="padding: 10px; background: #ef4444; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap;" 
-                                        onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='#ef4444'">
-                                    Discard
+                                <button type="submit" name="return_action" value="unavailable" title="Item needs repair. Flag as unavailable."
+                                        style="padding: 10px; background: #f59e0b; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap;" 
+                                        onmouseover="this.style.backgroundColor='#d97706'" onmouseout="this.style.backgroundColor='#f59e0b'">
+                                    Unavailable
                                 </button>
                             </form>
                         </td>

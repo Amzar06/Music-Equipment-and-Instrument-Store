@@ -130,13 +130,23 @@ require_once('admin_header.php');
                     <?php if(mysqli_num_rows($result) > 0): ?>
                         <?php while($row = mysqli_fetch_assoc($result)): 
                             $rental_id = $row['rental_id'];
-                            
                             $status = $row['status'];
-                            if ($status == 'Pending' || $status == 'Processing') { $bg = '#fef3c7'; $txt = '#92400e'; }
-                            elseif ($status == 'Active') { $bg = '#dbeafe'; $txt = '#1e40af'; }
-                            elseif ($status == 'Returned' || $status == 'Completed') { $bg = '#d1fae5'; $txt = '#065f46'; }
-                            elseif ($status == 'Cancelled' || $status == 'Overdue') { $bg = '#fee2e2'; $txt = '#991b1b'; }
-                            else { $bg = '#e5e7eb'; $txt = '#374151'; $status = 'Unknown'; }
+                            
+                            // Visual badge logic setup with your new changes
+                            if ($status == 'Pending' || $status == 'Processing') { 
+                                $bg = '#fef3c7'; $txt = '#92400e'; 
+                            } elseif ($status == 'Active') { 
+                                $bg = '#dbeafe'; $txt = '#1e40af'; 
+                            } elseif ($status == 'Returned' || $status == 'Completed') { 
+                                $bg = '#d1fae5'; $txt = '#065f46'; 
+                            } elseif ($status == 'Returned (Damaged)') { 
+                                // Distinctive warning color style for problematic instrument conditions
+                                $bg = '#ffedd5'; $txt = '#c2410c'; 
+                            } elseif ($status == 'Cancelled') { 
+                                $bg = '#fee2e2'; $txt = '#991b1b'; 
+                            } else { 
+                                $bg = '#e5e7eb'; $txt = '#374151'; 
+                            }
                         ?>
                         
                         <tr style="border-bottom: 1px solid #f3f4f6; transition: background 0.2s;" id="row-<?php echo $rental_id; ?>">
@@ -148,7 +158,7 @@ require_once('admin_header.php');
                             </td>
                             <td style="padding: 16px; font-weight: 700; color: #111827;">RM <?php echo number_format($row['total_amount'], 2); ?></td>
                             <td style="padding: 16px;">
-                                <span style="background: <?php echo $bg; ?>; color: <?php echo $txt; ?>; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">
+                                <span style="background: <?php echo $bg; ?>; color: <?php echo $txt; ?>; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; white-space: nowrap;">
                                     <?php echo htmlspecialchars($status); ?>
                                 </span>
                             </td>
@@ -203,6 +213,9 @@ require_once('admin_header.php');
                                                         echo '<li style="margin-bottom: 8px;">';
                                                         echo '<strong>' . $item['rental_qty'] . 'x</strong> ' . htmlspecialchars($item['prod_name']);
                                                         echo '<br><span style="color:#9ca3af; font-size: 0.75rem;">(RM ' . number_format($item['rental_rate'], 2) . ' /day)</span>';
+                                                        if (!empty($item['return_condition'])) {
+                                                            echo '<br><span style="color: #c2410c; font-size: 0.75rem; font-style: italic;">Condition: ' . htmlspecialchars($item['return_condition']) . '</span>';
+                                                        }
                                                         echo '</li>';
                                                     }
                                                     echo '</ul>';
@@ -219,12 +232,12 @@ require_once('admin_header.php');
                                             <input type="hidden" name="rental_id" value="<?php echo $rental_id; ?>">
                                             <input type="hidden" name="redirect_search" value="<?php echo htmlspecialchars($search); ?>">
                                             <input type="hidden" name="redirect_sort" value="<?php echo htmlspecialchars($sort_by); ?>">
-                                            <select name="new_status" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.85rem; outline: none;">
+                                            <select name="new_status" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.85rem; outline: none; background: white;">
                                                 <option value="Pending" <?php echo ($status == 'Pending') ? 'selected' : ''; ?>>Pending</option>
                                                 <option value="Processing" <?php echo ($status == 'Processing') ? 'selected' : ''; ?>>Processing</option>
                                                 <option value="Active" <?php echo ($status == 'Active') ? 'selected' : ''; ?>>Active</option>
                                                 <option value="Returned" <?php echo ($status == 'Returned') ? 'selected' : ''; ?>>Returned</option>
-                                                <option value="Overdue" <?php echo ($status == 'Overdue') ? 'selected' : ''; ?>>Overdue</option>
+                                                <option value="Returned (Damaged)" <?php echo ($status == 'Returned (Damaged)') ? 'selected' : ''; ?>>Returned (Damaged)</option>
                                                 <option value="Cancelled" <?php echo ($status == 'Cancelled') ? 'selected' : ''; ?>>Cancelled</option>
                                             </select>
                                             <button type="submit" name="update_rental_status" style="background: #4f46e5; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">Update Status</button>
