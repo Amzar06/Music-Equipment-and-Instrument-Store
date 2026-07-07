@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // 2. Safely verify if the typed password matches the secure hashed password
                 if (password_verify($password, $row['cust_password'])) {
                     $_SESSION['cust_id'] = $row['cust_id'];
-                    header("Location: product page.php");
+                    header("Location: ../customer/home_page.php");
                     exit();
                 } else {
                     // Password hash mismatch

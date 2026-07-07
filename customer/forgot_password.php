@@ -143,7 +143,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_email'])) {
                         <?php
                         $questions = [
                             "What was the name of your first pet?",
-                            "What is your mother's maiden name?",
+                            "What is your mother's name?",
                             "What elementary school did you attend?",
                             "In what city were you born?",
                             "What was your favorite food as a child?"

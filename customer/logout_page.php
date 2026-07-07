@@ -19,6 +19,35 @@ session_destroy();
   <title>Logout</title>
   <link rel="stylesheet" href="customer.css">
   <style>
+      /* Center the container vertically and horizontally on the screen */
+      body {
+          margin: 0;
+          padding: 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+          background-color: #f8fafc; /* Optional: adds a light background like your image */
+      }
+
+      .container {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+      }
+
+      /* Styled the card wrapper to look clean and elevated */
+      .card {
+          text-align: center; 
+          max-width: 420px; 
+          width: 100%;
+          padding: 30px;
+          background: #ffffff;
+          border-radius: 12px;
+          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* Optional: matches the card shadow in your screenshot */
+      }
+
       .button-group {
           display: flex;
           gap: 12px;
@@ -51,13 +80,13 @@ session_destroy();
 <body>
 
   <div class="container">
-    <div class="card" style="text-align: center; max-width: 420px; margin: 0 auto;">
-      <h2>You Have Logged Out</h2>
+    <div class="card">
+      <h2 style="color: #6366f1; margin-top: 0;">You Have Logged Out</h2>
       <p style="color: #555; margin-bottom: 12px;">Thank you for using the system!</p>
 
       <div class="button-group">
           <a href="../product/cust login.php">
-              <button type="button">Login Again</button>
+              <button type="button" style="background-color: #2563eb; color: white; border: none;">Login Again</button>
           </a>
 
           <a href="home_page.php">

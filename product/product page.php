@@ -189,7 +189,7 @@ if (isset($conn) && $userHasSession) {
 
         <?php if (isset($_GET['error']) && $_GET['error'] === 'out_of_stock'): ?>
             <div style="margin-left: auto; background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 10px 20px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; animation: shake 0.5s;">
-                ⚠️ <?php echo htmlspecialchars($_GET['name'] ?? 'Item'); ?> is out of stock!
+                ⚠️ <?php echo htmlspecialchars($_GET['name'] ?? 'Item'); ?> is not available!
             </div>
         <?php endif; ?>
     </div>
@@ -212,7 +212,7 @@ if (isset($conn) && $userHasSession) {
                         </div>
                         <?php if ($is_out_of_stock): ?>
                             <div style="position: absolute; top: 10px; left: 10px; background: #ef4444; color: white; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 6px rgba(239,68,68,0.4);">
-                                Out of Stock
+                                Not Available
                             </div>
                         <?php endif; ?>
                         <div style="position: absolute; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.5); color: white; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; transition: background 0.2s;" title="Maximize image"
@@ -225,7 +225,7 @@ if (isset($conn) && $userHasSession) {
                         <div style="width: 100%; height: 200px; background-color: #f1f5f9; border-radius: 10px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; color: #94a3b8; border: 2px dashed #e2e8f0;">[ No Image ]</div>
                         <?php if ($is_out_of_stock): ?>
                             <div style="position: absolute; top: 10px; left: 10px; background: #ef4444; color: white; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 6px rgba(239,68,68,0.4);">
-                                Out of Stock
+                                Not Available
                             </div>
                         <?php endif; ?>
                     </div>
@@ -252,7 +252,7 @@ if (isset($conn) && $userHasSession) {
                         <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Stock</span> <?php echo htmlspecialchars($product['prod_sale_qty']); ?> units</div>
                         <div><span style="color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Status</span> 
                             <span style="color: <?php echo $is_out_of_stock ? '#ef4444' : '#10b981'; ?>; font-weight: 700;">
-                                <?php echo $is_out_of_stock ? 'Out of Stock' : 'Available'; ?>
+                                <?php echo $is_out_of_stock ? 'Not Available' : 'Available'; ?>
                             </span>
                         </div>
                     </div>
@@ -260,7 +260,7 @@ if (isset($conn) && $userHasSession) {
 
                 <div class="product-actions mt-2" onclick="event.stopPropagation()">
                     <?php if ($is_out_of_stock): ?>
-                        <button type="button" disabled style="width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; background: #e5e7eb; color: #9ca3af; border: none; cursor: not-allowed; margin-bottom: 8px;">Out of Stock</button>
+                        <button type="button" disabled style="width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; background: #e5e7eb; color: #9ca3af; border: none; cursor: not-allowed; margin-bottom: 8px;">Not Available</button>
                     <?php else: ?>
                         <form action="add_to_cart.php" method="POST" style="margin-bottom: 8px;">
                             <input type="hidden" name="prod_id" value="<?php echo htmlspecialchars($product['prod_id']); ?>">
