@@ -39,28 +39,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_product'])) {
     $p_name = mysqli_real_escape_string($conn, trim($_POST['prod_name']));
     $p_desc = mysqli_real_escape_string($conn, trim($_POST['prod_description']));
 
-    $p_sale_price   = isset($_POST['prod_sale_price']) ? floatval($_POST['prod_sale_price']) : $product['prod_sale_price'];
-    $p_sale_qty     = isset($_POST['prod_sale_qty']) ? intval($_POST['prod_sale_qty']) : $product['prod_sale_qty'];
-    $p_rental_price = isset($_POST['prod_rental_price']) ? floatval($_POST['prod_rental_price']) : $product['prod_rental_price'];
-    $p_rental_qty   = 1;
+    // 1. Get values safely using the flags you already defined
+    $p_sale_price   = ($is_sale_allowed && isset($_POST['prod_sale_price'])) ? floatval($_POST['prod_sale_price']) : $product['prod_sale_price'];
+    $p_sale_qty     = ($is_sale_allowed && isset($_POST['prod_sale_qty'])) ? intval($_POST['prod_sale_qty']) : $product['prod_sale_qty'];
+    $p_rental_price = ($is_rent_allowed && isset($_POST['prod_rental_price'])) ? floatval($_POST['prod_rental_price']) : $product['prod_rental_price'];
+    $p_rental_qty   = 1; 
 
-    // Validation — no negative values
+    // 2. Safety Fallbacks: Force empty/null values to 0 to prevent SQL syntax errors
+    if (empty($p_sale_price)) $p_sale_price = 0;
+    if (empty($p_rental_price)) $p_rental_price = 0;
+    if (empty($p_sale_qty)) $p_sale_qty = 0;
+
+    // Validation
     if ($p_sale_price < 0 || $p_sale_qty < 0 || $p_rental_price < 0) {
-        $_SESSION['flash_message'] = "Values cannot be negative. Please enter valid numbers.";
+        $_SESSION['flash_message'] = "Values cannot be negative.";
         $_SESSION['flash_type'] = "error";
         header("Location: admin_edit_product.php?id=$prod_id");
         exit();
-    }
-
-    // Prevent disabled fields from overwriting existing values
-    if (!$is_sale_allowed) {
-        $p_sale_price = $product['prod_sale_price'];
-        $p_sale_qty   = $product['prod_sale_qty'];
-    }
-
-    if (!$is_rent_allowed) {
-        $p_rental_price = $product['prod_rental_price'];
-        $p_rental_qty   = $product['prod_rental_qty'];
     }
 
     $update_query = "UPDATE products SET 
