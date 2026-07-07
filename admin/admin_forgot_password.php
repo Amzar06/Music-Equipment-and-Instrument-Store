@@ -8,7 +8,7 @@ $success = "";
 $user_email = "";
 $security_question = "";
 
-// Verify the email
+// Verify the email exists
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['verify_email'])) {
     $user_email = mysqli_real_escape_string($conn, trim($_POST['email']));
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset_password'])) {
     $result = mysqli_query($conn, $query);
     $staff = mysqli_fetch_assoc($result);
     
-    // Check if their typed answer matches the hashed answer in the database
+    // Check if answer matches hashed answer in the database
     if (password_verify($answer_attempt, $staff['security_answer'])) {
         $hashed_new_pass = password_hash($new_password, PASSWORD_DEFAULT);
         mysqli_query($conn, "UPDATE staff SET staff_password = '$hashed_new_pass' WHERE staff_email = '$user_email'");
@@ -78,6 +78,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset_password'])) {
         <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.85rem;"><?php echo $error; ?></div>
     <?php endif; ?>
 
+    <!-- ask for email -->
+    
     <?php if ($step == 1): ?>
         <p style="color: #4b5563; font-size: 0.9rem;">Enter your staff email to verify identity.</p>
         <form method="POST">
@@ -86,6 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset_password'])) {
             <button type="submit" name="verify_email">Verify Email</button>
             <div style="text-align: center; margin-top: 16px;"><a href="admin_login.php" style="color: #4f46e5; font-size: 0.85rem; text-decoration: none;">Back to Login</a></div>
         </form>
+    
+    <!-- ask security question + new password -->
 
     <?php elseif ($step == 2): ?>
         <p style="color: #4b5563; font-size: 0.9rem;">Answer your security question to reset your password.</p>
@@ -107,6 +111,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset_password'])) {
             </div>
         </form>
 
+    <!-- success confirmation -->
+     
     <?php elseif ($step == 3): ?>
         <div style="background: #d1fae5; color: #065f46; padding: 16px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; text-align: center;">
             <?php echo $success; ?>

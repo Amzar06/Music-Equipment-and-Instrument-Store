@@ -15,14 +15,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_rental_status']
     
     $update_query = "UPDATE rentals SET status = '$new_status' WHERE rental_id = $rental_id";
     
-    // If status is Active, update all associated rental_items to 'Out' if they are still 'Pending'
-
+    
     if ($new_status === 'Active') {
+        // 1. Mark the individual order line items as 'Out'
         mysqli_query($conn, "UPDATE rental_items SET return_status = 'Out' WHERE rental_id = $rental_id AND return_status = 'Pending'");
+        
+        mysqli_query($conn, "
+            UPDATE products p
+            JOIN rental_items ri ON p.prod_id = ri.prod_id
+            SET p.availability = 'Unavailable'
+            WHERE ri.rental_id = $rental_id
+        ");
     }
 
     if (mysqli_query($conn, $update_query)) {
-        $_SESSION['flash_message'] = "Rental #$rental_id status updated successfully.";
+        $_SESSION['flash_message'] = "Rental #$rental_id records and item availability updated successfully.";
         $_SESSION['flash_type'] = "success";
     } else {
         $_SESSION['flash_message'] = "Error updating rental: " . mysqli_error($conn);

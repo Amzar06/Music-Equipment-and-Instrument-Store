@@ -24,6 +24,8 @@ header("Pragma: no-cache");
 </head>
 <body>
 
+<!-- sidebar navigation -->
+
 <aside class="sidebar">
     <h2>Music Equipment & Instrument Store</h2>
     <ul class="nav-links">
@@ -35,6 +37,8 @@ header("Pragma: no-cache");
         <li><a href="admin_rental_list.php" class="<?php echo ($active == 'rentals') ? 'active' : ''; ?>">Rentals</a></li>
         <li><a href="manage_customer.php" class="<?php echo ($active == 'customers') ? 'active' : ''; ?>">Customers</a></li>
         
+        <!-- staff + reports only visible to Superadmins -->
+
         <?php if (isset($_SESSION['staff_role']) && $_SESSION['staff_role'] === 'Administrator'): ?>
             <li><a href="manage_admin.php" class="<?php echo ($active == 'staff') ? 'active' : ''; ?>">Staff</a></li>
             <li><a href="admin_report.php" class="<?php echo ($active == 'reports') ? 'active' : ''; ?>">Reports</a></li>
@@ -44,6 +48,8 @@ header("Pragma: no-cache");
         <a href="admin_logout.php" onclick="return confirm('Are you sure you want to log out?');" style="color: #ef4444; text-decoration: none; font-size: 0.9rem; font-weight: 600;">Logout</a>
     </div>
 </aside>
+
+<!-- Main content area -->
 
 <div class="main-content">
     <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
@@ -58,7 +64,9 @@ header("Pragma: no-cache");
         <?php else: ?>
             <div style="width: 100%; max-width: 400px; margin: 0 20px;"></div>
         <?php endif; ?>
-
+        
+        <!-- staff role display -->
+         
         <div class="admin-profile" style="display: flex; align-items: center; gap: 15px;">
             <span style="text-transform: uppercase; letter-spacing: 1px; padding: 6px 12px; font-size: 0.75rem; background-color: #d1fae5; color: #065f46; border-radius: 12px; font-weight: 600;">
                 <?php 

@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_category'])) {
             }
         }
     }
-    header("Location: admin_categories.php");
+    header("Location: admin_categories.php"); //redirect after POSt to avoid form resubmit
     exit();
 }
 

@@ -2,8 +2,6 @@
 session_start();
 require_once('../database.php');
 
-// If already logged in, proceed to dashboard
-
 if (isset($_SESSION['staff_id'])) {
     header("Location: admin_dashboard.php"); 
     exit();
@@ -17,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $password = $_POST['password'];
 
-    // Query your staff table using the escaped email input
     $query = "SELECT * FROM staff WHERE staff_email = '$email'"; 
     $result = mysqli_query($conn, $query);
 

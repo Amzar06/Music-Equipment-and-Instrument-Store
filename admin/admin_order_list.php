@@ -6,13 +6,13 @@ require_once('../database.php');
 $page_title = "Orders";
 $active = "orders";
 
-// ==========================================
-// HANDLE STATUS UPDATES
-// ==========================================
+// Handle status updates
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_order_status'])) {
     $order_id = intval($_POST['order_id']);
     $new_status = mysqli_real_escape_string($conn, $_POST['new_status']);
     
+    // record delivery timestamp when status changed to delivered
     if ($new_status === 'Delivered') {
         $update_query = "UPDATE orders SET status = '$new_status', delivered_at = CURRENT_TIMESTAMP WHERE order_id = $order_id";
     } else {
@@ -27,16 +27,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_order_status'])
         $_SESSION['flash_type'] = "error";
     }
     
-    // Redirect back to admin_order_list.php preserving search/sort context
+    // preserv search/sort when redirect
+
     $search_param = isset($_POST['redirect_search']) ? $_POST['redirect_search'] : '';
     $sort_param = isset($_POST['redirect_sort']) ? $_POST['redirect_sort'] : 'newest';
     header("Location: admin_order_list.php?search=" . urlencode($search_param) . "&sort_by=" . urlencode($sort_param));
     exit();
 }
 
-// ==========================================
-// SEARCH AND SORT LOGIC
-// ==========================================
+
+// Search & sort logic
+
 $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, trim($_GET['search'])) : '';
 $sort_by = isset($_GET['sort_by']) ? trim($_GET['sort_by']) : 'newest';
 
@@ -62,6 +63,7 @@ switch ($sort_by) {
 }
 
 // Fetch orders, customer data, address data
+
 $query = "SELECT o.*, 
                  c.cust_name, c.cust_email, c.cust_phone_number,
                  a.full_name AS ship_name, a.phone_number AS ship_phone, 
@@ -135,6 +137,7 @@ require_once('admin_header.php');
                             else { $bg = '#e5e7eb'; $txt = '#374151'; }
                         ?>
                         
+                        <!-- main summary row -->
                         <tr style="border-bottom: 1px solid #f3f4f6; transition: background 0.2s;" id="row-<?php echo $order_id; ?>">
                             <td style="padding: 16px; font-weight: 700; color: #4f46e5;">#<?php echo $order_id; ?></td>
                             <td style="padding: 16px; font-weight: 600; color: #111827;"><?php echo htmlspecialchars($row['cust_name']); ?></td>
@@ -146,16 +149,22 @@ require_once('admin_header.php');
                                 </span>
                             </td>
                             <td style="padding: 16px; text-align: right;">
+
+                            <!-- togle hidden details row
                                 <button onclick="toggleDetails(<?php echo $order_id; ?>)" style="background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 6px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">
                                     View Details ⮟
                                 </button>
                             </td>
                         </tr>
+                        
+                        < !-- expandable details row -->
 
                         <tr id="details-<?php echo $order_id; ?>" style="display: none; background: #f8fafc; border-bottom: 2px solid #e5e7eb;">
                             <td colspan="6" style="padding: 0;">
                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; padding: 24px; border-left: 4px solid #4f46e5;">
                                     
+                                     < !-- customer & delivery method -->
+
                                     <div>
                                         <h4 style="margin: 0 0 12px 0; color: #111827; font-size: 0.95rem; border-bottom: 1px solid #d1d5db; padding-bottom: 8px;">Customer & Fulfillment</h4>
                                         <div style="font-size: 0.85rem; color: #4b5563; line-height: 1.6;">
@@ -209,7 +218,8 @@ require_once('admin_header.php');
 
                                         </div>
                                     </div>
-
+                                    
+                                    <!-- Items purchased in order -->
                                     <div>
                                         <h4 style="margin: 0 0 12px 0; color: #111827; font-size: 0.95rem; border-bottom: 1px solid #d1d5db; padding-bottom: 8px;">Purchased Instruments</h4>
                                         <div style="font-size: 0.85rem; color: #4b5563;">
@@ -228,7 +238,8 @@ require_once('admin_header.php');
                                             ?>
                                         </div>
                                     </div>
-
+                                    
+                                    <!-- status update form & return request -->
                                     <div>
                                         <h4 style="margin: 0 0 12px 0; color: #111827; font-size: 0.95rem; border-bottom: 1px solid #d1d5db; padding-bottom: 8px;">Update Order Status</h4>
                                         <form action="admin_order_list.php" method="POST" style="display: flex; flex-direction: column; gap: 10px;">
@@ -247,6 +258,9 @@ require_once('admin_header.php');
                                         </form>
 
                                         <?php 
+
+                                    //show return rquest
+
                                         $ret_query = mysqli_query($conn, "SELECT * FROM product_returns WHERE order_id = $order_id LIMIT 1");
                                         if (mysqli_num_rows($ret_query) > 0): 
                                             $ret_req = mysqli_fetch_assoc($ret_query);
@@ -281,6 +295,9 @@ require_once('admin_header.php');
 </div>
 
 <script>
+
+    //show or hide details row
+    
 function toggleDetails(id) {
     var detailsRow = document.getElementById('details-' + id);
     var mainRow = document.getElementById('row-' + id);

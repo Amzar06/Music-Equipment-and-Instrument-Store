@@ -42,6 +42,8 @@ if (mysqli_num_rows($staff_result) == 0) {
 $staff = mysqli_fetch_assoc($staff_result);
 $message = ""; $message_type = "";
 
+// for form submission
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_staff'])) {
     $staff_name    = mysqli_real_escape_string($conn, trim($_POST['staff_name']));
     $staff_email   = mysqli_real_escape_string($conn, trim($_POST['staff_email']));
@@ -52,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_staff'])) {
 
     if (!empty($staff_name) && !empty($staff_email)) {
         
-        // Excludes password, security_question, and security_answer.
+        // Excludes password, security question and security answer
 
         $update_query = "UPDATE staff SET 
                          staff_name = '$staff_name', 

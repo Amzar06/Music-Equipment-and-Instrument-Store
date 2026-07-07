@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_product'])) {
 }
 
 
-// Handle master catalog updates
+// Handle master detail updates
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_product'])) {
     $p_name = mysqli_real_escape_string($conn, trim($_POST['prod_name']));
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_product'])) {
 $product_query = mysqli_query($conn, "SELECT * FROM products WHERE prod_id = $prod_id");
 $product = mysqli_fetch_assoc($product_query);
 
-// Determine structural listing limits on load
+// Determine editable fields
 
 $is_sale_allowed = ($product['prod_sale_price'] > 0 || $product['prod_sale_qty'] > 0 || $product['prod_rental_price'] == 0);
 $is_rent_allowed = ($product['prod_rental_price'] > 0 || $product['prod_rental_qty'] > 0 || $product['prod_sale_price'] == 0);
@@ -108,6 +108,8 @@ require_once('admin_header.php');
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                 
+            // sale data
+
                 <div style="background: <?php echo $is_sale_allowed ? '#f8fafc' : '#f3f4f6'; ?>; padding: 16px; border-radius: 8px; border: 1px solid <?php echo $is_sale_allowed ? '#e2e8f0' : '#e5e7eb'; ?>; opacity: <?php echo $is_sale_allowed ? '1' : '0.6'; ?>;">
                     <h4 style="margin-top: 0; color: #0f172a; margin-bottom: 12px;">Sale Data <?php echo !$is_sale_allowed ? '<span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">(Rental Only Item)</span>' : ''; ?></h4>
                     
@@ -117,6 +119,8 @@ require_once('admin_header.php');
                     <label style="display: block; margin-bottom: 4px; font-size: 0.85rem; color: #64748b; font-weight: bold;">Available Stock (Sales)</label>
                     <input type="number" name="prod_sale_qty" value="<?php echo $product['prod_sale_qty']; ?>" <?php echo $is_sale_allowed ? 'required' : 'disabled'; ?> style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; background: <?php echo $is_sale_allowed ? '#fff' : '#e5e7eb'; ?>;">
                 </div>
+                
+            // rental data 
 
                 <div style="background: <?php echo $is_rent_allowed ? '#fffbeb' : '#f3f4f6'; ?>; padding: 16px; border-radius: 8px; border: 1px solid <?php echo $is_rent_allowed ? '#fef3c7' : '#e5e7eb'; ?>; opacity: <?php echo $is_rent_allowed ? '1' : '0.6'; ?>;">
                     <h4 style="margin-top: 0; color: <?php echo $is_rent_allowed ? '#92400e' : '#0f172a'; ?>; margin-bottom: 12px;">Rental Data <?php echo !$is_rent_allowed ? '<span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">(Sale Only Item)</span>' : ''; ?></h4>
