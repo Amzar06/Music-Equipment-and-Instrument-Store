@@ -38,13 +38,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_product'])) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_product'])) {
     $p_name = mysqli_real_escape_string($conn, trim($_POST['prod_name']));
     $p_desc = mysqli_real_escape_string($conn, trim($_POST['prod_description']));
-    
-    // Fallback to 0 if the field was disabled/locked out in the UI
 
-    $p_sale_price   = isset($_POST['prod_sale_price']) ? floatval($_POST['prod_sale_price']) : 0;
-    $p_sale_qty     = isset($_POST['prod_sale_qty']) ? intval($_POST['prod_sale_qty']) : 0;
-    $p_rental_price = isset($_POST['prod_rental_price']) ? floatval($_POST['prod_rental_price']) : 0;
+    $p_sale_price   = isset($_POST['prod_sale_price']) ? floatval($_POST['prod_sale_price']) : $product['prod_sale_price'];
+    $p_sale_qty     = isset($_POST['prod_sale_qty']) ? intval($_POST['prod_sale_qty']) : $product['prod_sale_qty'];
+    $p_rental_price = isset($_POST['prod_rental_price']) ? floatval($_POST['prod_rental_price']) : $product['prod_rental_price'];
     $p_rental_qty   = 1;
+
+    // Validation — no negative values
+    if ($p_sale_price < 0 || $p_sale_qty < 0 || $p_rental_price < 0) {
+        $_SESSION['flash_message'] = "Values cannot be negative. Please enter valid numbers.";
+        $_SESSION['flash_type'] = "error";
+        header("Location: admin_edit_product.php?id=$prod_id");
+        exit();
+    }
+
+    // Prevent disabled fields from overwriting existing values
+    if (!$is_sale_allowed) {
+        $p_sale_price = $product['prod_sale_price'];
+        $p_sale_qty   = $product['prod_sale_qty'];
+    }
+
+    if (!$is_rent_allowed) {
+        $p_rental_price = $product['prod_rental_price'];
+        $p_rental_qty   = $product['prod_rental_qty'];
+    }
 
     $update_query = "UPDATE products SET 
                         prod_name = '$p_name',
@@ -114,10 +131,10 @@ require_once('admin_header.php');
                     <h4 style="margin-top: 0; color: #0f172a; margin-bottom: 12px;">Sale Data <?php echo !$is_sale_allowed ? '<span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">(Rental Only Item)</span>' : ''; ?></h4>
                     
                     <label style="display: block; margin-bottom: 4px; font-size: 0.85rem; color: #64748b; font-weight: bold;">Sale Price (RM)</label>
-                    <input type="number" step="0.01" name="prod_sale_price" value="<?php echo $product['prod_sale_price']; ?>" <?php echo $is_sale_allowed ? 'required' : 'disabled'; ?> style="width: 100%; padding: 8px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 4px; background: <?php echo $is_sale_allowed ? '#fff' : '#e5e7eb'; ?>;">
+                    <input type="number" min="0" step="0.01" name="prod_sale_price" value="<?php echo $product['prod_sale_price']; ?>" <?php echo $is_sale_allowed ? 'required' : 'disabled'; ?> style="width: 100%; padding: 8px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 4px; background: <?php echo $is_sale_allowed ? '#fff' : '#e5e7eb'; ?>;">
                     
                     <label style="display: block; margin-bottom: 4px; font-size: 0.85rem; color: #64748b; font-weight: bold;">Available Stock (Sales)</label>
-                    <input type="number" name="prod_sale_qty" value="<?php echo $product['prod_sale_qty']; ?>" <?php echo $is_sale_allowed ? 'required' : 'disabled'; ?> style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; background: <?php echo $is_sale_allowed ? '#fff' : '#e5e7eb'; ?>;">
+                    <input type="number" min="0" name="prod_sale_qty" value="<?php echo $product['prod_sale_qty']; ?>" <?php echo $is_sale_allowed ? 'required' : 'disabled'; ?> style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; background: <?php echo $is_sale_allowed ? '#fff' : '#e5e7eb'; ?>;">
                 </div>
                 
         <!--rental data -->
@@ -126,10 +143,10 @@ require_once('admin_header.php');
                     <h4 style="margin-top: 0; color: <?php echo $is_rent_allowed ? '#92400e' : '#0f172a'; ?>; margin-bottom: 12px;">Rental Data <?php echo !$is_rent_allowed ? '<span style="font-size:0.75rem; font-weight:normal; color:#9ca3af;">(Sale Only Item)</span>' : ''; ?></h4>
                     
                     <label style="display: block; margin-bottom: 4px; font-size: 0.85rem; color: #b45309; font-weight: bold;">Rental Rate (RM/Day)</label>
-                    <input type="number" step="0.01" name="prod_rental_price" value="<?php echo $product['prod_rental_price']; ?>" <?php echo $is_rent_allowed ? 'required' : 'disabled'; ?> style="width: 100%; padding: 8px; margin-bottom: 12px; border: 1px solid #fde68a; border-radius: 4px; background: <?php echo $is_rent_allowed ? '#fff' : '#e5e7eb'; ?>;">
+                    <input type="number" min="0" step="0.01" name="prod_rental_price" value="<?php echo $product['prod_rental_price']; ?>" <?php echo $is_rent_allowed ? 'required' : 'disabled'; ?> style="width: 100%; padding: 8px; margin-bottom: 12px; border: 1px solid #fde68a; border-radius: 4px; background: <?php echo $is_rent_allowed ? '#fff' : '#e5e7eb'; ?>;">
                     
                     <label style="display: block; margin-bottom: 4px; font-size: 0.85rem; color: #b45309; font-weight: bold;">Available Stock (Rentals)</label>
-                    <input type="number" name="prod_rental_qty" value="1" max="1" min="1" readonly style="width: 100%; padding: 8px; border: 1px solid #fde68a; border-radius: 4px; background: #e5e7eb;">
+                    <input type="number" min="0" name="prod_rental_qty" value="1" max="1" min="1" readonly style="width: 100%; padding: 8px; border: 1px solid #fde68a; border-radius: 4px; background: #e5e7eb;">
                     <small style="color: #9ca3af; font-size: 0.75rem;">Rental quantity is fixed at 1 per item.</small>
                 </div>
             </div>
