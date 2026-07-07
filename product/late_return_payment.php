@@ -34,8 +34,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_now'])) {
     $expiry     = trim($_POST['expiry']  ?? '');
     $cvv        = trim($_POST['cvv']     ?? '');
 
-    if (!$cardholder || strlen($card_no) < 13 || !$expiry || strlen($cvv) < 3) {
-        $payment_error = "Please fill in all card details correctly.";
+    // Validate CVV — must be exactly 3 digits
+    $cvv_valid = preg_match('/^\d{3}$/', $cvv);
+
+    // Validate expiry date — must be a future month (MM/YY format)
+    $expiry_valid = false;
+    if (preg_match('/^(\d{2})\/(\d{2})$/', $expiry, $exp_parts)) {
+        $exp_month = (int)$exp_parts[1];
+        $exp_year  = (int)('20' . $exp_parts[2]);
+        $cur_month = (int)date('m');
+        $cur_year  = (int)date('Y');
+        if ($exp_month >= 1 && $exp_month <= 12) {
+            if ($exp_year > $cur_year || ($exp_year === $cur_year && $exp_month >= $cur_month)) {
+                $expiry_valid = true;
+            }
+        }
+    }
+
+    if (!$cardholder || strlen($card_no) < 13 || !$expiry_valid || !$cvv_valid) {
+        if (!$cardholder || strlen($card_no) < 13) {
+            $payment_error = "Please fill in all card details correctly.";
+        } elseif (!$expiry_valid) {
+            $payment_error = "Invalid expiry date. Please enter a valid future date in MM/YY format.";
+        } elseif (!$cvv_valid) {
+            $payment_error = "CVV must be exactly 3 digits.";
+        }
     } else {
         // Mark rental as Processing + items returned
         $upd = $conn->prepare("UPDATE rentals SET status = 'Processing' WHERE rental_id = ?");
@@ -49,10 +72,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_now'])) {
         $upd2->close();
 
         // Record extra payment in payments table
-        $conn->prepare("
-            INSERT INTO payments (cust_id, rental_id, amount, payment_method, payment_status)
-            VALUES (?, ?, ?, 'Online Banking', 'Completed')
-        ")->execute() ?: null;
         $pay_ins = $conn->prepare("
             INSERT INTO payments (cust_id, rental_id, amount, payment_method, payment_status)
             VALUES (?, ?, ?, 'Card', 'Completed')
@@ -156,18 +175,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_now'])) {
             <div class="row g-3 mb-4">
                 <div class="col-6">
                     <label class="form-label">Expiry Date</label>
-                    <input type="text" name="expiry" class="form-control" placeholder="MM/YY" maxlength="5"
-                           oninput="if(this.value.length===2&&!this.value.includes('/'))this.value+='/'" required>
+                    <input type="text" name="expiry" id="expiry" class="form-control" placeholder="MM/YY" maxlength="5"
+                           oninput="formatExpiry(this)" required>
+                    <div id="expiry-error" style="color:#ef4444;font-size:0.78rem;margin-top:4px;display:none;">Expiry must be a future date.</div>
                 </div>
                 <div class="col-6">
                     <label class="form-label">CVV</label>
-                    <input type="password" name="cvv" class="form-control" placeholder="•••" maxlength="4" required>
+                    <input type="password" name="cvv" id="cvv" class="form-control" placeholder="•••" maxlength="3"
+                           oninput="this.value=this.value.replace(/\D/g,'')" required>
+                    <div id="cvv-error" style="color:#ef4444;font-size:0.78rem;margin-top:4px;display:none;">CVV must be exactly 3 digits.</div>
                 </div>
             </div>
-            <button type="submit" name="pay_now" class="pay-btn">
+            <button type="submit" name="pay_now" class="pay-btn" onclick="return validateForm()">
                 <i class="fa-solid fa-lock me-2"></i>Pay RM <?php echo number_format($amount, 2); ?> Now
             </button>
         </form>
+
+        <script>
+        function formatExpiry(input) {
+            let v = input.value.replace(/\D/g, '');
+            if (v.length >= 3) v = v.substring(0,2) + '/' + v.substring(2,4);
+            input.value = v;
+            validateExpiryField(input);
+        }
+
+        function validateExpiryField(input) {
+            const val = input.value;
+            const errEl = document.getElementById('expiry-error');
+            const match = val.match(/^(\d{2})\/(\d{2})$/);
+            if (!match) { errEl.style.display = 'block'; return false; }
+            const month = parseInt(match[1], 10);
+            const year  = parseInt('20' + match[2], 10);
+            const now   = new Date();
+            const curM  = now.getMonth() + 1;
+            const curY  = now.getFullYear();
+            const valid = month >= 1 && month <= 12 &&
+                          (year > curY || (year === curY && month >= curM));
+            errEl.style.display = valid ? 'none' : 'block';
+            return valid;
+        }
+
+        function validateCvvField() {
+            const cvv = document.getElementById('cvv').value;
+            const errEl = document.getElementById('cvv-error');
+            const valid = /^\d{3}$/.test(cvv);
+            errEl.style.display = valid ? 'none' : 'block';
+            return valid;
+        }
+
+        function validateForm() {
+            const expiryOk = validateExpiryField(document.getElementById('expiry'));
+            const cvvOk    = validateCvvField();
+            return expiryOk && cvvOk;
+        }
+        </script>
 
         <div style="text-align:center;margin-top:18px;">
             <a href="return_rental.php?rental_id=<?php echo $rental_id; ?>"
